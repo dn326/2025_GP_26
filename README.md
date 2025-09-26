@@ -14,7 +14,7 @@ Elan is a digital platform designed to simplify influencer marketing for busines
 •	Launching Instructions
 
 1. Clone the repository:  
-   `git clone https://github.com/dn326.git`
+   `git clone https://github.com/2025_GP_26.git`
 
 2. Install dependencies:  
    `npm install`
