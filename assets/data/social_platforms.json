@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "name_en": "instagram",
+    "name_ar": "إنستغرام",
+    "domain": "instagram.com"
+  },
+  {
+    "id": 2,
+    "name_en": "youtube",
+    "name_ar": "يوتيوب",
+    "domain": "youtube.com"
+  },
+  {
+    "id": 3,
+    "name_en": "tiktok",
+    "name_ar": "تيك توك",
+    "domain": "tiktok.com"
+  },
+  {
+    "id": 4,
+    "name_en": "facebook",
+    "name_ar": "فيسبوك",
+    "domain": "facebook.com"
+  },
+  {
+    "id": 5,
+    "name_en": "x",
+    "name_ar": "إكس (تويتر)",
+    "domain": "x.com"
+  },
+  {
+    "id": 6,
+    "name_en": "snapchat",
+    "name_ar": "سناب شات",
+    "domain": "snapchat.com"
+  },
+  {
+    "id": 7,
+    "name_en": "pinterest",
+    "name_ar": "بينتريست",
+    "domain": "pinterest.com"
+  },
+  {
+    "id": 8,
+    "name_en": "linkedin",
+    "name_ar": "لينكدإن",
+    "domain": "linkedin.com"
+  },
+  {
+    "id": 9,
+    "name_en": "twitch",
+    "name_ar": "تويتش",
+    "domain": "twitch.tv"
+  },
+  {
+    "id": 10,
+    "name_en": "threads",
+    "name_ar": "ثريدز",
+    "domain": "threads.net"
+  },
+  {
+    "id": 11,
+    "name_en": "bluesky",
+    "name_ar": "بلو سكاي",
+    "domain": "bsky.app"
+  },
+  {
+    "id": 12,
+    "name_en": "reddit",
+    "name_ar": "ريديت",
+    "domain": "reddit.com"
+  }
+]

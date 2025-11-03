@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "name_en": "Oil & Gas & Energy",
+    "name_ar": "النفط والغاز والطاقة"
+  },
+  {
+    "id": 2,
+    "name_en": "Petrochemicals",
+    "name_ar": "البتروكيماويات"
+  },
+  {
+    "id": 3,
+    "name_en": "Mining",
+    "name_ar": "التعدين"
+  },
+  {
+    "id": 4,
+    "name_en": "Construction & Real Estate",
+    "name_ar": "المقاولات والعقارات"
+  },
+  {
+    "id": 5,
+    "name_en": "Manufacturing & Industrial Production",
+    "name_ar": "الصناعة والتصنيع"
+  },
+  {
+    "id": 6,
+    "name_en": "Banking, Finance & Investment",
+    "name_ar": "التمويل والبنوك والاستثمار"
+  },
+  {
+    "id": 7,
+    "name_en": "Insurance",
+    "name_ar": "التأمين"
+  },
+  {
+    "id": 8,
+    "name_en": "Fintech & Digital Payments",
+    "name_ar": "التقنية المالية والمدفوعات الرقمية"
+  },
+  {
+    "id": 9,
+    "name_en": "Technology & Software Development",
+    "name_ar": "التقنية وتطوير البرمجيات"
+  },
+  {
+    "id": 10,
+    "name_en": "Artificial Intelligence & Data Science",
+    "name_ar": "الذكاء الاصطناعي وعلوم البيانات"
+  },
+  {
+    "id": 11,
+    "name_en": "Agriculture & Food",
+    "name_ar": "الزراعة والأغذية"
+  },
+  {
+    "id": 12,
+    "name_en": "Healthcare & Medical Services",
+    "name_ar": "الرعاية الصحية"
+  },
+  {
+    "id": 13,
+    "name_en": "Education & Training",
+    "name_ar": "التعليم والتدريب"
+  },
+  {
+    "id": 14,
+    "name_en": "Government & Regulatory Services",
+    "name_ar": "الخدمات الحكومية والتنظيمية"
+  },
+  {
+    "id": 15,
+    "name_en": "Logistics & Transportation",
+    "name_ar": "الخدمات اللوجستية والنقل"
+  },
+  {
+    "id": 16,
+    "name_en": "Consulting & Management",
+    "name_ar": "الاستشارات والإدارة"
+  },
+  {
+    "id": 17,
+    "name_en": "Tourism & Hospitality",
+    "name_ar": "السياحة والضيافة"
+  },
+  {
+    "id": 18,
+    "name_en": "E-commerce",
+    "name_ar": "التجارة الإلكترونية"
+  },
+  {
+    "id": 19,
+    "name_en": "Marketing & Advertising",
+    "name_ar": "التسويق والإعلان"
+  },
+  {
+    "id": 20,
+    "name_en": "Interior Design & Decoration",
+    "name_ar": "التصميم الداخلي والديكور"
+  },
+  {
+    "id": 21,
+    "name_en": "Beauty & Salon Services",
+    "name_ar": "الصالونات والخدمات الجمالية"
+  },
+  {
+    "id": 22,
+    "name_en": "Fitness & Wellness",
+    "name_ar": "اللياقة والصحة"
+  },
+  {
+    "id": 23,
+    "name_en": "Fashion & Retail",
+    "name_ar": "الأزياء والملابس والتجزئة"
+  },
+  {
+    "id": 24,
+    "name_en": "Events & Festivals",
+    "name_ar": "الفعاليات والمهرجانات"
+  },
+  {
+    "id": 25,
+    "name_en": "Entertainment & Media Production",
+    "name_ar": "الترفيه والإنتاج الإعلامي"
+  },
+  {
+    "id": 26,
+    "name_en": "Aviation",
+    "name_ar": "الطيران"
+  },
+  {
+    "id": 27,
+    "name_en": "Non-Profit & NGOs",
+    "name_ar": "الجمعيات والمنظمات غير الربحية"
+  },
+  {
+    "id": 28,
+    "name_en": "Smart Cities & Development",
+    "name_ar": "المدن الذكية والتنمية"
+  },
+  {
+    "id": 29,
+    "name_en": "Renewable Energy & Environment",
+    "name_ar": "الطاقة المتجددة والبيئة"
+  },
+  {
+    "id": 30,
+    "name_en": "Arts & Creative Industries",
+    "name_ar": "الفنون والصناعات الإبداعية"
+  },
+  {
+    "id": 31,
+    "name_en": "Culture & Heritage",
+    "name_ar": "الثقافة والتراث"
+  },
+  {
+    "id": 32,
+    "name_en": "Lifestyle & Luxury",
+    "name_ar": "أسلوب الحياة والفخامة"
+  },
+  {
+    "id": 33,
+    "name_en": "Sports & Recreation",
+    "name_ar": "الرياضة والترفيه البدني"
+  },
+  {
+    "id": 34,
+    "name_en": "Sustainability & Green Innovation",
+    "name_ar": "الاستدامة والابتكار الأخضر"
+  },
+  {
+    "id": 35,
+    "name_en": "Science & Research",
+    "name_ar": "العلوم والبحث العلمي"
+  },
+  {
+    "id": 36,
+    "name_en": "Automotive & Transport Manufacturing",
+    "name_ar": "صناعة السيارات والنقل"
+  }
+]

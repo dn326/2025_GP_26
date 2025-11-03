@@ -1,0 +1,252 @@
+[
+  {
+    "id": 1,
+    "name_en": "Saudi Aramco",
+    "name_ar": "أرامكو السعودية"
+  },
+  {
+    "id": 2,
+    "name_en": "SABIC",
+    "name_ar": "سابك"
+  },
+  {
+    "id": 3,
+    "name_en": "Saudi Telecom Company (STC)",
+    "name_ar": "شركة الاتصالات السعودية"
+  },
+  {
+    "id": 4,
+    "name_en": "Saudi Electricity Company",
+    "name_ar": "الشركة السعودية للكهرباء"
+  },
+  {
+    "id": 5,
+    "name_en": "Saudi Arabian Airlines (Saudia)",
+    "name_ar": "الخطوط الجوية العربية السعودية"
+  },
+  {
+    "id": 6,
+    "name_en": "Saudi National Bank (SNB)",
+    "name_ar": "البنك الأهلي السعودي"
+  },
+  {
+    "id": 7,
+    "name_en": "Riyad Bank",
+    "name_ar": "بنك الرياض"
+  },
+  {
+    "id": 8,
+    "name_en": "Al Rajhi Bank",
+    "name_ar": "مصرف الراجحي"
+  },
+  {
+    "id": 9,
+    "name_en": "Banque Saudi Fransi",
+    "name_ar": "البنك السعودي الفرنسي"
+  },
+  {
+    "id": 10,
+    "name_en": "Samba Financial Group",
+    "name_ar": "مجموعة سامبا المالية"
+  },
+  {
+    "id": 11,
+    "name_en": "Saudi Arabian Mining Company (Ma’aden)",
+    "name_ar": "شركة التعدين العربية السعودية (معادن)"
+  },
+  {
+    "id": 12,
+    "name_en": "Saudi Arabian Oilfield Services",
+    "name_ar": "خدمات حقول النفط السعودية"
+  },
+  {
+    "id": 13,
+    "name_en": "Saudi Post",
+    "name_ar": "البريد السعودي"
+  },
+  {
+    "id": 14,
+    "name_en": "Saudi Railways Company (SAR)",
+    "name_ar": "الشركة السعودية للخطوط الحديدية"
+  },
+  {
+    "id": 15,
+    "name_en": "Saudi Ports Authority (Mawani)",
+    "name_ar": "الهيئة العامة للموانئ"
+  },
+  {
+    "id": 16,
+    "name_en": "Saudi Arabian Airlines Catering",
+    "name_ar": "الخطوط السعودية للتموين"
+  },
+  {
+    "id": 17,
+    "name_en": "Saudi Investment Bank",
+    "name_ar": "البنك السعودي للاستثمار"
+  },
+  {
+    "id": 18,
+    "name_en": "Saudi British Bank (SABB)",
+    "name_ar": "البنك السعودي البريطاني"
+  },
+  {
+    "id": 19,
+    "name_en": "Saudi Oger",
+    "name_ar": "سعودي أوجيه"
+  },
+  {
+    "id": 20,
+    "name_en": "Almarai",
+    "name_ar": "المراعي"
+  },
+  {
+    "id": 21,
+    "name_en": "Jarir Bookstore",
+    "name_ar": "مكتبة جرير"
+  },
+  {
+    "id": 22,
+    "name_en": "Extra (United Electronics Company)",
+    "name_ar": "إكسترا (الشركة المتحدة للإلكترونيات)"
+  },
+  {
+    "id": 23,
+    "name_en": "Zain KSA",
+    "name_ar": "زين السعودية"
+  },
+  {
+    "id": 24,
+    "name_en": "Mobily (Etihad Etisalat)",
+    "name_ar": "موبايلي (اتحاد اتصالات)"
+  },
+  {
+    "id": 25,
+    "name_en": "Saudi Arabian Monetary Authority (SAMA)",
+    "name_ar": "مؤسسة النقد العربي السعودي"
+  },
+  {
+    "id": 26,
+    "name_en": "Saudi Food and Drug Authority (SFDA)",
+    "name_ar": "الهيئة العامة للغذاء والدواء"
+  },
+  {
+    "id": 27,
+    "name_en": "Saudi Airlines Cargo",
+    "name_ar": "الخطوط السعودية للشحن"
+  },
+  {
+    "id": 28,
+    "name_en": "Saudi Arabian Amiantit Company",
+    "name_ar": "شركة أميانتيت العربية السعودية"
+  },
+  {
+    "id": 29,
+    "name_en": "Saudi Arabian Glass Company",
+    "name_ar": "الشركة السعودية للزجاج"
+  },
+  {
+    "id": 30,
+    "name_en": "Saudi Arabian Chevron",
+    "name_ar": "شيفرون العربية السعودية"
+  },
+  {
+    "id": 31,
+    "name_en": "Saudi Paper Manufacturing Company",
+    "name_ar": "الشركة السعودية لصناعة الورق"
+  },
+  {
+    "id": 32,
+    "name_en": "Saudi Arabian Fertilizer Company (SAFCO)",
+    "name_ar": "شركة الأسمدة العربية السعودية (سافكو)"
+  },
+  {
+    "id": 33,
+    "name_en": "Saudi Arabian Airlines Engineering",
+    "name_ar": "الهندسة الجوية للخطوط السعودية"
+  },
+  {
+    "id": 34,
+    "name_en": "Saudi Industrial Development Fund (SIDF)",
+    "name_ar": "صندوق التنمية الصناعية السعودي"
+  },
+  {
+    "id": 35,
+    "name_en": "Saudi Basic Industries Corporation (SABIC Agri-Nutrients)",
+    "name_ar": "سابك للمغذيات الزراعية"
+  },
+  {
+    "id": 36,
+    "name_en": "Saudi Telecom Solutions",
+    "name_ar": "حلول الاتصالات السعودية"
+  },
+  {
+    "id": 37,
+    "name_en": "Saudi Arabian Parsons Ltd.",
+    "name_ar": "شركة بارسونز العربية السعودية المحدودة"
+  },
+  {
+    "id": 38,
+    "name_en": "Saudi Arabian Bechtel Company",
+    "name_ar": "شركة بكتل العربية السعودية"
+  },
+  {
+    "id": 39,
+    "name_en": "Saudi Arabian General Authority for Civil Aviation (GACA)",
+    "name_ar": "الهيئة العامة للطيران المدني"
+  },
+  {
+    "id": 40,
+    "name_en": "NEOM",
+    "name_ar": "نيوم"
+  },
+  {
+    "id": 41,
+    "name_en": "ACWA Power",
+    "name_ar": "أكوا باور"
+  },
+  {
+    "id": 42,
+    "name_en": "Alinma Bank",
+    "name_ar": "بنك الإنماء"
+  },
+  {
+    "id": 43,
+    "name_en": "Arab National Bank",
+    "name_ar": "البنك العربي الوطني"
+  },
+  {
+    "id": 44,
+    "name_en": "Dr. Sulaiman Al Habib Medical Group",
+    "name_ar": "مجموعة الدكتور سليمان الحبيب الطبية"
+  },
+  {
+    "id": 45,
+    "name_en": "Kingdom Holding Company",
+    "name_ar": "شركة المملكة القابضة"
+  },
+  {
+    "id": 46,
+    "name_en": "Bupa Arabia for Cooperative Insurance",
+    "name_ar": "بيـبـا العربية للتأمين التعاوني"
+  },
+  {
+    "id": 47,
+    "name_en": "Yanbu National Petrochemical Company (Yansab)",
+    "name_ar": "الشركة الوطنية للبتروكيماويات بينبع (ينساب)"
+  },
+  {
+    "id": 48,
+    "name_en": "National Shipping Company of Saudi Arabia (Bahri)",
+    "name_ar": "الشركة الوطنية للشحن البحري (بحري)"
+  },
+  {
+    "id": 49,
+    "name_en": "Seera Holding Group",
+    "name_ar": "مجموعة سيرا القابضة"
+  },
+  {
+    "id": 50,
+    "name_en": "Flynas",
+    "name_ar": "طيران ناس"
+  }
+]
