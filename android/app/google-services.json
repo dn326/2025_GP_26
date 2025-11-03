@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "992326034981",
+    "project_id": "elan-db-55c84",
+    "storage_bucket": "elan-db-55c84.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:992326034981:android:073531df9896a61ad201cc",
+        "android_client_info": {
+          "package_name": "com.example.elan_flutterproject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC96CbWN0NNuDwWUlykRm3B5zNZDyaCJ6w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:992326034981:android:66411a04a5595ae8d201cc",
+        "android_client_info": {
+          "package_name": "com.firebase.elan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC96CbWN0NNuDwWUlykRm3B5zNZDyaCJ6w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
