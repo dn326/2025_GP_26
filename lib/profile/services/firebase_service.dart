@@ -169,6 +169,46 @@ class FirebaseService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> fetchBusinessCampaignList() async {
+    try {
+      final campaignSnap = await FirebaseFirestore.instance
+          .collection('campaigns')
+          .where('business_id', isEqualTo: currentUserId)
+          .get();
+      final campaignList = campaignSnap.docs.map((d) {
+        final m = d.data();
+        return {
+          'id': d.id,
+          'business_id': currentUserId,
+          'title': (m['title'] ?? '').toString(),
+          'description': (m['description'] ?? '').toString(),
+          'budget_min': m['budget_min'] ?? 0,
+          'budget_max': m['budget_max'] ?? 0,
+          'influencer_content_type_id': m['influencer_content_type_id'] ?? 0,
+          'start_date': m['start_date'],
+          'end_date': m['end_date'],
+          'active':  m['active'] ?? false,
+          'visible':  m['visible'] ?? false,
+        };
+      }).toList();
+
+      DateTime? toDate(dynamic v) {
+        if (v is Timestamp) return v.toDate();
+        if (v is DateTime) return v;
+        return null;
+      }
+
+      campaignList.sort((a, b) {
+        final da = toDate(a['start_date'])?.millisecondsSinceEpoch ?? -1;
+        final db = toDate(b['start_date'])?.millisecondsSinceEpoch ?? -1;
+        return db.compareTo(da);
+      });
+      return campaignList;
+    } catch (e) {
+      throw Exception('فشل في تحميل البيانات: ${_getUserFriendlyError(e)}');
+    }
+  }
+
   Future<InfluencerProfileModel?>
   fetchInfluencerProfileDataByProfileId() async {
     try {
