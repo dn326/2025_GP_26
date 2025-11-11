@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../flutter_flow/flutter_flow_model.dart';
+import '../../flutter_flow/flutter_flow_model.dart';
 
 class AccountChangePasswordModel extends FlutterFlowModel {
   /// Local state
@@ -60,8 +60,9 @@ class AccountChangePasswordModel extends FlutterFlowModel {
       return '✅ تم تغيير كلمة المرور بنجاح';
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') return '⚠️ كلمة المرور الحالية غير صحيحة';
-      if (e.code == 'requires-recent-login')
+      if (e.code == 'requires-recent-login') {
         return '⚠️ يلزم تسجيل الدخول مجددًا';
+      }
       return '❌ خطأ: ${e.message}';
     } catch (e) {
       return '❌ حدث خطأ غير متوقع: $e';

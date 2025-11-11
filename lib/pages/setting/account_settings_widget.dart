@@ -1,14 +1,14 @@
-import 'package:elan_flutterproject/setting/account_change_password_page.dart';
-import 'package:elan_flutterproject/setting/account_delete_page.dart';
-import 'package:elan_flutterproject/setting/account_details_page.dart';
+import 'package:elan_flutterproject/pages/setting/account_change_password_widget.dart';
+import 'package:elan_flutterproject/pages/setting/account_delete_widget.dart';
+import 'package:elan_flutterproject/pages/setting/account_details_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '../pages/user_login.dart';
-import '../services/user_session.dart';
-import 'account_deactivate_page.dart';
+import '../login_and_signup/user_login.dart';
+import '../../services/user_session.dart';
+import 'account_deactivate_widget.dart';
 
 class AccountSettingsPage extends StatefulWidget {
   static const String routePath = '/account_settings_page';

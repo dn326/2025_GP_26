@@ -158,8 +158,9 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
                       onToggleObscure: () =>
                           setState(() => _obscureCur = !_obscureCur),
                       validator: (v) {
-                        if (v == null || v.isEmpty)
+                        if (v == null || v.isEmpty) {
                           return 'أدخل كلمة المرور الحالية';
+                        }
                         if (v.length < 6) return 'الحد الأدنى 6 أحرف';
                         return null;
                       },
@@ -175,11 +176,13 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
                       onToggleObscure: () =>
                           setState(() => _obscureNew = !_obscureNew),
                       validator: (v) {
-                        if (v == null || v.isEmpty)
+                        if (v == null || v.isEmpty) {
                           return 'أدخل كلمة المرور الجديدة';
+                        }
                         if (v.length < 6) return 'الحد الأدنى 6 أحرف';
-                        if (v == _currentCtrl.text)
+                        if (v == _currentCtrl.text) {
                           return 'يجب أن تختلف عن الحالية';
+                        }
                         return null;
                       },
                     ),
@@ -270,7 +273,6 @@ class _PasswordBox extends StatelessWidget {
   final ValueChanged<String>? onFieldSubmitted;
 
   const _PasswordBox({
-    super.key,
     required this.controller,
     this.focusNode,
     required this.obscure,

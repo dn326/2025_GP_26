@@ -3,10 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '/flutter_flow/flutter_flow_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
-import '../pages/user_login.dart';
-import 'coming_soon_model.dart';
+import '../pages/login_and_signup/user_login.dart';
+import '../models/coming_soon_model.dart';
 
-export 'coming_soon_model.dart';
+export '../models/coming_soon_model.dart';
 
 class ComingSoonWidget extends StatefulWidget {
   const ComingSoonWidget({super.key, this.initialIndex = 1});

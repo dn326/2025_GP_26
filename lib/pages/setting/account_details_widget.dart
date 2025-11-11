@@ -6,11 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../pages/user_login.dart';
+import '../login_and_signup/user_login.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '../profile/models/business_profile_model.dart';
-import '../profile/services/firebase_service.dart';
+import '../profile/business_profile_model.dart';
+import '../../services/firebase_service.dart';
 import 'account_details_model.dart';
 
 class AccountDetailsPage extends StatefulWidget {
@@ -145,7 +145,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
             .showSnackBar(const SnackBar(content: Text('تم حفظ التعديلات بنجاح')));
         setState(() => _model.isEditing = false);
       }
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException {
       /*
       String msg = 'فشل في الحفظ: $e';
       if (e.code == 'wrong-password') msg = '⚠️ كلمة المرور غير صحيحة';
@@ -166,7 +166,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
   }
 
   Future<String?> _showPasswordDialog() async {
-    final _pwdCtrl = TextEditingController();
+    final pwdCtrl = TextEditingController();
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
@@ -175,7 +175,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
         child: AlertDialog(
           title: const Text('تأكيد كلمة المرور'),
           content: TextFormField(
-            controller: _pwdCtrl,
+            controller: pwdCtrl,
             obscureText: true,
             decoration: const InputDecoration(
               hintText: 'أدخل كلمة المرور لتأكيد التغيير',
@@ -183,7 +183,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('إلغاء')),
-            TextButton(onPressed: () => Navigator.pop(ctx, _pwdCtrl.text), child: const Text('تأكيد')),
+            TextButton(onPressed: () => Navigator.pop(ctx, pwdCtrl.text), child: const Text('تأكيد')),
           ],
         ),
       ),

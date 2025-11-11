@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '/flutter_flow/flutter_flow_theme.dart';
-import '../pages/user_login.dart';
-import '../services/user_session.dart';
+import '../login_and_signup/user_login.dart';
+import '../../services/user_session.dart';
 
 class AccountDeactivatePage extends StatefulWidget {
   const AccountDeactivatePage({super.key});

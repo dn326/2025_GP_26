@@ -3,7 +3,7 @@ import 'package:elan_flutterproject/flutter_flow/flutter_flow_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'account_deactivate_page.dart';
+import 'account_deactivate_widget.dart';
 
 class AccountDeactivateModel extends FlutterFlowModel<AccountDeactivatePage> {
   /// UI state

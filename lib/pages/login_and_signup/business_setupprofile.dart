@@ -1,7 +1,7 @@
 import 'dart:core';
 import 'dart:io';
 import 'dart:math' as math;
-//test
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -9,30 +9,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../widgets/custom_text_form_field.dart';
+import '../../widgets/custom_text_form_field.dart';
 import '/flutter_flow/flutter_flow_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '../../main_screen.dart';
-import '../../models/dropdown_list.dart';
-import '../../services/dropdown_list_loader.dart';
-import '../../services/elan_storage.dart';
-import '../models/business_edit_profile_model.dart';
-import '../models/business_profile_model.dart';
-import '../services/firebase_service.dart';
+import '../../../main_screen.dart';
+import '../../../models/dropdown_list.dart';
+import '../../../services/dropdown_list_loader.dart';
+import '../../../services/elan_storage.dart';
+import '../profile/business_edit_profile_model.dart';
+import '../profile/business_profile_model.dart';
+import '../../services/firebase_service.dart';
 
-class BusinessEditProfileScreen extends StatefulWidget {
-  const BusinessEditProfileScreen({super.key});
+class BusinessSetupProfilePage extends StatefulWidget {
+  const BusinessSetupProfilePage({super.key});
 
-  static String routeName = 'business_edit_profile';
+  static String routeName = 'business_setup';
 
   @override
-  State<BusinessEditProfileScreen> createState() =>
-      _BusinessEditProfileScreenState();
+  State<BusinessSetupProfilePage> createState() =>
+      _BusinessSetupProfilePageState();
 }
 
-class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
+class _BusinessSetupProfilePageState extends State<BusinessSetupProfilePage>
     with SingleTickerProviderStateMixin {
   late BusinessEditProfileModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -41,10 +42,11 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
   Uint8List? _pickedBytes;
   String? _imageUrl;
   bool _uploadingImage = false;
-  bool _loading = true;
+  final bool _loading = false;
   bool _showErrors = false;
 
   late AnimationController _shakeCtrl;
+
   late List<DropDownList> _businessIndustries;
   DropDownList? _selectedBusinessIndustry;
 
@@ -67,42 +69,6 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-
-    _loadProfileData();
-  }
-
-  Future<void> _loadProfileData() async {
-    try {
-      final profile = await FirebaseService().fetchBusinessProfileData();
-      if (profile != null && mounted) {
-        setState(() {
-          _model.businessNameTextController?.text =
-              profile.businessNameAr ?? '';
-          _model.businessDescreptionTextController?.text =
-              profile.description ?? '';
-          _model.phoneNumberTextController?.text = profile.phoneNumber ?? '';
-          _model.emailTextController?.text = profile.email ?? '';
-          if (profile.profileImageUrl != null) {
-            _imageUrl = profile.profileImageUrl;
-          }
-          if (profile.businessIndustryId > 0) {
-            _selectedBusinessIndustry = _businessIndustries.firstWhere(
-                  (i) => i.id == profile.businessIndustryId,
-              orElse: () => _businessIndustries.first,
-            );
-          }
-          _loading = false;
-        });
-      } else {
-        setState(() => _loading = false);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('فشل في تحميل البيانات: $e')));
-    }
   }
 
   @override
@@ -126,9 +92,19 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
     Widget imageWidget;
 
     if (bytes != null && bytes.isNotEmpty) {
-      imageWidget = Image.memory(bytes, width: size, height: size, fit: BoxFit.cover);
+      imageWidget = Image.memory(
+        bytes,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      );
     } else if (file != null) {
-      imageWidget = Image.file(file, width: size, height: size, fit: BoxFit.cover);
+      imageWidget = Image.file(
+        file,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      );
     } else if (imageUrl != null && imageUrl.isNotEmpty) {
       imageWidget = CachedNetworkImage(
         imageUrl: imageUrl,
@@ -264,14 +240,23 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
       );
       await FirebaseService().saveProfileData(profile);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
+        final user = FirebaseAuth.instance.currentUser!;
+        // Save to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_id', user.uid);
+        await prefs.setString('user_type', 'business');
+        await prefs.setString('email', user.email!);
+        await prefs.setString('account_status', 'active');
         Navigator.pushReplacementNamed(context, MainScreen.routeName);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('فشل الحفظ: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('فشل الحفظ: $e')));
     }
   }
 
@@ -285,15 +270,9 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
         key: scaffoldKey,
         backgroundColor: Colors.white70,// themeFlutterFlow.backgroundElan,
         appBar: AppBar(
-          backgroundColor: themeFlutterFlow.containers,
+          backgroundColor: themeFlutterFlow.secondaryBackground,
           centerTitle: true,
-          title: const Text('تعديل الملف الشخصي'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios),
-            color: Colors.black,
-            onPressed: () =>
-                Navigator.pushReplacementNamed(context, MainScreen.routeName),
-          ),
+          title: const Text('إعداد الملف الشخصي'),
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
@@ -313,8 +292,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
                       bytes: _pickedBytes,
                       size: 100,
                     ),
-                    if (_uploadingImage)
-                      const CircularProgressIndicator(),
+                    if (_uploadingImage) const CircularProgressIndicator(),
                   ],
                 ),
               ),
@@ -325,6 +303,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
                 _model.businessNameTextController,
                 _validateCompanyName,
               ),
+
               const SizedBox(height: 16),
 
               DropdownButtonFormField<DropDownList>(
@@ -335,10 +314,10 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
                 ),
                 initialValue: _selectedBusinessIndustry,
                 items: _businessIndustries
-                    .map((i) => DropdownMenuItem(
-                  value: i,
-                  child: Text(i.nameAr),
-                ))
+                    .map(
+                      (i) =>
+                      DropdownMenuItem(value: i, child: Text(i.nameAr)),
+                )
                     .toList(),
                 onChanged: (v) =>
                     setState(() => _selectedBusinessIndustry = v),
@@ -357,9 +336,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
                 _model.phoneNumberTextController,
                 _validatePhone,
                 keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
 
               _buildFieldLabel('البريد الإلكتروني', themeFlutterFlow),
@@ -369,46 +346,26 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
                 keyboardType: TextInputType.emailAddress,
               ),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  FFButtonWidget(
-                    onPressed: () => Navigator.pushReplacementNamed(
-                      context,
-                      MainScreen.routeName,
+              AnimatedBuilder(
+                animation: _shakeCtrl,
+                builder: (ctx, child) => Transform.translate(
+                  offset: Offset(_shakeOffset(), 0),
+                  child: child,
+                ),
+                child: FFButtonWidget(
+                  onPressed: _saveAll,
+                  text: 'حفظ',
+                  options: FFButtonOptions(
+                    width: double.infinity,
+                    height: 50,
+                    color: themeFlutterFlow.primary,
+                    textStyle: themeFlutterFlow.bodyMedium.copyWith(
+                      fontFamily: 'Readex Pro',
+                      color: Colors.white,
                     ),
-                    text: 'إلغاء',
-                    options: FFButtonOptions(
-                      height: 40,
-                      color: themeFlutterFlow.secondaryBackground,
-                      textStyle: themeFlutterFlow.bodyMedium.copyWith(
-                        fontFamily: 'Readex Pro',
-                        color: Colors.black,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  AnimatedBuilder(
-                    animation: _shakeCtrl,
-                    builder: (ctx, child) => Transform.translate(
-                      offset: Offset(_shakeOffset(), 0),
-                      child: child,
-                    ),
-                    child: FFButtonWidget(
-                      onPressed: _saveAll,
-                      text: 'تحديث',
-                      options: FFButtonOptions(
-                        height: 40,
-                        color: themeFlutterFlow.primary,
-                        textStyle: themeFlutterFlow.bodyMedium.copyWith(
-                          fontFamily: 'Readex Pro',
-                          color: Colors.white,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
@@ -423,21 +380,16 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
       alignment: Alignment.centerRight,
       child: Text(
         label,
-        style: theme.bodyMedium.copyWith(
-          fontFamily: GoogleFonts.inter().fontFamily,
-          fontSize: 16,
-        ),
+        style: theme.bodyMedium.copyWith(fontFamily: GoogleFonts.inter().fontFamily, fontSize: 16),
       ),
     ),
   );
 
   Widget _buildTextField(
       TextEditingController? controller,
-      String? Function(String?)? validator, {
-        int maxLines = 1,
-        TextInputType? keyboardType,
-        List<TextInputFormatter>? inputFormatters,
-      }) {
+      String? Function(String?)? validator,
+      {int maxLines = 1, TextInputType? keyboardType, List<TextInputFormatter>? inputFormatters}
+      ) {
     final errorText = validator?.call(controller?.text);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,14 +414,14 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: Text(
-                errorText,
-                style: TextStyle(
-                  color: Colors.red[700],
-                  fontSize: 12,
-                ),
-                textAlign: TextAlign.right,
+              errorText,
+              style: TextStyle(
+                color: Colors.red[700],
+                fontSize: 12,
               ),
+              textAlign: TextAlign.right,
             ),
+    ),
           ),
         const SizedBox(height: 16),
       ],

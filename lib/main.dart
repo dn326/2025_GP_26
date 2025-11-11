@@ -1,29 +1,30 @@
+// هنا نربط الصفحات
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/services/dropdown_list_loader.dart';
-import 'package:elan_flutterproject/setting/account_change_password_page.dart';
-import 'package:elan_flutterproject/setting/account_deactivate_page.dart';
-import 'package:elan_flutterproject/setting/account_delete_page.dart';
-import 'package:elan_flutterproject/setting/account_details_page.dart';
-import 'package:elan_flutterproject/setting/account_settings_page.dart';
+import 'package:elan_flutterproject/pages/setting/account_change_password_widget.dart';
+import 'package:elan_flutterproject/pages/setting/account_deactivate_widget.dart';
+import 'package:elan_flutterproject/pages/setting/account_delete_widget.dart';
+import 'package:elan_flutterproject/pages/setting/account_details_widget.dart';
+import 'package:elan_flutterproject/pages/setting/account_settings_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
-import 'influencer_pages/influencer_add_experience_widget.dart';
-import 'influencer_pages/influencer_edit_experience_widget.dart';
-import 'influencer_pages/influencer_edit_profile_widget.dart';
-import 'influencer_pages/influencer_profile_widget.dart';
+import 'pages/profile/influencer_add_experience_widget.dart';
+import 'pages/profile/influencer_edit_experience_widget.dart';
+import 'pages/profile/influencer_edit_profile_widget.dart';
+import 'pages/profile/influencer_profile_widget.dart';
 import 'main_screen.dart';
-import 'pages/business_setupprofile.dart';
-import 'pages/influencer_setupprofile.dart';
-import 'pages/user_login.dart';
-import 'pages/user_resetpassword.dart' show UserResetPasswordPage;
-import 'pages/user_signup.dart';
-import 'pages/user_type.dart';
-import 'profile/screens/business_edit_profile_screen.dart';
-import 'profile/widgets/coming_soon_widget.dart';
+import 'pages/login_and_signup/business_setupprofile.dart';
+import 'pages/login_and_signup/influencer_setupprofile.dart';
+import 'pages/login_and_signup/user_login.dart';
+import 'pages/login_and_signup/user_resetpassword.dart' show UserResetPasswordPage;
+import 'pages/login_and_signup/user_signup.dart';
+import 'pages/login_and_signup/user_type.dart';
+import 'pages/profile/business_edit_profile_widget.dart';
+import 'widgets/coming_soon_widget.dart';
 
 const kWebRecaptchaSiteKey =
     '6Lemcn0dAAAAABLkf6aiiHvpGD6x-zF3nOSDU2M8'; // Replace with your key

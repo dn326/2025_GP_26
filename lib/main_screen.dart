@@ -1,11 +1,11 @@
-import 'package:elan_flutterproject/pages/user_login.dart';
-import 'package:elan_flutterproject/profile/screens/business_profile_screen.dart';
-import 'package:elan_flutterproject/profile/widgets/coming_soon_widget.dart';
+import 'package:elan_flutterproject/pages/login_and_signup/user_login.dart';
+import 'package:elan_flutterproject/pages/profile/business_profile_widget.dart';
+import 'package:elan_flutterproject/widgets/coming_soon_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '/flutter_flow/main_navbar_widget.dart';
-import 'influencer_pages/influencer_profile_widget.dart';
+import 'pages/profile/influencer_profile_widget.dart';
 
 class MainScreen extends StatefulWidget {
   final int selectedIndex;

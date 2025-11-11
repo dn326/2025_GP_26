@@ -19,9 +19,9 @@ import '/flutter_flow/flutter_flow_util.dart' hide createModel;
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import '/services/elan_storage.dart';
-import '../components/feq_components.dart';
-import '../profile/models/influencer_profile_model.dart';
-import '../services/dropdown_list_loader.dart';
+import '../../components/feq_components.dart';
+import 'influencer_profile_model.dart';
+import '../../services/dropdown_list_loader.dart';
 
 export 'influencer_edit_profile_model.dart';
 
