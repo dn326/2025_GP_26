@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../flutter_flow/flutter_flow_model.dart';
+import '../../flutter_flow/flutter_flow_model.dart';
 
 class AccountDeleteModel extends FlutterFlowModel {
   /// ✅ حذف الحساب والمستندات المرتبطة
@@ -20,8 +20,9 @@ class AccountDeleteModel extends FlutterFlowModel {
 
       return '✅ تم حذف الحساب نهائيًا';
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login')
+      if (e.code == 'requires-recent-login') {
         return '⚠️ يلزم تسجيل الدخول مجددًا';
+      }
       return '❌ خطأ Firebase Auth: ${e.message}';
     } on FirebaseException catch (e) {
       return '❌ خطأ Firestore: ${e.message}';

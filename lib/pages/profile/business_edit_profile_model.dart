@@ -3,7 +3,7 @@ import 'package:elan_flutterproject/flutter_flow/flutter_flow_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../screens/business_edit_profile_screen.dart';
+import 'business_edit_profile_widget.dart';
 
 class BusinessEditProfileModel
     extends FlutterFlowModel<BusinessEditProfileScreen> {

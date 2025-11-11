@@ -12,9 +12,9 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
-import '../models/dropdown_list.dart';
-import '../services/dropdown_list_loader.dart';
-import '../setting/account_settings_page.dart';
+import '../../models/dropdown_list.dart';
+import '../../services/dropdown_list_loader.dart';
+import '../setting/account_settings_widget.dart';
 import 'influencer_edit_experience_widget.dart';
 
 class InfluncerProfileWidget extends StatefulWidget {
