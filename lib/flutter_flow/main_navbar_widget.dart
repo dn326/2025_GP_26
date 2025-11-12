@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../features/business/presentation/campaign_screen.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 
@@ -94,7 +95,19 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
                 size: 24,
                 color: iconColor(2),
               ),
-              onPressed: () => _handleTap(2),
+              onPressed: () async {
+                if (widget.userType == "influencer") {
+                  _handleTap(2);
+                } else {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CampaignScreen(),
+                    ),
+                  );
+                  // After campaign is created/edited, simulate tap on profile (index 0)
+                  widget.onTap?.call(0);
+                }
+              },
             ),
 
             // 3) Notifications
