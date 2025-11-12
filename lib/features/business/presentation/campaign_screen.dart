@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../flutter_flow/flutter_flow_util.dart';
@@ -85,6 +86,7 @@ class _CampaignScreenState extends State<CampaignScreen>
   bool _showErrors = false;
   bool _influencerContentTypeEmpty = false;
   bool _showDateErrors = false;
+  bool _budgetError = false;
 
   late AnimationController _shakeCtrl;
 
@@ -92,6 +94,23 @@ class _CampaignScreenState extends State<CampaignScreen>
   DropDownList? _selectedInfluencerContentType;
 
   bool get _isEdit => widget.campaignId != null;
+
+  String _convertFromArabicNumbers(String input) {
+    const Map<String, String> englishMap = {
+      '٠': '0',
+      '١': '1',
+      '٢': '2',
+      '٣': '3',
+      '٤': '4',
+      '٥': '5',
+      '٦': '6',
+      '٧': '7',
+      '٨': '8',
+      '٩': '9',
+    };
+
+    return input.split('').map((char) => englishMap[char] ?? char).join('');
+  }
 
   @override
   void initState() {
@@ -123,6 +142,16 @@ class _CampaignScreenState extends State<CampaignScreen>
     return !end.isBefore(start);
   }
 
+  bool get _budgetValid {
+    final minStr = _convertFromArabicNumbers(_model.budgetMinTextController?.text ?? '0');
+    final maxStr = _convertFromArabicNumbers(_model.budgetMaxTextController?.text ?? '0');
+
+    final min = int.tryParse(minStr) ?? 0;
+    final max = int.tryParse(maxStr) ?? 0;
+
+    return max >= min;
+  }
+
   bool get _fieldsFilled {
     _influencerContentTypeEmpty = _selectedInfluencerContentType == null;
     final b =
@@ -143,8 +172,11 @@ class _CampaignScreenState extends State<CampaignScreen>
     }
 
     try {
-      final budgetMin = int.tryParse(_model.budgetMinTextController?.text ?? '0') ?? 0;
-      final budgetMax = int.tryParse(_model.budgetMaxTextController?.text ?? '0') ?? 0;
+      final budgetMinStr = _convertFromArabicNumbers(_model.budgetMinTextController?.text ?? '0');
+      final budgetMaxStr = _convertFromArabicNumbers(_model.budgetMaxTextController?.text ?? '0');
+
+      final budgetMin = int.tryParse(budgetMinStr) ?? 0;
+      final budgetMax = int.tryParse(budgetMaxStr) ?? 0;
 
       if (_isEdit) {
         await FirebaseFirestore.instance
@@ -240,8 +272,12 @@ class _CampaignScreenState extends State<CampaignScreen>
       );
       _model.campaignTitleTextController!.text = (m['title'] ?? '').toString();
       _model.detailsTextController!.text = (m['description'] ?? '').toString();
-      _model.budgetMinTextController!.text = (m['budget_min'] ?? '0').toString();
-      _model.budgetMaxTextController!.text = (m['budget_max'] ?? '0').toString();
+
+      final minBudget = (m['budget_min'] ?? 0).toString();
+      final maxBudget = (m['budget_max'] ?? 0).toString();
+      _model.budgetMinTextController!.text = (minBudget);
+      _model.budgetMaxTextController!.text = (maxBudget);
+
       _model.isActive = m['active'] ?? true;
       _model.isVisible = m['visible'] ?? true;
 
@@ -538,6 +574,15 @@ class _CampaignScreenState extends State<CampaignScreen>
                                               _model.budgetMaxFocusNode,
                                               keyboardType:
                                               TextInputType.number,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .allow(
+                                                  RegExp(r'[0-9]'),
+                                                ),
+                                              ],
+                                              onChanged: (value) {
+                                                setState(() {});
+                                              },
                                               style: t.bodyMedium.copyWith(
                                                 color: t.primaryText,
                                               ),
@@ -612,6 +657,15 @@ class _CampaignScreenState extends State<CampaignScreen>
                                               _model.budgetMinFocusNode,
                                               keyboardType:
                                               TextInputType.number,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .allow(
+                                                  RegExp(r'[0-9]'),
+                                                ),
+                                              ],
+                                              onChanged: (value) {
+                                                setState(() {});
+                                              },
                                               style: t.bodyMedium.copyWith(
                                                 color: t.primaryText,
                                               ),
@@ -665,6 +719,22 @@ class _CampaignScreenState extends State<CampaignScreen>
                                     ],
                                   ),
                                 ),
+
+                                if (_showErrors && !_budgetValid)
+                                  Padding(
+                                    padding:
+                                    const EdgeInsetsDirectional.fromSTEB(
+                                      20,
+                                      0,
+                                      20,
+                                      16,
+                                    ),
+                                    child: const Text(
+                                      'الحد الأقصى يجب أن يكون أكبر من أو يساوي الحد الأدنى',
+                                      style: TextStyle(color: Colors.red),
+                                      textAlign: TextAlign.end,
+                                    ),
+                                  ),
 
                                 FeqLabeled(
                                   'نوع المحتوى',
@@ -1069,6 +1139,32 @@ class _CampaignScreenState extends State<CampaignScreen>
                                                   ),
                                                   content: const Text(
                                                     'تاريخ الانتهاء يجب ألا يكون قبل تاريخ البدء.',
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.of(
+                                                            ctx,
+                                                          ).pop(),
+                                                      child: const Text(
+                                                        'حسنًا',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                              return;
+                                            }
+
+                                            if (!_budgetValid) {
+                                              await showDialog(
+                                                context: context,
+                                                builder: (ctx) => AlertDialog(
+                                                  title: const Text(
+                                                    'تصحيح الميزانية',
+                                                  ),
+                                                  content: const Text(
+                                                    'الحد الأقصى للميزانية يجب أن يكون أكبر من أو يساوي الحد الأدنى.',
                                                   ),
                                                   actions: [
                                                     TextButton(
