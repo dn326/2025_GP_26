@@ -8,6 +8,7 @@ class BusinessProfileModel {
   final String? phoneNumber;
   final String? email;
   final String? profileImageUrl;
+  final List<Map<String, String>> socialMedia;
 
   BusinessProfileModel({
     this.userId,
@@ -19,6 +20,7 @@ class BusinessProfileModel {
     this.phoneNumber,
     this.email,
     this.profileImageUrl,
+    this.socialMedia = const [],
   });
 
   factory BusinessProfileModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,11 @@ class BusinessProfileModel {
       phoneNumber: json['phone_number'] as String?,
       email: json['contact_email'] as String?,
       profileImageUrl: json['profile_image'] as String?,
+      socialMedia:
+          (json['social_media'] as List<dynamic>?)
+              ?.map((e) => Map<String, String>.from(e as Map))
+              .toList() ??
+          [],
     );
   }
 
@@ -46,6 +53,7 @@ class BusinessProfileModel {
       'phone_number': phoneNumber,
       'contact_email': email,
       if (profileImageUrl != null) 'profile_image': profileImageUrl,
+      'social_media': socialMedia,
     };
   }
 
@@ -60,6 +68,7 @@ class BusinessProfileModel {
     String? phoneNumber,
     String? email,
     String? profileImageUrl,
+    List<Map<String, String>>? socialMedia,
   }) {
     return BusinessProfileModel(
       userId: userId ?? this.userId,
@@ -71,6 +80,7 @@ class BusinessProfileModel {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       email: email ?? this.email,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      socialMedia: socialMedia ?? this.socialMedia,
     );
   }
 }

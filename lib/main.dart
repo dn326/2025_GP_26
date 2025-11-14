@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
+import 'pages/payment/payment_details_page.dart' show PaymentDetailsPage;
 import 'pages/profile/influencer_add_experience_widget.dart';
 import 'pages/profile/influencer_edit_experience_widget.dart';
 import 'pages/profile/influencer_edit_profile_widget.dart';
@@ -26,8 +27,7 @@ import 'pages/login_and_signup/user_type.dart';
 import 'pages/profile/business_edit_profile_widget.dart';
 import 'widgets/coming_soon_widget.dart';
 
-const kWebRecaptchaSiteKey =
-    '6Lemcn0dAAAAABLkf6aiiHvpGD6x-zF3nOSDU2M8'; // Replace with your key
+const kWebRecaptchaSiteKey = '6Lemcn0dAAAAABLkf6aiiHvpGD6x-zF3nOSDU2M8'; // Replace with your key
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,41 +63,37 @@ class MyApp extends StatelessWidget {
       home: const AuthWrapper(),
       routes: {
         UserLoginPage.routeName: (context) => const UserLoginPage(),
-        UserResetPasswordPage.routeName: (context) =>
-            const UserResetPasswordPage(),
+        UserResetPasswordPage.routeName: (context) => const UserResetPasswordPage(),
         UserTypePage.routeName: (context) => const UserTypePage(),
         UserSignupPage.routeName: (context) => const UserSignupPage(),
-        BusinessSetupProfilePage.routeName: (context) =>
-            const BusinessSetupProfilePage(),
-        InfluencerSetupProfilePage.routeName: (context) =>
-            const InfluencerSetupProfilePage(),
+        BusinessSetupProfilePage.routeName: (context) => const BusinessSetupProfilePage(),
+        InfluencerSetupProfilePage.routeName: (context) => const InfluencerSetupProfilePage(),
         MainScreen.routeName: (context) {
           // Extract selectedIndex from arguments if passed
           final args = ModalRoute.of(context)?.settings.arguments;
           final selectedIndex = args is int ? args : 0;
           return MainScreen(selectedIndex: selectedIndex);
         },
-        BusinessEditProfileScreen.routeName: (context) =>
-            const BusinessEditProfileScreen(),
+        BusinessEditProfileScreen.routeName: (context) => const BusinessEditProfileScreen(),
         ComingSoonWidget.routeName: (context) => const ComingSoonWidget(),
-        AccountChangePasswordPage.routeName: (context) =>
-            const AccountChangePasswordPage(),
-        AccountDeactivatePage.routeName: (context) =>
-            const AccountDeactivatePage(),
+        AccountChangePasswordPage.routeName: (context) => const AccountChangePasswordPage(),
+        AccountDeactivatePage.routeName: (context) => const AccountDeactivatePage(),
         AccountDeletePage.routeName: (context) => const AccountDeletePage(),
         AccountDetailsPage.routeName: (context) => const AccountDetailsPage(),
         AccountSettingsPage.routeName: (context) => const AccountSettingsPage(),
-        InfluncerProfileWidget.routeName: (context) =>
-            const InfluncerProfileWidget(),
-        InfluncerEditProfileWidget.routeName: (context) =>
-            const InfluncerEditProfileWidget(),
-        InfluncerAddExperienceWidget.routeName: (context) =>
-            const InfluncerAddExperienceWidget(),
+        InfluncerProfileWidget.routeName: (context) => const InfluncerProfileWidget(),
+        InfluncerEditProfileWidget.routeName: (context) => const InfluncerEditProfileWidget(),
+        InfluncerAddExperienceWidget.routeName: (context) => const InfluncerAddExperienceWidget(),
         InfluncerEditExperienceWidget.routeName: (context) {
           // Extract the experienceId from the arguments passed via Navigator.pushNamed
           final args = ModalRoute.of(context)?.settings.arguments;
           final experienceId = args is String ? args : '';
           return InfluncerEditExperienceWidget(experienceId: experienceId);
+        },
+        PaymentDetailsPage.routeName: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          final planId = args is String ? args : '';
+          return PaymentDetailsPage(planId: planId);
         },
       },
     );
@@ -115,9 +111,7 @@ class AuthWrapper extends StatelessWidget {
       future: _checkUserSession(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
         final session = snapshot.data;
@@ -145,10 +139,7 @@ class AuthWrapper extends StatelessWidget {
     if (userType == null || userType.isEmpty) {
       // اختياري: جلب من Firestore كـ fallback
       try {
-        final doc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (doc.exists) {
           final data = doc.data()!;
           await prefs.setString('user_type', data['user_type'] ?? 'business');

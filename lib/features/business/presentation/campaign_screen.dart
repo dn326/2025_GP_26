@@ -220,7 +220,7 @@ class _CampaignScreenState extends State<CampaignScreen>
         );
       }
 
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true); // Return true for successful creation/update
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
