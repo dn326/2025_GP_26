@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../features/business/presentation/campaign_screen.dart';
+import '../pages/payment/payment_page.dart';
+import '../services/subscription_service.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 
@@ -12,8 +14,7 @@ class MainNavbarWidget extends StatefulWidget {
     this.onTap,
   });
 
-  final int
-  initialIndex; // 0: profile, 1: checklist, 2: search, 3: bell, 4: home
+  final int initialIndex; // 0: profile, 1: checklist, 2: search, 3: bell, 4: home
   final String userType;
   final void Function(int)? onTap;
 
@@ -53,10 +54,10 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
-              blurRadius: 4,
-              color: Color(0x33000000),
-              offset: Offset(0, 2),
-            ),
+blurRadius: 4,
+color: Color(0x33000000),
+offset: Offset(0, 2),
+),
           ],
         ),
         child: Row(
@@ -89,9 +90,7 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
               borderRadius: 8,
               buttonSize: 40,
               icon: Icon(
-                widget.userType == "influencer"
-                    ? Icons.search_rounded
-                    : Icons.add_circle_rounded,
+                widget.userType == "influencer" ? Icons.search_rounded : Icons.add_circle_rounded,
                 size: 24,
                 color: iconColor(2),
               ),
@@ -99,13 +98,30 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
                 if (widget.userType == "influencer") {
                   _handleTap(2);
                 } else {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const CampaignScreen(),
-                    ),
-                  );
-                  // After campaign is created/edited, simulate tap on profile (index 0)
-                  widget.onTap?.call(0);
+                  // Check subscription before allowing campaign creation
+                  final subscriptionService = SubscriptionService();
+                  final canCreate = await subscriptionService.canCreateCampaign();
+
+                  if (!mounted) return;
+
+                  if (canCreate) {
+                    final result = await Navigator.of(
+                      context,
+                    ).push(MaterialPageRoute(builder: (_) => const CampaignScreen()));
+
+                    // Only increment if campaign was successfully created (not edited)
+                    if (result == true) {
+                      await subscriptionService.incrementCampaignsUsed();
+                    }
+
+                    // After campaign is created/edited, simulate tap on profile (index 0)
+                    widget.onTap?.call(0);
+                  } else {
+                    // Navigate to payment page
+                    await Navigator.of(
+                      context,
+                    ).push(MaterialPageRoute(builder: (_) => const PaymentPage()));
+                  }
                 }
               },
             ),
@@ -114,11 +130,7 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
             FlutterFlowIconButton(
               borderRadius: 8,
               buttonSize: 40,
-              icon: Icon(
-                Icons.notifications_sharp,
-                size: 24,
-                color: iconColor(3),
-              ),
+              icon: Icon(Icons.notifications_sharp, size: 24, color: iconColor(3)),
               onPressed: () => _handleTap(3),
             ),
 
