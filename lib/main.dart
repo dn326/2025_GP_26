@@ -6,6 +6,7 @@ import 'package:elan_flutterproject/pages/login_and_signup/user_login.dart';
 import 'package:elan_flutterproject/pages/login_and_signup/user_resetpassword.dart';
 import 'package:elan_flutterproject/pages/login_and_signup/user_signup.dart';
 import 'package:elan_flutterproject/pages/login_and_signup/user_type.dart';
+import 'package:elan_flutterproject/pages/payment/payment_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,15 +45,15 @@ class MyApp extends StatelessWidget {
       routes: {
         UserLoginPage.routeName: (context) => const UserLoginPage(),
         UserResetPasswordPage.routeName: (context) =>
-        const UserResetPasswordPage(),
+            const UserResetPasswordPage(),
         UserTypePage.routeName: (context) => const UserTypePage(),
         UserSignupPage.routeName: (context) => const UserSignupPage(),
         BusinessSetupProfilePage.routeName: (context) =>
-        const BusinessProfileFormWidget(mode: ProfileMode.setup),
+            const BusinessSetupProfilePage(),
         BusinessProfileFormWidget.routeNameEdit: (context) =>
-        const BusinessProfileFormWidget(mode: ProfileMode.edit),
+            const BusinessProfileFormWidget(mode: ProfileMode.edit),
         InfluencerSetupProfilePage.routeName: (context) =>
-        const InfluencerProfileFormWidget(mode: ProfileMode.setup),
+            const InfluencerSetupProfilePage(),
         MainScreen.routeName: (context) {
           // Extract selectedIndex from arguments if passed
           final args = ModalRoute.of(context)?.settings.arguments;
@@ -61,23 +62,30 @@ class MyApp extends StatelessWidget {
         },
         ComingSoonWidget.routeName: (context) => const ComingSoonWidget(),
         AccountChangePasswordPage.routeName: (context) =>
-        const AccountChangePasswordPage(),
+            const AccountChangePasswordPage(),
         AccountDeactivatePage.routeName: (context) =>
-        const AccountDeactivatePage(),
+            const AccountDeactivatePage(),
         AccountDeletePage.routeName: (context) => const AccountDeletePage(),
         AccountDetailsPage.routeName: (context) => const AccountDetailsPage(),
         AccountSettingsPage.routeName: (context) => const AccountSettingsPage(),
         InfluncerProfileWidget.routeName: (context) =>
-        const InfluncerProfileWidget(),
+            const InfluncerProfileWidget(),
         InfluencerProfileFormWidget.routeNameEdit: (context) =>
-        const InfluencerProfileFormWidget(mode: ProfileMode.edit),
+            const InfluencerProfileFormWidget(mode: ProfileMode.edit),
         InfluncerAddExperienceWidget.routeName: (context) =>
-        const InfluncerAddExperienceWidget(),
+            const InfluncerAddExperienceWidget(),
         InfluncerEditExperienceWidget.routeName: (context) {
           // Extract the experienceId from the arguments passed via Navigator.pushNamed
           final args = ModalRoute.of(context)?.settings.arguments;
           final experienceId = args is String ? args : '';
           return InfluncerEditExperienceWidget(experienceId: experienceId);
+        },
+        PaymentDetailsPage.routeName: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+
+          final planId = args is String ? args : '';
+
+          return PaymentDetailsPage(planId: planId);
         },
       },
     );
@@ -138,8 +146,8 @@ class AuthWrapper extends StatelessWidget {
       } on FirebaseException catch (e) {
         return {
           'isLoggedIn': false,
-          'error': e.code,       // e.g., "unavailable"
-          'message': e.message,  // Firebase message
+          'error': e.code, // e.g., "unavailable"
+          'message': e.message, // Firebase message
         };
       } catch (e) {
         return {
