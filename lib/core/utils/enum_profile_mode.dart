@@ -1,0 +1,1 @@
+enum ProfileMode { setup, edit }

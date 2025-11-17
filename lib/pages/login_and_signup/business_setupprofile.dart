@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elan_flutterproject/core/services/firebase_service_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,20 +13,17 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../components/feq_components.dart';
-import '../../components/searchable_dropdown.dart';
-
+import '../../core/components/feq_components.dart';
+import '../../core/services/dropdown_list_loader.dart';
+import '../../core/services/elan_storage.dart';
+import '../../features/influencer/presentation/profile_form_widget.dart';
 import '/flutter_flow/flutter_flow_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '../../../main_screen.dart';
-import '../../../models/dropdown_list.dart';
-import '../../../services/dropdown_list_loader.dart';
-import '../../../services/elan_storage.dart';
 import '../profile/business_edit_profile_model.dart';
 import '../profile/business_profile_model.dart';
-import '../../services/firebase_service.dart';
 
 class BusinessSetupProfilePage extends StatefulWidget {
   const BusinessSetupProfilePage({super.key});
@@ -51,10 +49,10 @@ class _BusinessSetupProfilePageState extends State<BusinessSetupProfilePage>
 
   late AnimationController _shakeCtrl;
 
-  late List<DropDownList> _businessIndustries;
-  DropDownList? _selectedBusinessIndustry;
+  late List<FeqDropDownList> _businessIndustries;
+  FeqDropDownList? _selectedBusinessIndustry;
 
-  late List<DropDownList> _socialPlatforms;
+  late List<FeqDropDownList> _socialPlatforms;
   final List<_SocialRow> _socialRows = [_SocialRow()];
   bool _socialsRequireError = false;
 
@@ -63,8 +61,8 @@ class _BusinessSetupProfilePageState extends State<BusinessSetupProfilePage>
     super.initState();
     _model = createModel(context, () => BusinessEditProfileModel());
 
-    _businessIndustries = DropDownListLoader.instance.businessIndustries;
-    _socialPlatforms = DropDownListLoader.instance.socialPlatforms;
+    _businessIndustries = FeqDropDownListLoader.instance.businessIndustries;
+    _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
 
     _model.businessNameTextController ??= TextEditingController();
     _model.businessDescreptionTextController ??= TextEditingController();
@@ -274,7 +272,7 @@ class _BusinessSetupProfilePageState extends State<BusinessSetupProfilePage>
         profileImageUrl: _imageUrl,
         socialMedia: socialMedia,
       );
-      await FirebaseService().saveProfileData(profile);
+      await FeqFirebaseServiceUtils().saveProfile(profile);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
       final user = FirebaseAuth.instance.currentUser!;
@@ -557,7 +555,7 @@ class _BusinessSetupProfilePageState extends State<BusinessSetupProfilePage>
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.end,
                                               children: [
-                                                FeqSearchableDropdown<DropDownList>(
+                                                FeqSearchableDropdown<FeqDropDownList>(
                                                   items: _socialPlatforms,
                                                   value: row.platform,
                                                   onChanged: (v) {
@@ -683,9 +681,9 @@ class _BusinessSetupProfilePageState extends State<BusinessSetupProfilePage>
 
   Widget _buildDropdownField({
     required String? Function() validator,
-    required DropDownList? value,
-    required List<DropDownList> items,
-    required void Function(DropDownList?) onChanged,
+    required FeqDropDownList? value,
+    required List<FeqDropDownList> items,
+    required void Function(FeqDropDownList?) onChanged,
   }) {
     final errorText = validator();
     return Column(
@@ -695,7 +693,7 @@ class _BusinessSetupProfilePageState extends State<BusinessSetupProfilePage>
           padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 0),
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: DropdownButtonFormField<DropDownList>(
+            child: DropdownButtonFormField<FeqDropDownList>(
               decoration: InputDecoration(
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
@@ -785,7 +783,7 @@ class _BusinessSetupProfilePageState extends State<BusinessSetupProfilePage>
 }
 
 class _SocialRow {
-  DropDownList? platform;
+  FeqDropDownList? platform;
   final TextEditingController usernameCtrl;
 
   _SocialRow({this.platform, TextEditingController? usernameCtrl})

@@ -2,6 +2,7 @@ import 'dart:core';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elan_flutterproject/features/business/data/models/profile_data_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,20 +11,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../components/feq_components.dart';
-// import '../../flutter_flow/flutter_flow_drop_down.dart';
+import '../../core/components/feq_components.dart';
+import '../../core/services/dropdown_list_loader.dart';
+import '../../core/services/elan_storage.dart';
+import '../../core/services/firebase_service_utils.dart';
 import '../../flutter_flow/flutter_flow_icon_button.dart';
 import '../../index.dart';
 import '/flutter_flow/flutter_flow_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '../../main_screen.dart';
-import '../../models/dropdown_list.dart';
-import '../../services/dropdown_list_loader.dart';
-import '../../services/elan_storage.dart';
 import 'business_edit_profile_model.dart';
 import 'business_profile_model.dart';
-import '../../services/firebase_service.dart';
 
 class BusinessEditProfileScreen extends StatefulWidget {
   const BusinessEditProfileScreen({super.key});
@@ -47,10 +46,10 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
   bool _loading = true;
 
   late AnimationController _shakeCtrl;
-  late List<DropDownList> _businessIndustries;
-  DropDownList? _selectedBusinessIndustry;
+  late List<FeqDropDownList> _businessIndustries;
+  FeqDropDownList? _selectedBusinessIndustry;
 
-  late List<DropDownList> _socialPlatforms;
+  late List<FeqDropDownList> _socialPlatforms;
   List<_SocialRow> _socialRows = [_SocialRow()];
   bool _socialsRequireError = false;
 
@@ -59,8 +58,8 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
     super.initState();
     _model = createModel(context, () => BusinessEditProfileModel());
 
-    _businessIndustries = DropDownListLoader.instance.businessIndustries;
-    _socialPlatforms = DropDownListLoader.instance.socialPlatforms;
+    _businessIndustries = FeqDropDownListLoader.instance.businessIndustries;
+    _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
 
     _model.businessNameTextController ??= TextEditingController();
     _model.businessDescreptionTextController ??= TextEditingController();
@@ -78,7 +77,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
 
   Future<void> _loadProfileData() async {
     try {
-      final profile = await FirebaseService().fetchBusinessProfileData();
+      final profile = await FeqFirebaseServiceUtils().fetchBusinessProfileData();
       if (profile != null && mounted) {
         setState(() {
           _model.businessNameTextController?.text = profile.businessNameAr;
@@ -95,7 +94,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
             );
           }
           // Load social media if available
-          if (profile.socialMedia.isNotEmpty) {
+          /*if (profile.socialMedia.isNotEmpty) {
             _socialRows = profile.socialMedia.map((sm) {
               final platform = _socialPlatforms.firstWhere(
                 (p) => p.nameEn == sm['platform'],
@@ -113,7 +112,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
               _attachSocialRowListeners(r);
               _socialRows.add(r);
             }
-          }
+          }*/
           _loading = false;
         });
       } else {
@@ -322,7 +321,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
         profileImageUrl: _imageUrl,
         socialMedia: socialMedia,
       );
-      await FirebaseService().saveProfileData(profile);
+      await FeqFirebaseServiceUtils().saveProfileData(profile as BusinessProfileDataModel);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
         Navigator.pushReplacementNamed(context, MainScreen.routeName);
@@ -616,7 +615,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.end,
                                               children: [
-                                                FeqSearchableDropdown<DropDownList>(
+                                                FeqSearchableDropdown<FeqDropDownList>(
                                                   items: _socialPlatforms,
                                                   value: row.platform,
                                                   onChanged: (v) {
@@ -810,9 +809,9 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
 
   Widget _buildDropdownField({
     required String? Function() validator,
-    required DropDownList? value,
-    required List<DropDownList> items,
-    required void Function(DropDownList?) onChanged,
+    required FeqDropDownList? value,
+    required List<FeqDropDownList> items,
+    required void Function(FeqDropDownList?) onChanged,
   }) {
     final errorText = validator();
     return Column(
@@ -822,7 +821,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
           padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 0),
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: DropdownButtonFormField<DropDownList>(
+            child: DropdownButtonFormField<FeqDropDownList>(
               decoration: InputDecoration(
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
@@ -872,7 +871,7 @@ class _BusinessEditProfileScreenState extends State<BusinessEditProfileScreen>
 }
 
 class _SocialRow {
-  DropDownList? platform;
+  FeqDropDownList? platform;
   final TextEditingController usernameCtrl;
 
   _SocialRow({this.platform, TextEditingController? usernameCtrl})

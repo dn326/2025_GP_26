@@ -1,6 +1,5 @@
 // lib/index.dart
 
-export 'widgets/business_coming_soon_widget.dart';
 export 'pages/profile/influencer_add_experience_widget.dart'; // ← نُبقي هذه تُصدّر الدالة
 export 'pages/profile/influencer_edit_profile_widget.dart';
 // ===== Influencer pages =====

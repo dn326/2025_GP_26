@@ -23,7 +23,7 @@
 // import 'influencer_pages/influencer_edit_experience_widget.dart';
 
 // final GoRouter router = GoRouter(
-//   initialLocation: UserLoginPage.routePath,
+//   initialLocation: UserLoginPage.routeName,
 //   routes: [
 //     GoRoute(
 //       path: MainScreen.routePath,
@@ -45,7 +45,7 @@
 //       builder: (context, state) => const ComingSoonWidget(),
 //     ),
 //     GoRoute(
-//       path: UserLoginPage.routePath,
+//       path: UserLoginPage.routeName,
 //       name: UserLoginPage.routeName,
 //       builder: (context, state) => UserLoginPage(),
 //     ),

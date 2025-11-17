@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:elan_flutterproject/models/dropdown_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -12,16 +11,16 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/components/feq_components.dart';
+import '../../core/services/dropdown_list_loader.dart';
+import '../../core/services/elan_storage.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart' hide createModel;
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
-import '/services/elan_storage.dart';
-import '../../components/feq_components.dart';
 import 'influencer_profile_model.dart';
-import '../../services/dropdown_list_loader.dart';
 
 export 'influencer_edit_profile_model.dart';
 
@@ -36,9 +35,7 @@ InputDecoration inputDecoration(BuildContext context, {bool isError = false}) {
     ),
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
-        color: isError
-            ? Colors.red
-            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
         width: 2,
       ),
       borderRadius: BorderRadius.circular(12),
@@ -56,10 +53,7 @@ InputDecoration inputDecoration(BuildContext context, {bool isError = false}) {
   );
 }
 
-InputDecoration platformInputDecoration(
-    BuildContext context, {
-      bool isError = false,
-    }) {
+InputDecoration platformInputDecoration(BuildContext context, {bool isError = false}) {
   final t = FlutterFlowTheme.of(context);
   return InputDecoration(
     isDense: true,
@@ -70,9 +64,7 @@ InputDecoration platformInputDecoration(
     ),
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
-        color: isError
-            ? Colors.red
-            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
         width: 2,
       ),
       borderRadius: BorderRadius.circular(12),
@@ -97,12 +89,10 @@ class InfluncerEditProfileWidget extends StatefulWidget {
   static String routePath = '/influncerEditProfile';
 
   @override
-  State<InfluncerEditProfileWidget> createState() =>
-      _InfluncerEditProfileWidgetState();
+  State<InfluncerEditProfileWidget> createState() => _InfluncerEditProfileWidgetState();
 }
 
-class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
-    with SingleTickerProviderStateMixin {
+class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget> with SingleTickerProviderStateMixin {
   late InfluencerEditProfileModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -132,19 +122,18 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
 
   late AnimationController _shakeCtrl;
 
-  late List<DropDownList> _influencerContentTypes;
-  late List<DropDownList> _socialPlatforms;
+  late List<FeqDropDownList> _influencerContentTypes;
+  late List<FeqDropDownList> _socialPlatforms;
 
-  DropDownList? _selectedInfluencerContentType;
+  FeqDropDownList? _selectedInfluencerContentType;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => InfluencerEditProfileModel());
 
-    _influencerContentTypes =
-        DropDownListLoader.instance.influencerContentTypes;
-    _socialPlatforms = DropDownListLoader.instance.socialPlatforms;
+    _influencerContentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
+    _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
 
     _model.influncerNameTextController ??= TextEditingController();
     _model.influncerNameFocusNode ??= FocusNode();
@@ -158,10 +147,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
     _model.emailTextController ??= TextEditingController();
     _model.emailFocusNode ??= FocusNode();
 
-    _shakeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
+    _shakeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
 
     _attachFieldListeners();
     _attachSocialRowListeners(_socialRows.first);
@@ -184,11 +170,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
   }
 
   String _currentSnapshot() {
-    final socials = _socialRows
-        .map(
-          (r) => {'p': r.platform?.id ?? '', 'u': r.usernameCtrl.text.trim()},
-    )
-        .toList();
+    final socials = _socialRows.map((r) => {'p': r.platform?.id ?? '', 'u': r.usernameCtrl.text.trim()}).toList();
     return {
       'name': _model.influncerNameTextController?.text.trim() ?? '',
       'content_id': _selectedInfluencerContentType?.id ?? 0,
@@ -225,8 +207,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
     if (!_initialized) return;
     _recomputeValidation();
     final now = _currentSnapshot();
-    final changed =
-        now != _initialSnapshot || _pickedImage != null || _pickedBytes != null;
+    final changed = now != _initialSnapshot || _pickedImage != null || _pickedBytes != null;
     setState(() => _dirty = changed);
   }
 
@@ -273,11 +254,9 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
         final profileDoc = profilesSnap.docs.first;
         _profileDocId = profileDoc.id;
 
-        InfluencerProfileModel userProfileModel =
-        InfluencerProfileModel.fromJson(profileDoc.data());
+        InfluencerProfileModel userProfileModel = InfluencerProfileModel.fromJson(profileDoc.data());
         _model.influncerNameTextController!.text = userProfileModel.name;
-        _model.influncerDescreptionTextController!.text =
-            userProfileModel.description;
+        _model.influncerDescreptionTextController!.text = userProfileModel.description;
         _model.emailTextController!.text = userProfileModel.contactEmail;
         _model.phoneNumberTextController!.text = userProfileModel.phoneNumber;
 
@@ -286,10 +265,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
           _imageUrl = rawImageUrl;
         }
 
-        final influencerSnap = await profileDoc.reference
-            .collection('influencer_profile')
-            .limit(1)
-            .get();
+        final influencerSnap = await profileDoc.reference.collection('influencer_profile').limit(1).get();
 
         if (influencerSnap.docs.isNotEmpty) {
           final influencerDoc = influencerSnap.docs.first;
@@ -305,7 +281,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
           }
 
           _selectedInfluencerContentType = _influencerContentTypes.firstWhere(
-                (c) => c.id == contentId,
+            (c) => c.id == contentId,
             orElse: () => _influencerContentTypes.first,
           );
         }
@@ -326,14 +302,12 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
         final m = d.data();
         final platId = (m['platform'] ?? '').toString();
         final plat = _socialPlatforms.firstWhere(
-              (p) => p.id.toString() == platId,
+          (p) => p.id.toString() == platId,
           orElse: () => _socialPlatforms.first,
         );
         final row = _SocialRow(
           platform: plat,
-          usernameCtrl: TextEditingController(
-            text: (m['username'] ?? '').toString(),
-          ),
+          usernameCtrl: TextEditingController(text: (m['username'] ?? '').toString()),
         );
         _attachSocialRowListeners(row);
         return row;
@@ -364,9 +338,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
 
   void _redirectToLogin() {
     if (!mounted) return;
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil(UserLoginPage.routePath, (route) => false);
+    Navigator.of(context).pushNamedAndRemoveUntil(UserLoginPage.routePath, (route) => false);
   }
 
   Future<void> _pickAndUploadImage() async {
@@ -376,10 +348,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
       setState(() => _uploadingImage = true);
 
       final picker = ImagePicker();
-      final x = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-      );
+      final x = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
 
       if (x == null) {
         setState(() => _uploadingImage = false);
@@ -426,10 +395,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
         contentType = 'image/gif';
       }
 
-      final metadata = SettableMetadata(
-        contentType: contentType,
-        cacheControl: 'public, max-age=3600',
-      );
+      final metadata = SettableMetadata(contentType: contentType, cacheControl: 'public, max-age=3600');
 
       String newUrl;
       if (kIsWeb) {
@@ -466,9 +432,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
     } catch (e) {
       setState(() => _uploadingImage = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('فشل رفع الصورة: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل رفع الصورة: $e')));
       }
       debugPrint('pick/upload error: $e');
     }
@@ -528,9 +492,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
 
       DocumentReference profileRef;
       if (_profileDocId != null) {
-        profileRef = FirebaseFirestore.instance
-            .collection('profiles')
-            .doc(_profileDocId);
+        profileRef = FirebaseFirestore.instance.collection('profiles').doc(_profileDocId);
       } else {
         profileRef = FirebaseFirestore.instance.collection('profiles').doc();
         _profileDocId = profileRef.id;
@@ -573,12 +535,8 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
       final socialCol = FirebaseFirestore.instance.collection('social_account');
       final usersRef = FirebaseFirestore.instance.collection('users').doc(uid);
 
-      final oldSnapString = await socialCol
-          .where('influencer_id', isEqualTo: uid)
-          .get();
-      final oldSnapRef = await socialCol
-          .where('influencer_id', isEqualTo: usersRef)
-          .get();
+      final oldSnapString = await socialCol.where('influencer_id', isEqualTo: uid).get();
+      final oldSnapRef = await socialCol.where('influencer_id', isEqualTo: usersRef).get();
 
       final batch = FirebaseFirestore.instance.batch();
       for (final d in [...oldSnapString.docs, ...oldSnapRef.docs]) {
@@ -587,8 +545,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
 
       for (final row in _socialRows) {
         final platformId = row.platform?.id ?? '';
-        final platformEmpty =
-            row.platform?.id == null || row.platform!.id.toString().isEmpty;
+        final platformEmpty = row.platform?.id == null || row.platform!.id.toString().isEmpty;
         final username = row.usernameCtrl.text.trim();
         if (platformEmpty && username.isEmpty) continue;
 
@@ -607,17 +564,13 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
         _pickedImage = null;
         _pickedBytes = null;
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
 
         context.pushNamed(InfluncerProfileWidget.routeName);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('فشل الحفظ: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل الحفظ: $e')));
       }
       debugPrint('Save error: $e');
     }
@@ -638,12 +591,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
     return math.sin(_shakeCtrl.value * 10 * math.pi) * 8;
   }
 
-  Widget _avatarWidget({
-    String? imageUrl,
-    Uint8List? bytes,
-    File? file,
-    double size = 100,
-  }) {
+  Widget _avatarWidget({String? imageUrl, Uint8List? bytes, File? file, double size = 100}) {
     final theme = FlutterFlowTheme.of(context);
 
     Widget imageWidget;
@@ -655,12 +603,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
         height: size,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            'assets/images/person_icon.png',
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-          );
+          return Image.asset('assets/images/person_icon.png', width: size, height: size, fit: BoxFit.cover);
         },
       );
     } else if (file != null) {
@@ -670,12 +613,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
         height: size,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            'assets/images/person_icon.png',
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-          );
+          return Image.asset('assets/images/person_icon.png', width: size, height: size, fit: BoxFit.cover);
         },
       );
     } else if (imageUrl != null && imageUrl.isNotEmpty) {
@@ -684,22 +622,12 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
         width: size,
         height: size,
         fit: BoxFit.cover,
-        placeholder: (_, __) =>
-            Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        errorWidget: (_, __, ___) => Image.asset(
-          'assets/images/person_icon.png',
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-        ),
+        placeholder: (_, __) => Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        errorWidget: (_, __, ___) =>
+            Image.asset('assets/images/person_icon.png', width: size, height: size, fit: BoxFit.cover),
       );
     } else {
-      imageWidget = Image.asset(
-        'assets/images/person_icon.png',
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-      );
+      imageWidget = Image.asset('assets/images/person_icon.png', width: size, height: size, fit: BoxFit.cover);
     }
 
     return Container(
@@ -710,17 +638,10 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
         color: theme.tertiary,
         shape: BoxShape.circle,
         border: Border.all(
-          color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
-              .withValues(alpha: 0.2),
+          color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds.withValues(alpha: 0.2),
           width: 3,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: Offset(0, 4))],
       ),
       child: ClipOval(child: imageWidget),
     );
@@ -768,8 +689,7 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
                   buttonSize: 40,
                   icon: Icon(
                     Icons.arrow_forward_ios,
-                    color:
-                    t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                    color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                     size: 24,
                   ),
                   onPressed: () async {
@@ -787,787 +707,453 @@ class _InfluncerEditProfileWidgetState extends State<InfluncerEditProfileWidget>
             ? const Center(child: CircularProgressIndicator())
             : _error != null
             ? Center(
-          child: Text(
-            _error!,
-            style: t.bodyMedium.copyWith(color: t.primaryText),
-          ),
-        )
+                child: Text(_error!, style: t.bodyMedium.copyWith(color: t.primaryText)),
+              )
             : Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
-          child: Container(
-            decoration: BoxDecoration(color: t.backgroundElan),
-            child: Padding(
-              padding:
-              const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(
-                        16,
-                        16,
-                        16,
-                        16,
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: t.containers,
-                          boxShadow: const [
-                            BoxShadow(
-                              blurRadius: 4,
-                              color: Color(0x33000000),
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(16),
-                          ),
-                        ),
-                        child: Padding(
-                          padding:
-                          const EdgeInsetsDirectional.fromSTEB(
-                            0,
-                            16,
-                            0,
-                            16,
-                          ),
-                          child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.end,
-                            children: [
-                              // Avatar
-                              Padding(
-                                padding: const EdgeInsetsDirectional
-                                    .fromSTEB(
-                                  0,
-                                  16,
-                                  0,
-                                  0,
-                                ),
+                padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+                child: Container(
+                  decoration: BoxDecoration(color: t.backgroundElan),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: t.containers,
+                                boxShadow: const [
+                                  BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2)),
+                                ],
+                                borderRadius: const BorderRadius.all(Radius.circular(16)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 16),
                                 child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Align(
-                                      alignment:
-                                      const AlignmentDirectional(
-                                        0,
-                                        -1,
-                                      ),
-                                      child: GestureDetector(
-                                        onTap: (_uploadingImage ||
-                                            _loading)
-                                            ? null
-                                            : _pickAndUploadImage,
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            _avatarWidget(
-                                              imageUrl: _imageUrl,
-                                              bytes: _pickedBytes,
-                                              file: _pickedImage,
-                                              size: 100,
-                                            ),
-                                            if (_uploadingImage)
-                                              const SizedBox(
-                                                width: 28,
-                                                height: 28,
-                                                child:
-                                                CircularProgressIndicator(
-                                                  strokeWidth: 3,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment:
-                                      const AlignmentDirectional(
-                                        0,
-                                        -1,
-                                      ),
-                                      child: Padding(
-                                        padding:
-                                        const EdgeInsetsDirectional
-                                            .fromSTEB(
-                                          0,
-                                          10,
-                                          0,
-                                          40,
-                                        ),
-                                        child: Opacity(
-                                          opacity: (_uploadingImage ||
-                                              _loading)
-                                              ? 0.5
-                                              : 1,
-                                          child: GestureDetector(
-                                            onTap: (_uploadingImage ||
-                                                _loading)
-                                                ? null
-                                                : _pickAndUploadImage,
-                                            child: Text(
-                                              'تغيير صورة الحساب',
-                                              style: t.bodyMedium
-                                                  .override(
-                                                fontFamily: 'Inter',
-                                                color: t.primaryText,
-                                                fontSize: 16,
+                                    // Avatar
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+                                      child: Column(
+                                        children: [
+                                          Align(
+                                            alignment: const AlignmentDirectional(0, -1),
+                                            child: GestureDetector(
+                                              onTap: (_uploadingImage || _loading) ? null : _pickAndUploadImage,
+                                              child: Stack(
+                                                alignment: Alignment.center,
+                                                children: [
+                                                  _avatarWidget(
+                                                    imageUrl: _imageUrl,
+                                                    bytes: _pickedBytes,
+                                                    file: _pickedImage,
+                                                    size: 100,
+                                                  ),
+                                                  if (_uploadingImage)
+                                                    const SizedBox(
+                                                      width: 28,
+                                                      height: 28,
+                                                      child: CircularProgressIndicator(strokeWidth: 3),
+                                                    ),
+                                                ],
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Name
-                              FeqLabeledTextField(
-                                label: 'الاسم ',
-                                controller:
-                                _model.influncerNameTextController,
-                                focusNode:
-                                _model.influncerNameFocusNode,
-                                textCapitalization:
-                                TextCapitalization.words,
-                                textAlign: TextAlign.end,
-                                width: double.infinity,
-                                isError: _showErrors && _nameEmpty,
-                                errorText: _showErrors && _nameEmpty
-                                    ? 'يرجى إدخال الاسم.'
-                                    : null,
-                                decoration: inputDecoration(
-                                  context,
-                                  isError: _showErrors && _nameEmpty,
-                                ),
-                              ),
-
-                              // Content Type Dropdown
-                              FeqLabeled(
-                                'نوع المحتوى',
-                                errorText: _showErrors && _contentEmpty
-                                    ? 'يرجى اختيار نوع المحتوى.'
-                                    : null,
-                                child: FeqSearchableDropdown<
-                                    DropDownList>(
-                                  items: _influencerContentTypes,
-                                  value:
-                                  _selectedInfluencerContentType,
-                                  onChanged: (v) {
-                                    setState(
-                                          () =>
-                                      _selectedInfluencerContentType =
-                                          v,
-                                    );
-                                    _onAnyFieldChanged();
-                                  },
-                                  hint: 'اختر أو ابحث...',
-                                  isError:
-                                  _showErrors && _contentEmpty,
-                                ),
-                              ),
-
-                              // Social Accounts
-                              Padding(
-                                padding: const EdgeInsetsDirectional
-                                    .fromSTEB(
-                                  20,
-                                  20,
-                                  20,
-                                  20,
-                                ),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius:
-                                    const BorderRadius.all(
-                                      Radius.circular(16),
-                                    ),
-                                    border: Border.all(
-                                      color: t.secondary,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding:
-                                        const EdgeInsetsDirectional
-                                            .fromSTEB(
-                                          0,
-                                          0,
-                                          0,
-                                          16,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment
-                                              .spaceBetween,
-                                          crossAxisAlignment:
-                                          CrossAxisAlignment
-                                              .center,
-                                          children: [
-                                            Align(
-                                              alignment:
-                                              const AlignmentDirectional(
-                                                1,
-                                                0,
-                                              ),
-                                              child:
-                                              FlutterFlowIconButton(
-                                                borderRadius: 8,
-                                                buttonSize: 50,
-                                                icon: Icon(
-                                                  Icons.add_circle,
-                                                  color: t
-                                                      .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                  size: 20,
-                                                ),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    final r =
-                                                    _SocialRow();
-                                                    _attachSocialRowListeners(
-                                                      r,
-                                                    );
-                                                    _socialRows.add(
-                                                        r);
-                                                  });
-                                                  _onAnyFieldChanged();
-                                                },
-                                              ),
-                                            ),
-                                            Align(
-                                              alignment:
-                                              const AlignmentDirectional(
-                                                1,
-                                                -1,
-                                              ),
-                                              child: Padding(
-                                                padding:
-                                                const EdgeInsetsDirectional
-                                                    .fromSTEB(
-                                                  0,
-                                                  0,
-                                                  20,
-                                                  0,
-                                                ),
-                                                child: Text(
-                                                  'منصاتك في مواقع التواصل الاجتماعي',
-                                                  textAlign:
-                                                  TextAlign.end,
-                                                  style: t.bodyMedium
-                                                      .override(
-                                                    fontFamily:
-                                                    'Inter',
-                                                    color:
-                                                    t.primaryText,
-                                                    fontSize: 16,
+                                          Align(
+                                            alignment: const AlignmentDirectional(0, -1),
+                                            child: Padding(
+                                              padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 40),
+                                              child: Opacity(
+                                                opacity: (_uploadingImage || _loading) ? 0.5 : 1,
+                                                child: GestureDetector(
+                                                  onTap: (_uploadingImage || _loading) ? null : _pickAndUploadImage,
+                                                  child: Text(
+                                                    'تغيير صورة الحساب',
+                                                    style: t.bodyMedium.override(
+                                                      fontFamily: 'Inter',
+                                                      color: t.primaryText,
+                                                      fontSize: 16,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                      Padding(
-                                        padding:
-                                        const EdgeInsetsDirectional
-                                            .fromSTEB(
-                                          35,
-                                          0,
-                                          20,
-                                          5,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment
-                                              .spaceBetween,
-                                          children: [
-                                            Padding(
-                                              padding:
-                                              const EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                0,
-                                                0,
-                                                10,
-                                                0,
-                                              ),
-                                              child: Text(
-                                                'اسم الحساب في المنصة',
-                                                style: t.bodyMedium
-                                                    .override(
-                                                  fontFamily: 'Inter',
-                                                  color:
-                                                  t.primaryText,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
-                                            Align(
-                                              alignment:
-                                              const AlignmentDirectional(
-                                                1,
-                                                -1,
-                                              ),
-                                              child: Text(
-                                                'اسم المنصة ',
-                                                textAlign:
-                                                TextAlign.end,
-                                                style: t.bodyMedium
-                                                    .override(
-                                                  fontFamily: 'Inter',
-                                                  color:
-                                                  t.primaryText,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                    ),
+
+                                    // Name
+                                    FeqLabeledTextField(
+                                      label: 'الاسم ',
+                                      controller: _model.influncerNameTextController,
+                                      focusNode: _model.influncerNameFocusNode,
+                                      textCapitalization: TextCapitalization.words,
+                                      width: double.infinity,
+                                      isError: _showErrors && _nameEmpty,
+                                      errorText: _showErrors && _nameEmpty ? 'يرجى إدخال الاسم.' : null,
+                                      decoration: inputDecoration(context, isError: _showErrors && _nameEmpty),
+                                    ),
+
+                                    // Content Type Dropdown
+                                    FeqLabeled(
+                                      'نوع المحتوى',
+                                      errorText: _showErrors && _contentEmpty ? 'يرجى اختيار نوع المحتوى.' : null,
+                                      child: FeqSearchableDropdown<FeqDropDownList>(
+                                        items: _influencerContentTypes,
+                                        value: _selectedInfluencerContentType,
+                                        onChanged: (v) {
+                                          setState(() => _selectedInfluencerContentType = v);
+                                          _onAnyFieldChanged();
+                                        },
+                                        hint: 'اختر أو ابحث...',
+                                        isError: _showErrors && _contentEmpty,
                                       ),
-                                      Padding(
-                                        padding:
-                                        const EdgeInsetsDirectional
-                                            .fromSTEB(
-                                          0,
-                                          0,
-                                          0,
-                                          16,
+                                    ),
+
+                                    // Social Accounts
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: const BorderRadius.all(Radius.circular(16)),
+                                          border: Border.all(color: t.secondary),
                                         ),
                                         child: Column(
-                                          children: List.generate(
-                                              _socialRows.length, (
-                                              i,
-                                              ) {
-                                            final row =
-                                            _socialRows[i];
-                                            final platformEmpty =
-                                                row.platform?.id ==
-                                                    null ||
-                                                    row.platform!.id
-                                                        .toString()
-                                                        .isEmpty;
-                                            final usernameEmpty = row
-                                                .usernameCtrl.text
-                                                .trim()
-                                                .isEmpty;
-                                            final showPlatformErr =
-                                                _showErrors &&
-                                                    _socialsRequireError &&
-                                                    platformEmpty;
-                                            final showUsernameErr =
-                                                _showErrors &&
-                                                    _socialsRequireError &&
-                                                    usernameEmpty;
-
-                                            return Row(
-                                              mainAxisAlignment:
-                                              MainAxisAlignment
-                                                  .spaceEvenly,
-                                              crossAxisAlignment:
-                                              CrossAxisAlignment
-                                                  .start,
-                                              children: [
-                                                Align(
-                                                  alignment:
-                                                  const AlignmentDirectional(
-                                                    1,
-                                                    0,
-                                                  ),
-                                                  child: Padding(
-                                                    padding:
-                                                    const EdgeInsetsDirectional
-                                                        .fromSTEB(
-                                                      0,
-                                                      0,
-                                                      0,
-                                                      16,
-                                                    ),
-                                                    child:
-                                                    FlutterFlowIconButton(
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  Align(
+                                                    alignment: const AlignmentDirectional(1, 0),
+                                                    child: FlutterFlowIconButton(
                                                       borderRadius: 8,
                                                       buttonSize: 50,
                                                       icon: Icon(
-                                                        Icons
-                                                            .minimize_outlined,
-                                                        color: t
-                                                            .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                        Icons.add_circle,
+                                                        color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                                                         size: 20,
                                                       ),
                                                       onPressed: () {
                                                         setState(() {
-                                                          _socialRows
-                                                              .removeAt(
-                                                            i,
-                                                          );
-                                                          if (_socialRows
-                                                              .isEmpty) {
-                                                            final r =
-                                                            _SocialRow();
-                                                            _attachSocialRowListeners(
-                                                              r,
-                                                            );
-                                                            _socialRows
-                                                                .add(
-                                                                r);
-                                                          }
+                                                          final r = _SocialRow();
+                                                          _attachSocialRowListeners(r);
+                                                          _socialRows.add(r);
                                                         });
                                                         _onAnyFieldChanged();
                                                       },
                                                     ),
                                                   ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                    const EdgeInsetsDirectional
-                                                        .fromSTEB(
-                                                      0,
-                                                      0,
-                                                      20,
-                                                      0,
-                                                    ),
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                      CrossAxisAlignment
-                                                          .end,
-                                                      children: [
-                                                        TextFormField(
-                                                          controller:
-                                                          row.usernameCtrl,
-                                                          textCapitalization:
-                                                          TextCapitalization
-                                                              .none,
-                                                          decoration:
-                                                          platformInputDecoration(
-                                                            context,
-                                                            isError:
-                                                            showUsernameErr,
-                                                          ),
-                                                          style: t
-                                                              .bodyMedium
-                                                              .copyWith(
-                                                            color: t
-                                                                .primaryText,
-                                                          ),
-                                                          textAlign:
-                                                          TextAlign
-                                                              .end,
+                                                  Align(
+                                                    alignment: const AlignmentDirectional(1, -1),
+                                                    child: Padding(
+                                                      padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
+                                                      child: Text(
+                                                        'منصاتك في مواقع التواصل الاجتماعي',
+                                                        textAlign: TextAlign.end,
+                                                        style: t.bodyMedium.override(
+                                                          fontFamily: 'Inter',
+                                                          color: t.primaryText,
+                                                          fontSize: 16,
                                                         ),
-                                                        if (row.platform !=
-                                                            null &&
-                                                            row
-                                                                .usernameCtrl
-                                                                .text
-                                                                .trim()
-                                                                .isNotEmpty)
-                                                          Padding(
-                                                            padding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                              top: 4,
-                                                            ),
-                                                            child:
-                                                            InkWell(
-                                                              onTap:
-                                                                  () {
-                                                                final url =
-                                                                    'https://${row.platform!.domain}/${row.usernameCtrl.text.trim()}';
-                                                                launchUrl(
-                                                                  Uri.parse(
-                                                                    url,
-                                                                  ),
-                                                                );
-                                                              },
-                                                              child:
-                                                              Text(
-                                                                '${row.platform!.domain}/${row.usernameCtrl.text.trim()}',
-                                                                style:
-                                                                const TextStyle(
-                                                                  color:
-                                                                  Colors.blue,
-                                                                  decoration:
-                                                                  TextDecoration.underline,
-                                                                ),
-                                                                textAlign:
-                                                                TextAlign.end,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        if (showUsernameErr)
-                                                          const Padding(
-                                                            padding:
-                                                            EdgeInsetsDirectional
-                                                                .fromSTEB(
-                                                              0,
-                                                              6,
-                                                              4,
-                                                              0,
-                                                            ),
-                                                            child:
-                                                            Text(
-                                                              'يرجى إدخال اسم الحساب.',
-                                                              style:
-                                                              TextStyle(
-                                                                color:
-                                                                Colors.red,
-                                                                fontSize:
-                                                                12,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                      ],
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                    const EdgeInsetsDirectional
-                                                        .fromSTEB(
-                                                      0,
-                                                      0,
-                                                      20,
-                                                      0,
-                                                    ),
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                      CrossAxisAlignment
-                                                          .end,
-                                                      children: [
-                                                        FeqSearchableDropdown<
-                                                            DropDownList>(
-                                                          items:
-                                                          _socialPlatforms,
-                                                          value: row
-                                                              .platform,
-                                                          onChanged:
-                                                              (v) {
-                                                            setState(
-                                                                  () =>
-                                                              row.platform =
-                                                                  v,
-                                                            );
-                                                            _onAnyFieldChanged();
-                                                          },
-                                                          hint:
-                                                          'اختر المنصة',
-                                                          isError:
-                                                          showPlatformErr,
-                                                        ),
-                                                        if (showPlatformErr)
-                                                          const Padding(
-                                                            padding:
-                                                            EdgeInsetsDirectional
-                                                                .fromSTEB(
-                                                              0,
-                                                              6,
-                                                              4,
-                                                              0,
-                                                            ),
-                                                            child:
-                                                            Text(
-                                                              'يرجى اختيار المنصة.',
-                                                              style:
-                                                              TextStyle(
-                                                                color:
-                                                                Colors.red,
-                                                                fontSize:
-                                                                12,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            );
-                                          }),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              // Description
-                              FeqLabeledTextField(
-                                label: 'النبذة الشخصية',
-                                controller: _model
-                                    .influncerDescreptionTextController,
-                                focusNode: _model
-                                    .influncerDescreptionFocusNode,
-                                textCapitalization:
-                                TextCapitalization.sentences,
-                                textAlign: TextAlign.end,
-                                width: double.infinity,
-                                maxLines: 3,
-                                decoration: inputDecoration(context),
-                              ),
-
-                              // Phone
-                              FeqLabeledTextField(
-                                label: 'رقم الجوال',
-                                controller:
-                                _model.phoneNumberTextController,
-                                focusNode:
-                                _model.phoneNumberFocusNode,
-                                keyboardType: TextInputType.phone,
-                                textAlign: TextAlign.end,
-                                width: double.infinity,
-                                validator: _validatePhone,
-                                isError: _showErrors &&
-                                    _bothContactsEmpty &&
-                                    _model.phoneNumberTextController!
-                                        .text
-                                        .trim()
-                                        .isEmpty,
-                                errorText: _showErrors &&
-                                    _bothContactsEmpty &&
-                                    _model
-                                        .phoneNumberTextController!
-                                        .text
-                                        .trim()
-                                        .isEmpty
-                                    ? 'يرجى إدخال رقم الجوال أو البريد الإلكتروني.'
-                                    : null,
-                                decoration: inputDecoration(
-                                  context,
-                                  isError: _showErrors &&
-                                      _bothContactsEmpty &&
-                                      _model
-                                          .phoneNumberTextController!
-                                          .text
-                                          .trim()
-                                          .isEmpty,
-                                ),
-                              ),
-
-                              // Email
-                              FeqLabeledTextField(
-                                label: 'البريد الإلكتروني',
-                                controller:
-                                _model.emailTextController,
-                                focusNode: _model.emailFocusNode,
-                                keyboardType:
-                                TextInputType.emailAddress,
-                                textAlign: TextAlign.end,
-                                width: double.infinity,
-                                validator: _validateEmail,
-                                isError: _showErrors &&
-                                    _bothContactsEmpty &&
-                                    _model.emailTextController!.text
-                                        .trim()
-                                        .isEmpty,
-                                errorText: _showErrors &&
-                                    _bothContactsEmpty &&
-                                    _model.emailTextController!
-                                        .text
-                                        .trim()
-                                        .isEmpty
-                                    ? 'يرجى إدخال البريد الإلكتروني أو رقم الجوال.'
-                                    : null,
-                                decoration: inputDecoration(
-                                  context,
-                                  isError: _showErrors &&
-                                      _bothContactsEmpty &&
-                                      _model.emailTextController!.text
-                                          .trim()
-                                          .isEmpty,
-                                ),
-                              ),
-
-                              // Buttons
-                              Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Padding(
-                                    padding:
-                                    const EdgeInsetsDirectional
-                                        .fromSTEB(
-                                      0,
-                                      16,
-                                      0,
-                                      24,
-                                    ),
-                                    child: FFButtonWidget(
-                                      onPressed: () async {
-                                        context.pushNamed(
-                                          InfluncerProfileWidget
-                                              .routeName,
-                                        );
-                                      },
-                                      text: 'إلغاء',
-                                      options: FFButtonOptions(
-                                        width: 90,
-                                        height: 40,
-                                        color: t.secondary,
-                                        textStyle:
-                                        t.titleMedium.override(
-                                          fontFamily: 'Inter Tight',
-                                          color: t.containers,
-                                          fontSize: 18,
-                                        ),
-                                        elevation: 2,
-                                        borderRadius:
-                                        BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding:
-                                    const EdgeInsetsDirectional
-                                        .fromSTEB(
-                                      0,
-                                      16,
-                                      0,
-                                      24,
-                                    ),
-                                    child: AnimatedBuilder(
-                                      animation: _shakeCtrl,
-                                      builder: (context, child) =>
-                                          Transform.translate(
-                                            offset: Offset(
-                                              _shakeOffset(),
-                                              0,
+                                                ],
+                                              ),
                                             ),
-                                            child: child,
-                                          ),
-                                      child: FFButtonWidget(
-                                        onPressed: _saveAll,
-                                        text: 'تحديث',
-                                        options: FFButtonOptions(
-                                          width: 200,
-                                          height: 40,
-                                          color: t
-                                              .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                          textStyle:
-                                          t.titleMedium.override(
-                                            fontFamily: 'Inter',
-                                            color: t.containers,
-                                          ),
-                                          elevation: 2,
-                                          borderRadius:
-                                          BorderRadius.circular(
-                                              12),
+                                            Padding(
+                                              padding: const EdgeInsetsDirectional.fromSTEB(35, 0, 20, 5),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 10, 0),
+                                                    child: Text(
+                                                      'اسم الحساب في المنصة',
+                                                      style: t.bodyMedium.override(
+                                                        fontFamily: 'Inter',
+                                                        color: t.primaryText,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Align(
+                                                    alignment: const AlignmentDirectional(1, -1),
+                                                    child: Text(
+                                                      'اسم المنصة ',
+                                                      textAlign: TextAlign.end,
+                                                      style: t.bodyMedium.override(
+                                                        fontFamily: 'Inter',
+                                                        color: t.primaryText,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
+                                              child: Column(
+                                                children: List.generate(_socialRows.length, (i) {
+                                                  final row = _socialRows[i];
+                                                  final platformEmpty =
+                                                      row.platform?.id == null || row.platform!.id.toString().isEmpty;
+                                                  final usernameEmpty = row.usernameCtrl.text.trim().isEmpty;
+                                                  final showPlatformErr =
+                                                      _showErrors && _socialsRequireError && platformEmpty;
+                                                  final showUsernameErr =
+                                                      _showErrors && _socialsRequireError && usernameEmpty;
+
+                                                  return Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Align(
+                                                        alignment: const AlignmentDirectional(1, 0),
+                                                        child: Padding(
+                                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
+                                                          child: FlutterFlowIconButton(
+                                                            borderRadius: 8,
+                                                            buttonSize: 50,
+                                                            icon: Icon(
+                                                              Icons.minimize_outlined,
+                                                              color: t
+                                                                  .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                              size: 20,
+                                                            ),
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                _socialRows.removeAt(i);
+                                                                if (_socialRows.isEmpty) {
+                                                                  final r = _SocialRow();
+                                                                  _attachSocialRowListeners(r);
+                                                                  _socialRows.add(r);
+                                                                }
+                                                              });
+                                                              _onAnyFieldChanged();
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                                            children: [
+                                                              TextFormField(
+                                                                controller: row.usernameCtrl,
+                                                                textCapitalization: TextCapitalization.none,
+                                                                decoration: platformInputDecoration(
+                                                                  context,
+                                                                  isError: showUsernameErr,
+                                                                ),
+                                                                style: t.bodyMedium.copyWith(color: t.primaryText),
+                                                                textAlign: TextAlign.end,
+                                                              ),
+                                                              if (row.platform != null &&
+                                                                  row.usernameCtrl.text.trim().isNotEmpty)
+                                                                Padding(
+                                                                  padding: const EdgeInsets.only(top: 4),
+                                                                  child: InkWell(
+                                                                    onTap: () {
+                                                                      final url =
+                                                                          'https://${row.platform!.domain}/${row.usernameCtrl.text.trim()}';
+                                                                      launchUrl(Uri.parse(url));
+                                                                    },
+                                                                    child: Text(
+                                                                      '${row.platform!.domain}/${row.usernameCtrl.text.trim()}',
+                                                                      style: const TextStyle(
+                                                                        color: Colors.blue,
+                                                                        decoration: TextDecoration.underline,
+                                                                      ),
+                                                                      textAlign: TextAlign.end,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              if (showUsernameErr)
+                                                                const Padding(
+                                                                  padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
+                                                                  child: Text(
+                                                                    'يرجى إدخال اسم الحساب.',
+                                                                    style: TextStyle(color: Colors.red, fontSize: 12),
+                                                                  ),
+                                                                ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                                            children: [
+                                                              FeqSearchableDropdown<FeqDropDownList>(
+                                                                items: _socialPlatforms,
+                                                                value: row.platform,
+                                                                onChanged: (v) {
+                                                                  setState(() => row.platform = v);
+                                                                  _onAnyFieldChanged();
+                                                                },
+                                                                hint: 'اختر المنصة',
+                                                                isError: showPlatformErr,
+                                                              ),
+                                                              if (showPlatformErr)
+                                                                const Padding(
+                                                                  padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
+                                                                  child: Text(
+                                                                    'يرجى اختيار المنصة.',
+                                                                    style: TextStyle(color: Colors.red, fontSize: 12),
+                                                                  ),
+                                                                ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                }),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+
+                                    // Description
+                                    FeqLabeledTextField(
+                                      label: 'النبذة الشخصية',
+                                      controller: _model.influncerDescreptionTextController,
+                                      focusNode: _model.influncerDescreptionFocusNode,
+                                      textCapitalization: TextCapitalization.sentences,
+                                      width: double.infinity,
+                                      maxLines: 3,
+                                      decoration: inputDecoration(context),
+                                    ),
+
+                                    // Phone
+                                    FeqLabeledTextField(
+                                      label: 'رقم الجوال',
+                                      controller: _model.phoneNumberTextController,
+                                      focusNode: _model.phoneNumberFocusNode,
+                                      keyboardType: TextInputType.phone,
+                                      width: double.infinity,
+                                      validator: _validatePhone,
+                                      isError:
+                                          _showErrors &&
+                                          _bothContactsEmpty &&
+                                          _model.phoneNumberTextController!.text.trim().isEmpty,
+                                      errorText:
+                                          _showErrors &&
+                                              _bothContactsEmpty &&
+                                              _model.phoneNumberTextController!.text.trim().isEmpty
+                                          ? 'يرجى إدخال رقم الجوال أو البريد الإلكتروني.'
+                                          : null,
+                                      decoration: inputDecoration(
+                                        context,
+                                        isError:
+                                            _showErrors &&
+                                            _bothContactsEmpty &&
+                                            _model.phoneNumberTextController!.text.trim().isEmpty,
+                                      ),
+                                    ),
+
+                                    // Email
+                                    FeqLabeledTextField(
+                                      label: 'البريد الإلكتروني',
+                                      controller: _model.emailTextController,
+                                      focusNode: _model.emailFocusNode,
+                                      keyboardType: TextInputType.emailAddress,
+                                      width: double.infinity,
+                                      validator: _validateEmail,
+                                      isError:
+                                          _showErrors &&
+                                          _bothContactsEmpty &&
+                                          _model.emailTextController!.text.trim().isEmpty,
+                                      errorText:
+                                          _showErrors &&
+                                              _bothContactsEmpty &&
+                                              _model.emailTextController!.text.trim().isEmpty
+                                          ? 'يرجى إدخال البريد الإلكتروني أو رقم الجوال.'
+                                          : null,
+                                      decoration: inputDecoration(
+                                        context,
+                                        isError:
+                                            _showErrors &&
+                                            _bothContactsEmpty &&
+                                            _model.emailTextController!.text.trim().isEmpty,
+                                      ),
+                                    ),
+
+                                    // Buttons
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 24),
+                                          child: FFButtonWidget(
+                                            onPressed: () async {
+                                              context.pushNamed(InfluncerProfileWidget.routeName);
+                                            },
+                                            text: 'إلغاء',
+                                            options: FFButtonOptions(
+                                              width: 90,
+                                              height: 40,
+                                              color: t.secondary,
+                                              textStyle: t.titleMedium.override(
+                                                fontFamily: 'Inter Tight',
+                                                color: t.containers,
+                                                fontSize: 18,
+                                              ),
+                                              elevation: 2,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 24),
+                                          child: AnimatedBuilder(
+                                            animation: _shakeCtrl,
+                                            builder: (context, child) =>
+                                                Transform.translate(offset: Offset(_shakeOffset(), 0), child: child),
+                                            child: FFButtonWidget(
+                                              onPressed: _saveAll,
+                                              text: 'تحديث',
+                                              options: FFButtonOptions(
+                                                width: 200,
+                                                height: 40,
+                                                color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                textStyle: t.titleMedium.override(
+                                                  fontFamily: 'Inter',
+                                                  color: t.containers,
+                                                ),
+                                                elevation: 2,
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -1585,8 +1171,7 @@ class _TitleText extends StatelessWidget {
         fontFamily: 'Inter Tight',
         color: FlutterFlowTheme.of(context).primaryText,
         letterSpacing: 0.0,
-        fontWeight:
-        FlutterFlowTheme.of(context).headlineSmall.fontWeight,
+        fontWeight: FlutterFlowTheme.of(context).headlineSmall.fontWeight,
         fontStyle: FlutterFlowTheme.of(context).headlineSmall.fontStyle,
       ),
     );
@@ -1594,11 +1179,11 @@ class _TitleText extends StatelessWidget {
 }
 
 class _SocialRow {
-  DropDownList? platform;
+  FeqDropDownList? platform;
   final TextEditingController usernameCtrl;
 
   _SocialRow({this.platform, TextEditingController? usernameCtrl})
-      : usernameCtrl = usernameCtrl ?? TextEditingController();
+    : usernameCtrl = usernameCtrl ?? TextEditingController();
 
   void dispose() {
     usernameCtrl.dispose();
