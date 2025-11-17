@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.2
+  sdk: ^3.10.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -31,11 +31,13 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_animate: ^4.5.2
-  firebase_core: ^4.2.0
-  firebase_app_check: ^0.4.1+1
-  firebase_auth: ^6.1.1
-  cloud_firestore: ^6.0.3
-  firebase_storage: ^13.0.3
+  firebase_core: ^4.2.1
+  firebase_app_check: ^0.4.1+2
+  firebase_auth: ^6.1.2
+  firebase_auth_platform_interface: ^8.1.4
+  cloud_firestore: ^6.1.0
+  firebase_storage: ^13.0.4
+  get_it: ^9.0.5
   google_fonts: ^6.3.2
   page_transition: ^2.2.1
   provider: ^6.1.5+1
@@ -56,8 +58,12 @@ dependencies:
   sign_in_with_apple: ^7.0.1
   rxdart: ^0.28.0
   google_sign_in: ^7.2.0
-  image_picker: ^1.2.0
+  image_picker: ^1.2.1
   cached_network_image: ^3.4.1
+  # Add these here (moved from dev_dependencies)
+  firebase_auth_mocks: ^0.15.1
+  firebase_storage_mocks: ^0.8.0+1
+  fake_cloud_firestore: ^4.0.0
 
 dev_dependencies:
   flutter_test:

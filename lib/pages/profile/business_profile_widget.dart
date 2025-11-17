@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/services/firebase_service_utils.dart';
+import '../../features/setting/presentation/account_settings_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '../setting/account_settings_widget.dart';
 import '../profile/business_profile_model.dart';
-import '../../services/firebase_service.dart';
 import '../profile/business_edit_profile_widget.dart';
 
 class BusinessProfileScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class BusinessProfileScreen extends StatefulWidget {
 }
 
 class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
-  final FirebaseService _firebaseService = FirebaseService();
+  final FeqFirebaseServiceUtils _firebaseService = FeqFirebaseServiceUtils();
   BusinessProfileModel? _profileData;
   List<Map<String, dynamic>> _campaignList = [];
 
@@ -42,7 +42,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       final campaignList = await _firebaseService.fetchBusinessCampaignList();
       if (mounted) {
         setState(() {
-          _profileData = data;
+          // _profileData = data;
           _campaignList = campaignList;
           _isLoading = false;
         });

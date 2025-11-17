@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 // ======== Firebase & media
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:elan_flutterproject/models/dropdown_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -14,16 +13,15 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/components/feq_components.dart';
+import '../../core/services/dropdown_list_loader.dart';
+import '../../core/services/elan_storage.dart';
 import '../../main_screen.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart' hide createModel;
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '/services/elan_storage.dart';
-import '../../components/labeled.dart';
-import '../../components/searchable_dropdown.dart';
-import '../../services/dropdown_list_loader.dart';
 
 InputDecoration inputDecoration(BuildContext context, {bool isError = false}) {
   final t = FlutterFlowTheme.of(context);
@@ -36,9 +34,7 @@ InputDecoration inputDecoration(BuildContext context, {bool isError = false}) {
     ),
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
-        color: isError
-            ? Colors.red
-            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
         width: 2,
       ),
       borderRadius: BorderRadius.circular(12),
@@ -56,10 +52,7 @@ InputDecoration inputDecoration(BuildContext context, {bool isError = false}) {
   );
 }
 
-InputDecoration platformInputDecoration(
-  BuildContext context, {
-  bool isError = false,
-}) {
+InputDecoration platformInputDecoration(BuildContext context, {bool isError = false}) {
   final t = FlutterFlowTheme.of(context);
   return InputDecoration(
     isDense: true,
@@ -70,9 +63,7 @@ InputDecoration platformInputDecoration(
     ),
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
-        color: isError
-            ? Colors.red
-            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
         width: 2,
       ),
       borderRadius: BorderRadius.circular(12),
@@ -102,6 +93,7 @@ class InfluencerSetupProfileModel extends FlutterFlowModel {
 
   @override
   void dispose() {
+    super.dispose();
     influncerNameFocusNode?.dispose();
     influncerNameTextController?.dispose();
     influncerDescreptionFocusNode?.dispose();
@@ -120,12 +112,10 @@ class InfluencerSetupProfilePage extends StatefulWidget {
   static String routePath = '/influencerSetupProfile';
 
   @override
-  State<InfluencerSetupProfilePage> createState() =>
-      _InfluencerSetupProfilePageState();
+  State<InfluencerSetupProfilePage> createState() => _InfluencerSetupProfilePageState();
 }
 
-class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
-    with SingleTickerProviderStateMixin {
+class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage> with SingleTickerProviderStateMixin {
   late InfluencerSetupProfileModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -147,19 +137,18 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
 
   late AnimationController _shakeCtrl;
 
-  late List<DropDownList> _influencerContentTypes;
-  late List<DropDownList> _socialPlatforms;
+  late List<FeqDropDownList> _influencerContentTypes;
+  late List<FeqDropDownList> _socialPlatforms;
 
-  DropDownList? _selectedInfluencerContentType;
+  FeqDropDownList? _selectedInfluencerContentType;
 
   @override
   void initState() {
     super.initState();
     _model = InfluencerSetupProfileModel();
 
-    _influencerContentTypes =
-        DropDownListLoader.instance.influencerContentTypes;
-    _socialPlatforms = DropDownListLoader.instance.socialPlatforms;
+    _influencerContentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
+    _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
 
     _model.influncerNameTextController ??= TextEditingController();
     _model.influncerNameFocusNode ??= FocusNode();
@@ -173,10 +162,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
     _model.emailTextController ??= TextEditingController();
     _model.emailFocusNode ??= FocusNode();
 
-    _shakeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
+    _shakeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
   }
 
   @override
@@ -194,12 +180,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
     return math.sin(_shakeCtrl.value * 10 * math.pi) * 8;
   }
 
-  Widget _avatarWidget({
-    String? imageUrl,
-    Uint8List? bytes,
-    File? file,
-    double size = 100,
-  }) {
+  Widget _avatarWidget({String? imageUrl, Uint8List? bytes, File? file, double size = 100}) {
     final theme = FlutterFlowTheme.of(context);
 
     Widget imageWidget;
@@ -211,12 +192,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
         height: size,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            'assets/images/person_icon.png',
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-          );
+          return Image.asset('assets/images/person_icon.png', width: size, height: size, fit: BoxFit.cover);
         },
       );
     } else if (file != null) {
@@ -226,12 +202,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
         height: size,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            'assets/images/person_icon.png',
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-          );
+          return Image.asset('assets/images/person_icon.png', width: size, height: size, fit: BoxFit.cover);
         },
       );
     } else if (imageUrl != null && imageUrl.isNotEmpty) {
@@ -240,22 +211,12 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
         width: size,
         height: size,
         fit: BoxFit.cover,
-        placeholder: (_, __) =>
-            Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        errorWidget: (_, __, ___) => Image.asset(
-          'assets/images/person_icon.png',
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-        ),
+        placeholder: (_, __) => Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        errorWidget: (_, __, ___) =>
+            Image.asset('assets/images/person_icon.png', width: size, height: size, fit: BoxFit.cover),
       );
     } else {
-      imageWidget = Image.asset(
-        'assets/images/person_icon.png',
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-      );
+      imageWidget = Image.asset('assets/images/person_icon.png', width: size, height: size, fit: BoxFit.cover);
     }
 
     return Container(
@@ -266,17 +227,10 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
         color: theme.tertiary,
         shape: BoxShape.circle,
         border: Border.all(
-          color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
-              .withValues(alpha: 0.2),
+          color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds.withValues(alpha: 0.2),
           width: 3,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: Offset(0, 4))],
       ),
       child: ClipOval(child: imageWidget),
     );
@@ -289,10 +243,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
       setState(() => _uploadingImage = true);
 
       final picker = ImagePicker();
-      final x = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-      );
+      final x = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
 
       if (x == null) {
         setState(() => _uploadingImage = false);
@@ -339,10 +290,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
         contentType = 'image/gif';
       }
 
-      final metadata = SettableMetadata(
-        contentType: contentType,
-        cacheControl: 'public, max-age=3600',
-      );
+      final metadata = SettableMetadata(contentType: contentType, cacheControl: 'public, max-age=3600');
 
       String newUrl;
       if (kIsWeb) {
@@ -370,9 +318,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
     } catch (e) {
       setState(() => _uploadingImage = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('فشل رفع الصورة: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل رفع الصورة: $e')));
       }
       debugPrint('pick/upload error: $e');
     }
@@ -472,9 +418,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return;
 
-      DocumentReference profileRef = FirebaseFirestore.instance
-          .collection('profiles')
-          .doc();
+      DocumentReference profileRef = FirebaseFirestore.instance.collection('profiles').doc();
 
       final updates = {
         'profile_id': uid,
@@ -506,8 +450,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
 
       for (final row in _socialRows) {
         final platformId = row.platform?.id ?? '';
-        final platformEmpty =
-            row.platform?.id == null || row.platform!.id.toString().isEmpty;
+        final platformEmpty = row.platform?.id == null || row.platform!.id.toString().isEmpty;
         final username = row.usernameCtrl.text.trim();
         if (platformEmpty && username.isEmpty) continue;
 
@@ -521,9 +464,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
       await batch.commit();
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
         final user = FirebaseAuth.instance.currentUser!;
         // Save to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
@@ -535,9 +476,7 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('فشل الحفظ: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل الحفظ: $e')));
       }
       debugPrint('Save error: $e');
     }
@@ -581,58 +520,29 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
                       child: Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                              16,
-                              16,
-                              16,
-                              16,
-                            ),
+                            padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: t.containers,
                                 boxShadow: const [
-                                  BoxShadow(
-                                    blurRadius: 4,
-                                    color: Color(0x33000000),
-                                    offset: Offset(0, 2),
-                                  ),
+                                  BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2)),
                                 ],
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(16),
-                                ),
+                                borderRadius: const BorderRadius.all(Radius.circular(16)),
                               ),
                               child: Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                  0,
-                                  16,
-                                  0,
-                                  16,
-                                ),
+                                padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 16),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     // Avatar
                                     Padding(
-                                      padding:
-                                          const EdgeInsetsDirectional.fromSTEB(
-                                            0,
-                                            16,
-                                            0,
-                                            0,
-                                          ),
+                                      padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
                                       child: Column(
                                         children: [
                                           Align(
-                                            alignment:
-                                                const AlignmentDirectional(
-                                                  0,
-                                                  -1,
-                                                ),
+                                            alignment: const AlignmentDirectional(0, -1),
                                             child: GestureDetector(
-                                              onTap:
-                                                  (_uploadingImage || _loading)
-                                                  ? null
-                                                  : _pickAndUploadImage,
+                                              onTap: (_uploadingImage || _loading) ? null : _pickAndUploadImage,
                                               child: Stack(
                                                 alignment: Alignment.center,
                                                 children: [
@@ -646,49 +556,27 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
                                                     const SizedBox(
                                                       width: 28,
                                                       height: 28,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                            strokeWidth: 3,
-                                                          ),
+                                                      child: CircularProgressIndicator(strokeWidth: 3),
                                                     ),
                                                 ],
                                               ),
                                             ),
                                           ),
                                           Align(
-                                            alignment:
-                                                const AlignmentDirectional(
-                                                  0,
-                                                  -1,
-                                                ),
+                                            alignment: const AlignmentDirectional(0, -1),
                                             child: Padding(
-                                              padding:
-                                                  const EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    10,
-                                                    0,
-                                                    40,
-                                                  ),
+                                              padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 40),
                                               child: Opacity(
-                                                opacity:
-                                                    (_uploadingImage ||
-                                                        _loading)
-                                                    ? 0.5
-                                                    : 1,
+                                                opacity: (_uploadingImage || _loading) ? 0.5 : 1,
                                                 child: GestureDetector(
-                                                  onTap:
-                                                      (_uploadingImage ||
-                                                          _loading)
-                                                      ? null
-                                                      : _pickAndUploadImage,
+                                                  onTap: (_uploadingImage || _loading) ? null : _pickAndUploadImage,
                                                   child: Text(
                                                     'تغيير صورة الحساب',
-                                                    style: t.bodyMedium
-                                                        .override(
-                                                          fontFamily: 'Inter',
-                                                          color: t.primaryText,
-                                                          fontSize: 16,
-                                                        ),
+                                                    style: t.bodyMedium.override(
+                                                      fontFamily: 'Inter',
+                                                      color: t.primaryText,
+                                                      fontSize: 16,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
@@ -699,44 +587,28 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
                                     ),
 
                                     // Name
-                                    Labeled(
+                                    FeqLabeled(
                                       'الاسم ',
-                                      errorText: _showErrors && _nameEmpty
-                                          ? 'يرجى إدخال الاسم.'
-                                          : null,
+                                      errorText: _showErrors && _nameEmpty ? 'يرجى إدخال الاسم.' : null,
                                       child: TextFormField(
-                                        controller:
-                                            _model.influncerNameTextController,
-                                        focusNode:
-                                            _model.influncerNameFocusNode,
-                                        textCapitalization:
-                                            TextCapitalization.words,
-                                        decoration: inputDecoration(
-                                          context,
-                                          isError: _showErrors && _nameEmpty,
-                                        ),
-                                        style: t.bodyLarge.copyWith(
-                                          color: t.primaryText,
-                                        ),
+                                        controller: _model.influncerNameTextController,
+                                        focusNode: _model.influncerNameFocusNode,
+                                        textCapitalization: TextCapitalization.words,
+                                        decoration: inputDecoration(context, isError: _showErrors && _nameEmpty),
+                                        style: t.bodyLarge.copyWith(color: t.primaryText),
                                         textAlign: TextAlign.end,
                                       ),
                                     ),
 
                                     // Content Type Dropdown
-                                    Labeled(
+                                    FeqLabeled(
                                       'نوع المحتوى',
-                                      errorText: _showErrors && _contentEmpty
-                                          ? 'يرجى اختيار نوع المحتوى.'
-                                          : null,
-                                      child: SearchableDropdown<DropDownList>(
+                                      errorText: _showErrors && _contentEmpty ? 'يرجى اختيار نوع المحتوى.' : null,
+                                      child: FeqSearchableDropdown<FeqDropDownList>(
                                         items: _influencerContentTypes,
                                         value: _selectedInfluencerContentType,
                                         onChanged: (v) {
-                                          setState(
-                                            () =>
-                                                _selectedInfluencerContentType =
-                                                    v,
-                                          );
+                                          setState(() => _selectedInfluencerContentType = v);
                                         },
                                         hint: 'اختر أو ابحث...',
                                         isError: _showErrors && _contentEmpty,
@@ -745,89 +617,49 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
 
                                     // Social Accounts
                                     Padding(
-                                      padding:
-                                          const EdgeInsetsDirectional.fromSTEB(
-                                            20,
-                                            20,
-                                            20,
-                                            20,
-                                          ),
+                                      padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          borderRadius: const BorderRadius.all(
-                                            Radius.circular(16),
-                                          ),
-                                          border: Border.all(
-                                            color: t.secondary,
-                                          ),
+                                          borderRadius: const BorderRadius.all(Radius.circular(16)),
+                                          border: Border.all(color: t.secondary),
                                         ),
                                         child: Column(
                                           children: [
                                             Padding(
-                                              padding:
-                                                  const EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    16,
-                                                  ),
+                                              padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
                                               child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
                                                 children: [
                                                   Align(
-                                                    alignment:
-                                                        const AlignmentDirectional(
-                                                          1,
-                                                          0,
-                                                        ),
+                                                    alignment: const AlignmentDirectional(1, 0),
                                                     child: FlutterFlowIconButton(
                                                       borderRadius: 8,
                                                       buttonSize: 50,
                                                       icon: Icon(
                                                         Icons.add_circle,
-                                                        color: t
-                                                            .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                        color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                                                         size: 20,
                                                       ),
                                                       onPressed: () {
                                                         setState(() {
-                                                          _socialRows.add(
-                                                            _SocialRow(),
-                                                          );
+                                                          _socialRows.add(_SocialRow());
                                                         });
                                                       },
                                                     ),
                                                   ),
                                                   Align(
-                                                    alignment:
-                                                        const AlignmentDirectional(
-                                                          1,
-                                                          -1,
-                                                        ),
+                                                    alignment: const AlignmentDirectional(1, -1),
                                                     child: Padding(
-                                                      padding:
-                                                          const EdgeInsetsDirectional.fromSTEB(
-                                                            0,
-                                                            0,
-                                                            20,
-                                                            0,
-                                                          ),
+                                                      padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
                                                       child: Text(
                                                         'منصاتك في مواقع التواصل الاجتماعي',
-                                                        textAlign:
-                                                            TextAlign.end,
-                                                        style: t.bodyMedium
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Inter',
-                                                              color:
-                                                                  t.primaryText,
-                                                              fontSize: 16,
-                                                            ),
+                                                        textAlign: TextAlign.end,
+                                                        style: t.bodyMedium.override(
+                                                          fontFamily: 'Inter',
+                                                          color: t.primaryText,
+                                                          fontSize: 16,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -835,134 +667,71 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
                                               ),
                                             ),
                                             Padding(
-                                              padding:
-                                                  const EdgeInsetsDirectional.fromSTEB(
-                                                    35,
-                                                    0,
-                                                    20,
-                                                    5,
-                                                  ),
+                                              padding: const EdgeInsetsDirectional.fromSTEB(35, 0, 20, 5),
                                               child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
                                                   Padding(
-                                                    padding:
-                                                        const EdgeInsetsDirectional.fromSTEB(
-                                                          0,
-                                                          0,
-                                                          10,
-                                                          0,
-                                                        ),
+                                                    padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 10, 0),
                                                     child: Text(
                                                       'اسم الحساب في المنصة',
-                                                      style: t.bodyMedium
-                                                          .override(
-                                                            fontFamily: 'Inter',
-                                                            color:
-                                                                t.primaryText,
-                                                            fontSize: 14,
-                                                          ),
+                                                      style: t.bodyMedium.override(
+                                                        fontFamily: 'Inter',
+                                                        color: t.primaryText,
+                                                        fontSize: 14,
+                                                      ),
                                                     ),
                                                   ),
                                                   Align(
-                                                    alignment:
-                                                        const AlignmentDirectional(
-                                                          1,
-                                                          -1,
-                                                        ),
+                                                    alignment: const AlignmentDirectional(1, -1),
                                                     child: Text(
                                                       'اسم المنصة ',
                                                       textAlign: TextAlign.end,
-                                                      style: t.bodyMedium
-                                                          .override(
-                                                            fontFamily: 'Inter',
-                                                            color:
-                                                                t.primaryText,
-                                                            fontSize: 14,
-                                                          ),
+                                                      style: t.bodyMedium.override(
+                                                        fontFamily: 'Inter',
+                                                        color: t.primaryText,
+                                                        fontSize: 14,
+                                                      ),
                                                     ),
                                                   ),
                                                 ],
                                               ),
                                             ),
                                             Padding(
-                                              padding:
-                                                  const EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    16,
-                                                  ),
+                                              padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
                                               child: Column(
-                                                children: List.generate(_socialRows.length, (
-                                                  i,
-                                                ) {
+                                                children: List.generate(_socialRows.length, (i) {
                                                   final row = _socialRows[i];
                                                   final platformEmpty =
-                                                      row.platform?.id ==
-                                                          null ||
-                                                      row.platform!.id
-                                                          .toString()
-                                                          .isEmpty;
-                                                  final usernameEmpty = row
-                                                      .usernameCtrl
-                                                      .text
-                                                      .trim()
-                                                      .isEmpty;
+                                                      row.platform?.id == null || row.platform!.id.toString().isEmpty;
+                                                  final usernameEmpty = row.usernameCtrl.text.trim().isEmpty;
                                                   final showPlatformErr =
-                                                      _showErrors &&
-                                                      _socialsRequireError &&
-                                                      platformEmpty;
+                                                      _showErrors && _socialsRequireError && platformEmpty;
                                                   final showUsernameErr =
-                                                      _showErrors &&
-                                                      _socialsRequireError &&
-                                                      usernameEmpty;
+                                                      _showErrors && _socialsRequireError && usernameEmpty;
 
                                                   return Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceEvenly,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
                                                       Align(
-                                                        alignment:
-                                                            const AlignmentDirectional(
-                                                              1,
-                                                              0,
-                                                            ),
+                                                        alignment: const AlignmentDirectional(1, 0),
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsetsDirectional.fromSTEB(
-                                                                0,
-                                                                0,
-                                                                0,
-                                                                16,
-                                                              ),
+                                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
                                                           child: FlutterFlowIconButton(
                                                             borderRadius: 8,
                                                             buttonSize: 50,
                                                             icon: Icon(
-                                                              Icons
-                                                                  .minimize_outlined,
+                                                              Icons.minimize_outlined,
                                                               color: t
                                                                   .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                                                               size: 20,
                                                             ),
                                                             onPressed: () {
                                                               setState(() {
-                                                                _socialRows
-                                                                    .removeAt(
-                                                                      i,
-                                                                    );
-                                                                if (_socialRows
-                                                                    .isEmpty) {
-                                                                  _socialRows.add(
-                                                                    _SocialRow(),
-                                                                  );
+                                                                _socialRows.removeAt(i);
+                                                                if (_socialRows.isEmpty) {
+                                                                  _socialRows.add(_SocialRow());
                                                                 }
                                                               });
                                                             },
@@ -971,93 +740,46 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
                                                       ),
                                                       Expanded(
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsetsDirectional.fromSTEB(
-                                                                0,
-                                                                0,
-                                                                20,
-                                                                0,
-                                                              ),
+                                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
                                                           child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .end,
+                                                            crossAxisAlignment: CrossAxisAlignment.end,
                                                             children: [
                                                               TextFormField(
-                                                                controller: row
-                                                                    .usernameCtrl,
-                                                                textCapitalization:
-                                                                    TextCapitalization
-                                                                        .none,
-                                                                decoration:
-                                                                    platformInputDecoration(
-                                                                      context,
-                                                                      isError:
-                                                                          showUsernameErr,
-                                                                    ),
-                                                                style: t
-                                                                    .bodyMedium
-                                                                    .copyWith(
-                                                                      color: t
-                                                                          .primaryText,
-                                                                    ),
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .end,
+                                                                controller: row.usernameCtrl,
+                                                                textCapitalization: TextCapitalization.none,
+                                                                decoration: platformInputDecoration(
+                                                                  context,
+                                                                  isError: showUsernameErr,
+                                                                ),
+                                                                style: t.bodyMedium.copyWith(color: t.primaryText),
+                                                                textAlign: TextAlign.end,
                                                               ),
-                                                              if (row.platform !=
-                                                                      null &&
-                                                                  row
-                                                                      .usernameCtrl
-                                                                      .text
-                                                                      .trim()
-                                                                      .isNotEmpty)
+                                                              if (row.platform != null &&
+                                                                  row.usernameCtrl.text.trim().isNotEmpty)
                                                                 Padding(
-                                                                  padding:
-                                                                      const EdgeInsets.only(
-                                                                        top: 4,
-                                                                      ),
+                                                                  padding: const EdgeInsets.only(top: 4),
                                                                   child: InkWell(
                                                                     onTap: () {
                                                                       final url =
                                                                           'https://${row.platform!.domain}/${row.usernameCtrl.text.trim()}';
-                                                                      launchUrl(
-                                                                        Uri.parse(
-                                                                          url,
-                                                                        ),
-                                                                      );
+                                                                      launchUrl(Uri.parse(url));
                                                                     },
                                                                     child: Text(
                                                                       '${row.platform!.domain}/${row.usernameCtrl.text.trim()}',
                                                                       style: const TextStyle(
-                                                                        color: Colors
-                                                                            .blue,
-                                                                        decoration:
-                                                                            TextDecoration.underline,
+                                                                        color: Colors.blue,
+                                                                        decoration: TextDecoration.underline,
                                                                       ),
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .end,
+                                                                      textAlign: TextAlign.end,
                                                                     ),
                                                                   ),
                                                                 ),
                                                               if (showUsernameErr)
                                                                 const Padding(
-                                                                  padding:
-                                                                      EdgeInsetsDirectional.fromSTEB(
-                                                                        0,
-                                                                        6,
-                                                                        4,
-                                                                        0,
-                                                                      ),
+                                                                  padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
                                                                   child: Text(
                                                                     'يرجى إدخال اسم الحساب.',
-                                                                    style: TextStyle(
-                                                                      color: Colors
-                                                                          .red,
-                                                                      fontSize:
-                                                                          12,
-                                                                    ),
+                                                                    style: TextStyle(color: Colors.red, fontSize: 12),
                                                                   ),
                                                                 ),
                                                             ],
@@ -1066,54 +788,25 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
                                                       ),
                                                       Expanded(
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsetsDirectional.fromSTEB(
-                                                                0,
-                                                                0,
-                                                                20,
-                                                                0,
-                                                              ),
+                                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
                                                           child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .end,
+                                                            crossAxisAlignment: CrossAxisAlignment.end,
                                                             children: [
-                                                              SearchableDropdown<
-                                                                DropDownList
-                                                              >(
-                                                                items:
-                                                                    _socialPlatforms,
-                                                                value: row
-                                                                    .platform,
+                                                              FeqSearchableDropdown<FeqDropDownList>(
+                                                                items: _socialPlatforms,
+                                                                value: row.platform,
                                                                 onChanged: (v) {
-                                                                  setState(
-                                                                    () =>
-                                                                        row.platform =
-                                                                            v,
-                                                                  );
+                                                                  setState(() => row.platform = v);
                                                                 },
-                                                                hint:
-                                                                    'اختر المنصة',
-                                                                isError:
-                                                                    showPlatformErr,
+                                                                hint: 'اختر المنصة',
+                                                                isError: showPlatformErr,
                                                               ),
                                                               if (showPlatformErr)
                                                                 const Padding(
-                                                                  padding:
-                                                                      EdgeInsetsDirectional.fromSTEB(
-                                                                        0,
-                                                                        6,
-                                                                        4,
-                                                                        0,
-                                                                      ),
+                                                                  padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
                                                                   child: Text(
                                                                     'يرجى اختيار المنصة.',
-                                                                    style: TextStyle(
-                                                                      color: Colors
-                                                                          .red,
-                                                                      fontSize:
-                                                                          12,
-                                                                    ),
+                                                                    style: TextStyle(color: Colors.red, fontSize: 12),
                                                                   ),
                                                                 ),
                                                             ],
@@ -1131,74 +824,47 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
                                     ),
 
                                     // Description
-                                    Labeled(
+                                    FeqLabeled(
                                       'النبذة الشخصية',
                                       child: TextFormField(
-                                        controller: _model
-                                            .influncerDescreptionTextController,
-                                        focusNode: _model
-                                            .influncerDescreptionFocusNode,
-                                        textCapitalization:
-                                            TextCapitalization.sentences,
+                                        controller: _model.influncerDescreptionTextController,
+                                        focusNode: _model.influncerDescreptionFocusNode,
+                                        textCapitalization: TextCapitalization.sentences,
                                         decoration: inputDecoration(context),
-                                        style: t.bodyLarge.copyWith(
-                                          color: t.primaryText,
-                                        ),
+                                        style: t.bodyLarge.copyWith(color: t.primaryText),
                                         textAlign: TextAlign.end,
                                         maxLines: 3,
                                       ),
                                     ),
 
                                     // Phone
-                                    Labeled(
+                                    FeqLabeled(
                                       'رقم الجوال',
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
+                                        crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
                                           TextFormField(
-                                            controller: _model
-                                                .phoneNumberTextController,
-                                            focusNode:
-                                                _model.phoneNumberFocusNode,
+                                            controller: _model.phoneNumberTextController,
+                                            focusNode: _model.phoneNumberFocusNode,
                                             keyboardType: TextInputType.phone,
                                             decoration: inputDecoration(
                                               context,
                                               isError:
                                                   _showErrors &&
                                                   _bothContactsEmpty &&
-                                                  _model
-                                                      .phoneNumberTextController!
-                                                      .text
-                                                      .trim()
-                                                      .isEmpty,
+                                                  _model.phoneNumberTextController!.text.trim().isEmpty,
                                             ),
-                                            style: t.bodyLarge.copyWith(
-                                              color: t.primaryText,
-                                            ),
+                                            style: t.bodyLarge.copyWith(color: t.primaryText),
                                             textAlign: TextAlign.end,
                                           ),
                                           if (_showErrors &&
                                               _bothContactsEmpty &&
-                                              _model
-                                                  .phoneNumberTextController!
-                                                  .text
-                                                  .trim()
-                                                  .isEmpty)
+                                              _model.phoneNumberTextController!.text.trim().isEmpty)
                                             const Padding(
-                                              padding:
-                                                  EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    6,
-                                                    4,
-                                                    0,
-                                                  ),
+                                              padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
                                               child: Text(
                                                 'يرجى إدخال رقم الجوال أو البريد الإلكتروني.',
-                                                style: TextStyle(
-                                                  color: Colors.red,
-                                                  fontSize: 12,
-                                                ),
+                                                style: TextStyle(color: Colors.red, fontSize: 12),
                                               ),
                                             ),
                                         ],
@@ -1206,53 +872,33 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
                                     ),
 
                                     // Email
-                                    Labeled(
+                                    FeqLabeled(
                                       'البريد الإلكتروني',
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
+                                        crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
                                           TextFormField(
-                                            controller:
-                                                _model.emailTextController,
+                                            controller: _model.emailTextController,
                                             focusNode: _model.emailFocusNode,
-                                            keyboardType:
-                                                TextInputType.emailAddress,
+                                            keyboardType: TextInputType.emailAddress,
                                             decoration: inputDecoration(
                                               context,
                                               isError:
                                                   _showErrors &&
                                                   _bothContactsEmpty &&
-                                                  _model
-                                                      .emailTextController!
-                                                      .text
-                                                      .trim()
-                                                      .isEmpty,
+                                                  _model.emailTextController!.text.trim().isEmpty,
                                             ),
-                                            style: t.bodyLarge.copyWith(
-                                              color: t.primaryText,
-                                            ),
+                                            style: t.bodyLarge.copyWith(color: t.primaryText),
                                             textAlign: TextAlign.end,
                                           ),
                                           if (_showErrors &&
                                               _bothContactsEmpty &&
-                                              _model.emailTextController!.text
-                                                  .trim()
-                                                  .isEmpty)
+                                              _model.emailTextController!.text.trim().isEmpty)
                                             const Padding(
-                                              padding:
-                                                  EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    6,
-                                                    4,
-                                                    0,
-                                                  ),
+                                              padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
                                               child: Text(
                                                 'يرجى إدخال البريد الإلكتروني أو رقم الجوال.',
-                                                style: TextStyle(
-                                                  color: Colors.red,
-                                                  fontSize: 12,
-                                                ),
+                                                style: TextStyle(color: Colors.red, fontSize: 12),
                                               ),
                                             ),
                                         ],
@@ -1261,36 +907,21 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
 
                                     // Button
                                     Padding(
-                                      padding:
-                                          const EdgeInsetsDirectional.fromSTEB(
-                                            0,
-                                            16,
-                                            0,
-                                            24,
-                                          ),
+                                      padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 24),
                                       child: AnimatedBuilder(
                                         animation: _shakeCtrl,
                                         builder: (context, child) =>
-                                            Transform.translate(
-                                              offset: Offset(_shakeOffset(), 0),
-                                              child: child,
-                                            ),
+                                            Transform.translate(offset: Offset(_shakeOffset(), 0), child: child),
                                         child: FFButtonWidget(
                                           onPressed: _saveAll,
                                           text: 'إنشاء',
                                           options: FFButtonOptions(
                                             width: 200,
                                             height: 40,
-                                            color: t
-                                                .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                            textStyle: t.titleMedium.override(
-                                              fontFamily: 'Inter',
-                                              color: t.containers,
-                                            ),
+                                            color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                            textStyle: t.titleMedium.override(fontFamily: 'Inter', color: t.containers),
                                             elevation: 2,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
                                         ),
                                       ),
@@ -1312,11 +943,10 @@ class _InfluencerSetupProfilePageState extends State<InfluencerSetupProfilePage>
 }
 
 class _SocialRow {
-  DropDownList? platform;
+  FeqDropDownList? platform;
   final TextEditingController usernameCtrl;
 
-  _SocialRow({TextEditingController? usernameCtrl})
-    : usernameCtrl = usernameCtrl ?? TextEditingController();
+  _SocialRow({TextEditingController? usernameCtrl}) : usernameCtrl = usernameCtrl ?? TextEditingController();
 
   void dispose() {
     usernameCtrl.dispose();

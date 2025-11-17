@@ -4,12 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../components/feq_components.dart';
+import '../../core/components/feq_components.dart';
+import '../../core/services/signup_flow_controller.dart';
+import '../../core/services/terms_and_privacy.dart';
 import '../../flutter_flow/flutter_flow_icon_button.dart';
 import '../../flutter_flow/flutter_flow_theme.dart';
 import '../../flutter_flow/flutter_flow_widgets.dart';
-import '../../services/signup_flow_controller.dart';
-import '../../services/terms_and_privacy.dart';
 import 'business_setupprofile.dart';
 import 'influencer_setupprofile.dart';
 
@@ -94,9 +94,7 @@ class _UserSignupPageState extends State<UserSignupPage> {
       if (user == null) return false;
       await user.reload(); // reload latest user info
       user = FirebaseAuth.instance.currentUser; // get fresh instance after reload
-      // feq:todo to revert it back, just for development testing
-      // return user?.emailVerified ?? false;
-      return true;
+      return user?.emailVerified ?? false;
     } catch (e) {
       debugPrint('Error checking email verification: $e');
       return false;
@@ -371,7 +369,6 @@ class _UserSignupPageState extends State<UserSignupPage> {
                       controller: _emailController,
                       focusNode: _emailFocus,
                       keyboardType: TextInputType.emailAddress,
-                      textAlign: TextAlign.end,
                       width: double.infinity,
                       labelPadding: EdgeInsets.zero,
                       childPadding: const EdgeInsets.only(top: 8, bottom: 4),
@@ -397,7 +394,6 @@ class _UserSignupPageState extends State<UserSignupPage> {
                           controller: _passwordController1,
                           focusNode: _passwordFocus1,
                           obscureText: !_passwordVisibility1,
-                          textAlign: TextAlign.end,
                           width: double.infinity,
                           labelPadding: EdgeInsets.zero,
                           childPadding: const EdgeInsets.only(top: 8, bottom: 4),
@@ -452,7 +448,6 @@ class _UserSignupPageState extends State<UserSignupPage> {
                       controller: _passwordController2,
                       focusNode: _passwordFocus2,
                       obscureText: !_passwordVisibility2,
-                      textAlign: TextAlign.end,
                       width: double.infinity,
                       labelPadding: EdgeInsets.zero,
                       childPadding: const EdgeInsets.only(top: 8, bottom: 4),

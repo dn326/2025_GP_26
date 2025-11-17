@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/services/signup_flow_controller.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
-import '../../services/signup_flow_controller.dart';
 import 'user_signup.dart';
 
 class UserTypePage extends StatefulWidget {

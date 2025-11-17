@@ -5,13 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/components/feq_components.dart';
+import '../../core/services/dropdown_list_loader.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '../../components/searchable_dropdown.dart';
-import '../../models/dropdown_list.dart';
-import '../../services/dropdown_list_loader.dart';
 import 'influencer_edit_experience_model.dart';
 
 export 'influencer_edit_experience_model.dart';
@@ -115,14 +114,14 @@ class _InfluncerEditExperienceWidgetState
 
   late AnimationController _shakeCtrl;
 
-  late List<DropDownList> _saudiCompanies;
-  DropDownList? _selectedSaudiCompany;
+  late List<FeqDropDownList> _saudiCompanies;
+  FeqDropDownList? _selectedSaudiCompany;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => InfluncerEditExperienceModel());
-    _saudiCompanies = DropDownListLoader.instance.saudiCompanies;
+    _saudiCompanies = FeqDropDownListLoader.instance.saudiCompanies;
     _model.campaignTitleTextController ??= TextEditingController();
     _model.campaignTitleFocusNode ??= FocusNode();
 
@@ -361,7 +360,7 @@ class _InfluncerEditExperienceWidgetState
                                               20,
                                               16,
                                             ),
-                                        child: SearchableDropdown<DropDownList>(
+                                        child: FeqSearchableDropdown<FeqDropDownList>(
                                           items: _saudiCompanies,
                                           value: _selectedSaudiCompany,
                                           onChanged: (v) {

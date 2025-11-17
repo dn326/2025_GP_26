@@ -54,10 +54,10 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
-blurRadius: 4,
-color: Color(0x33000000),
-offset: Offset(0, 2),
-),
+              blurRadius: 4,
+              color: Color(0x33000000),
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: Row(

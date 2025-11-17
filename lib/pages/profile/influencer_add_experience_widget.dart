@@ -6,13 +6,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/components/feq_components.dart';
+import '../../core/services/dropdown_list_loader.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '../../components/searchable_dropdown.dart';
-import '../../models/dropdown_list.dart';
-import '../../services/dropdown_list_loader.dart';
 import 'influencer_add_experience_model.dart';
 
 export 'influencer_add_experience_model.dart';
@@ -116,14 +115,14 @@ class _InfluncerAddExperienceWidgetState
   // أنيميشن هزّة زر الإضافة عند الفشل
   late AnimationController _shakeCtrl;
 
-  late List<DropDownList> _saudiCompanies;
-  DropDownList? _selectedSaudiCompany;
+  late List<FeqDropDownList> _saudiCompanies;
+  FeqDropDownList? _selectedSaudiCompany;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => InfluncerAddExperienceModel());
-    _saudiCompanies = DropDownListLoader.instance.saudiCompanies;
+    _saudiCompanies = FeqDropDownListLoader.instance.saudiCompanies;
     _model.campaignTitleTextController ??= TextEditingController();
     _model.campaignTitleFocusNode ??= FocusNode();
 
@@ -319,7 +318,7 @@ class _InfluncerAddExperienceWidgetState
                                     20,
                                     16,
                                   ),
-                                  child: SearchableDropdown<DropDownList>(
+                                  child: FeqSearchableDropdown<FeqDropDownList>(
                                     items: _saudiCompanies,
                                     value: _selectedSaudiCompany,
                                     onChanged: (v) {

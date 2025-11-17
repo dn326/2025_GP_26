@@ -27,6 +27,10 @@ class FFButtonOptions {
   final BorderSide? hoverBorderSide;
   final Color? hoverShadowColor;
 
+  // خصائص الـ Disabled (إضافة جديدة)
+  final Color? disabledColor;
+  final Color? disabledTextColor;
+
   const FFButtonOptions({
     this.height = 44,
     this.width,
@@ -45,12 +49,16 @@ class FFButtonOptions {
     this.hoverElevation,
     this.hoverBorderSide,
     this.hoverShadowColor,
+
+    // خصائص الـ Disabled
+    this.disabledColor,
+    this.disabledTextColor,
   });
 }
 
 class FFButtonWidget extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final FFButtonOptions options;
   final Widget? icon;
 
@@ -96,18 +104,25 @@ class FFButtonWidget extends StatelessWidget {
         return baseSide;
       }),
       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return options.disabledColor ?? Colors.grey;
+        }
         if (states.contains(WidgetState.hovered)) {
           return options.hoverColor ?? baseBg;
         }
         return baseBg;
       }),
-      // ملاحظة: لو ضفتي color داخل textStyle قد يطغى على لون الـforeground هنا.
+
       foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return options.disabledTextColor ?? Colors.white70;
+        }
         if (states.contains(WidgetState.hovered)) {
           return options.hoverTextColor ?? baseFg;
         }
         return baseFg;
       }),
+
       elevation: WidgetStateProperty.resolveWith<double>((states) {
         if (states.contains(WidgetState.hovered)) {
           return options.hoverElevation ?? baseElevation;

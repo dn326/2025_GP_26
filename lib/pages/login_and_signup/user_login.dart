@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../components/feq_components.dart';
+import '../../core/components/feq_components.dart';
 import '../../flutter_flow/flutter_flow_theme.dart';
 import '../../flutter_flow/flutter_flow_widgets.dart';
 import '../../main_screen.dart';
@@ -168,7 +168,6 @@ class _UserLoginPageState extends State<UserLoginPage> {
                   controller: emailController,
                   focusNode: emailFocusNode,
                   keyboardType: TextInputType.emailAddress,
-                  textAlign: TextAlign.end,
                   width: double.infinity,
                   labelPadding: EdgeInsets.zero,
                   childPadding: const EdgeInsets.only(top: 8, bottom: 4),
@@ -191,7 +190,6 @@ class _UserLoginPageState extends State<UserLoginPage> {
                   controller: passwordController,
                   focusNode: passwordFocusNode,
                   obscureText: !passwordVisible,
-                  textAlign: TextAlign.end,
                   width: double.infinity,
                   labelPadding: EdgeInsets.zero,
                   childPadding: const EdgeInsets.only(top: 8, bottom: 4),

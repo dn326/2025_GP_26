@@ -7,14 +7,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/components/feq_components.dart';
+import '../../core/services/dropdown_list_loader.dart';
+import '../../features/setting/presentation/account_settings_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
-import '../../models/dropdown_list.dart';
-import '../../services/dropdown_list_loader.dart';
-import '../setting/account_settings_widget.dart';
 import 'influencer_edit_experience_widget.dart';
 
 class InfluncerProfileWidget extends StatefulWidget {
@@ -35,7 +35,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
   String? _description;
   String? _email;
   String? _phone;
-  late List<DropDownList> _socialPlatforms;
+  late List<FeqDropDownList> _socialPlatforms;
   List<Map<String, String>> _socials = [];
   List<Map<String, dynamic>> _experiences = [];
   bool _loading = true;
@@ -160,7 +160,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
         _experiences = exps;
         _loading = false;
         _error = null;
-        _socialPlatforms = DropDownListLoader.instance.socialPlatforms;
+        _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
       });
     } catch (e) {
       setState(() {
@@ -241,7 +241,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
           final platform = _socialPlatforms.firstWhere(
             (p) => p.id.toString() == platId,
             orElse: () =>
-                DropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
+                FeqDropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
           );
 
           final domain = platform.domain ?? '';
@@ -482,7 +482,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
           final platform = _socialPlatforms.firstWhere(
                 (p) => p.id.toString() == platId,
             orElse: () =>
-                DropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
+                FeqDropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
           );
 
           final domain = platform.domain ?? '';

@@ -6,13 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/components/feq_components.dart';
+import '../../../core/services/dropdown_list_loader.dart';
 import '../../../flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '../../../components/feq_components.dart';
-import '../../../models/dropdown_list.dart';
-import '../../../services/dropdown_list_loader.dart';
 import '../data/models/campaign_model.dart';
 
 Widget wrapInMaterialDatePickerTheme(
@@ -86,12 +85,11 @@ class _CampaignScreenState extends State<CampaignScreen>
   bool _showErrors = false;
   bool _influencerContentTypeEmpty = false;
   bool _showDateErrors = false;
-  bool _budgetError = false;
 
   late AnimationController _shakeCtrl;
 
-  late List<DropDownList> _influencerContentTypes;
-  DropDownList? _selectedInfluencerContentType;
+  late List<FeqDropDownList> _influencerContentTypes;
+  FeqDropDownList? _selectedInfluencerContentType;
 
   bool get _isEdit => widget.campaignId != null;
 
@@ -125,7 +123,7 @@ class _CampaignScreenState extends State<CampaignScreen>
     _model.budgetMaxTextController ??= TextEditingController();
     _model.budgetMaxFocusNode ??= FocusNode();
     _influencerContentTypes =
-        DropDownListLoader.instance.influencerContentTypes;
+        FeqDropDownListLoader.instance.influencerContentTypes;
     _shakeCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -742,7 +740,7 @@ class _CampaignScreenState extends State<CampaignScreen>
                                   _showErrors && _influencerContentTypeEmpty
                                       ? 'يرجى اختيار نوع المحتوى.'
                                       : null,
-                                  child: FeqSearchableDropdown<DropDownList>(
+                                  child: FeqSearchableDropdown<FeqDropDownList>(
                                     items: _influencerContentTypes,
                                     value: _selectedInfluencerContentType,
                                     onChanged: (v) {
