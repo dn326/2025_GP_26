@@ -437,7 +437,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                           context: context,
                           builder: (ctx) => AlertDialog(
                             title: const Text('تأكيد الحذف'),
-                            content: const Text('هل أنت متأكد من حذف هذه الخبرة؟ لا يمكن التراجع عن هذه العملية.'),
+                            content: const Text('هل أنت متأكد من حذف هذا العمل؟ لا يمكن التراجع عن هذه العملية.'),
                             actions: [
                               TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('إلغاء')),
                               TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('حذف')),
@@ -657,7 +657,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                                     ),
                                     child: Center(
                                       child: Text(
-                                        'اضف خبراتك ليتعرف الآخرون على تميزك',
+                                        'اضف أعمالك ليتعرف الآخرون على تميزك',
                                         style: theme.labelSmall.override(
                                           fontFamily: GoogleFonts.inter().fontFamily,
                                           color: theme.subtextHints,
