@@ -349,30 +349,10 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget>
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: AppBar(
-        backgroundColor: t.containers,
-        centerTitle: true,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Text(
-          isSetupMode ? 'إعداد الملف الشخصي' : 'تعديل الملف الشخصي',
-          textAlign: TextAlign.center,
-          style: t.headlineSmall.override(
-            fontFamily: 'Inter Tight',
-            color: t.primaryText,
-            letterSpacing: 0.0,
-            fontWeight: t.headlineSmall.fontWeight,
-            fontStyle: t.headlineSmall.fontStyle,
-          ),
-        ),
-        leading: isEditMode
-            ? IconButton(
-          icon: const Icon(Icons.arrow_forward_ios),
-          color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-          onPressed: () => Navigator.pushReplacementNamed(
-              context, MainScreen.routeName),
-        )
-            : null,
+      appBar: FeqAppBar(
+        title: isSetupMode ? 'إنشاء الملف الشخصي' : 'تعديل الملف الشخصي',
+        showBack: isEditMode,
+        backRoute: MainScreen.routeName,
       ),
       body: SafeArea(
         top: true,

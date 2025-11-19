@@ -13,7 +13,6 @@ import '../../../core/services/firebase_service.dart';
 import '../../../core/utils/ext_navigation.dart';
 import '../../../core/widgets/image_picker_widget.dart';
 import '../../../flutter_flow/flutter_flow_util.dart';
-import '../../setting/presentation/account_settings_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -21,10 +20,11 @@ import 'experience_add_widget.dart';
 import 'experience_edit_widget.dart';
 
 class InfluncerProfileWidget extends StatefulWidget {
-  const InfluncerProfileWidget({super.key});
+  final String? uid;
+  const InfluncerProfileWidget({super.key, this.uid});
 
-  static String routeName = 'influncer_profile';
-  static String routePath = '/influncerProfile';
+  static const String routeName = 'influencer-profile';
+  static const String routePath = '/$routeName';
 
   @override
   State<InfluncerProfileWidget> createState() => _InfluncerProfileWidgetState();
@@ -34,11 +34,15 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   late String userType = "business";
   String? _name;
+  late bool _isVerified = false;
   String? _profileImage;
   String? _contentType;
   String? _description;
   String? _email;
   String? _phone;
+  String? _phoneOwner;
+  String? _emailOwner;
+  bool _useCustomEmail = false;
   late List<FeqDropDownList> _socialPlatforms;
   List<Map<String, String>> _socials = [];
   List<Map<String, dynamic>> _experiences = [];
@@ -53,7 +57,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
 
   Future<void> _loadAll() async {
     try {
-      final uid = firebaseAuth.currentUser?.uid;
+      final uid = widget.uid ?? firebaseAuth.currentUser?.uid;
       if (uid == null) throw Exception('No logged-in user');
 
       final usersSnap = await firebaseFirestore.collection('users').where('user_id', isEqualTo: uid).limit(1).get();
@@ -61,6 +65,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
       if (usersSnap.docs.isEmpty) throw Exception('User record not found');
       final userDoc = usersSnap.docs.first;
       userType = (userDoc.data()['user_type'] ?? '').toString().toLowerCase();
+      _isVerified = userDoc.data()['verified'] ?? false;
       if (userType != 'influencer') {
         setState(() {
           _loading = false;
@@ -81,6 +86,10 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
       String? contactEmail;
       String? phone;
       String? contentType;
+      String? phoneOwner;
+      String? emailOwner;
+      bool useCustomEmail = false;
+
       if (profilesSnap.docs.isNotEmpty) {
         final profileDoc = profilesSnap.docs.first;
         final prof = profileDoc.data();
@@ -88,6 +97,9 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
         description = prof['description']?.toString();
         contactEmail = prof['contact_email']?.toString();
         phone = prof['phone_number']?.toString();
+        phoneOwner = prof['phone_owner']?.toString() ?? 'personal';
+        emailOwner = prof['email_owner']?.toString() ?? 'personal';
+        useCustomEmail = prof['use_custom_email'] as bool? ?? false;
         // Profile Image
         final rawImageUrl = prof['profile_image'];
         if (rawImageUrl != null && rawImageUrl.isNotEmpty) {
@@ -102,25 +114,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
         }
       }
 
-      final usersRef = firebaseFirestore.collection('users').doc(uid);
-      final snapString = await firebaseFirestore
-          .collection('social_account')
-          .where('influencer_id', isEqualTo: uid)
-          .get();
-      final snapRef = await firebaseFirestore
-          .collection('social_account')
-          .where('influencer_id', isEqualTo: usersRef)
-          .get();
-      final allDocs = [...snapString.docs, ...snapRef.docs];
-      final socials = allDocs
-          .map((d) {
-            final m = d.data();
-            final platform = (m['platform'] ?? m['platform_name'] ?? '').toString();
-            final username = (m['username'] ?? '').toString();
-            return {'platform': platform, 'username': username};
-          })
-          .where((e) => (e['platform'] ?? '').isNotEmpty || (e['username'] ?? '').isNotEmpty)
-          .toList();
+      _socials = await loadSocials(uid);
 
       final expSnap = await firebaseFirestore.collection('experiences').where('influencer_id', isEqualTo: uid).get();
       final exps = expSnap.docs.map((d) {
@@ -155,7 +149,9 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
         _description = description ?? '';
         _email = contactEmail ?? '';
         _phone = phone ?? '';
-        _socials = socials;
+        _phoneOwner = phoneOwner;
+        _emailOwner = emailOwner;
+        _useCustomEmail = useCustomEmail;
         _experiences = exps;
         _loading = false;
         _error = null;
@@ -167,6 +163,41 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
         _error = 'حصل خطأ أثناء جلب البيانات: $e';
       });
     }
+  }
+
+  Future<List<Map<String, String>>> loadSocials(String uid) async {
+    final usersRef = firebaseFirestore.collection('users').doc(uid);
+
+    // Run both queries in parallel
+    final results = await Future.wait([
+      firebaseFirestore
+          .collection('social_account')
+          .where('influencer_id', isEqualTo: uid)
+          .get(),
+      firebaseFirestore
+          .collection('social_account')
+          .where('influencer_id', isEqualTo: usersRef)
+          .get(),
+    ]);
+
+    // Combine both snapshots
+    final allDocs = {
+      for (var doc in [...results[0].docs, ...results[1].docs]) doc.id: doc
+    }.values.toList(); // remove duplicates by using doc.id as key
+
+    // Convert to simple map models
+    return allDocs
+        .map((d) {
+      final m = d.data();
+      return {
+        'platform': (m['platform'] ?? m['platform_name'] ?? '').toString(),
+        'username': (m['username'] ?? '').toString(),
+      };
+    })
+        .where((e) =>
+    (e['platform'] ?? '').isNotEmpty ||
+        (e['username'] ?? '').isNotEmpty)
+        .toList();
   }
 
   String _fmtDate(dynamic tsOrDate) {
@@ -347,7 +378,13 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                 const SizedBox(height: 4),
                 Align(
                   alignment: const AlignmentDirectional(1, 0),
-                  child: Text('البريد الإلكتروني الخاص بي', style: labelStyle, textAlign: TextAlign.end),
+                  child: Text(
+                    _useCustomEmail && _emailOwner == 'assistant'
+                        ? 'البريد الإلكتروني الخاص بمنسق أعمالي'
+                        : 'البريد الإلكتروني الخاص بي',
+                    style: labelStyle,
+                    textAlign: TextAlign.end,
+                  ),
                 ),
                 Align(
                   alignment: const AlignmentDirectional(1, 0),
@@ -362,7 +399,13 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                 const SizedBox(height: 8),
                 Align(
                   alignment: const AlignmentDirectional(1, 0),
-                  child: Text('رقم الجوال الخاص بي', style: labelStyle, textAlign: TextAlign.end),
+                  child: Text(
+                    _phoneOwner == 'assistant'
+                        ? 'رقم الجوال الخاص بمنسق أعمالي'
+                        : 'رقم الجوال الخاص بي',
+                    style: labelStyle,
+                    textAlign: TextAlign.end,
+                  ),
                 ),
                 Align(
                   alignment: const AlignmentDirectional(1, 0),
@@ -396,6 +439,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.uid == null)
             SizedBox(
               width: 88,
               child: Align(
@@ -461,6 +505,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                 ),
               ),
             ),
+            if (widget.uid == null)
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -505,32 +550,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: theme.backgroundElan,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: AppBar(
-            backgroundColor: theme.containers,
-            automaticallyImplyLeading: false,
-            leading: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Align(
-                  alignment: const AlignmentDirectional(-1, 1),
-                  child: GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, AccountSettingsPage.routeName),
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16),
-                      child: FaIcon(
-                        FontAwesomeIcons.bahai,
-                        color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        appBar: FeqAppBar(title: '', showBack: widget.uid != null, showLeading: widget.uid == null),
         body: SafeArea(
           top: true,
           child: _loading
@@ -566,17 +586,10 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                               ),
                               Padding(
                                 padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 8),
-                                child: Text(
-                                  _name ?? '',
-                                  textAlign: TextAlign.center,
-                                  style: theme.headlineSmall.override(
-                                    fontFamily: GoogleFonts.interTight().fontFamily,
-                                    fontSize: 22,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
+                                child: FeqVerifiedNameWidget(name: _name ?? '', isVerified: _isVerified),
                               ),
                               _buildInfoLines(context),
+                              if (widget.uid == null)
                               Padding(
                                 padding: const EdgeInsets.all(16),
                                 child: FFButtonWidget(
@@ -618,6 +631,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
+                                    if (widget.uid == null)
                                     FlutterFlowIconButton(
                                       borderRadius: 8,
                                       buttonSize: 50,
@@ -633,6 +647,8 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                                         await _loadAll();
                                       },
                                     ),
+                                    if (widget.uid != null)
+                                      Container(),
                                     Text(
                                       'الأعمال الإعلانية السابقة',
                                       textAlign: TextAlign.end,

@@ -104,6 +104,7 @@ class _InfluncerAddExperienceWidgetState extends State<InfluncerAddExperienceWid
   FeqDropDownList? _selectedSaudiCompany;
 
   late List<FeqDropDownList> _socialPlatforms;
+  late List<FeqDropDownList> _socialPlatformsSelected = [];
   FeqDropDownList? _selectedPlatform;
   bool _sameDayCompletion = true;
   bool _useCustomCompany = false;
@@ -122,6 +123,7 @@ class _InfluncerAddExperienceWidgetState extends State<InfluncerAddExperienceWid
     _model.detailsFocusNode ??= FocusNode();
 
     _shakeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _loadUserSocialPlatforms();
   }
 
   @override
@@ -129,6 +131,56 @@ class _InfluncerAddExperienceWidgetState extends State<InfluncerAddExperienceWid
     _shakeCtrl.dispose();
     _model.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUserSocialPlatforms() async {
+    final socials = await loadSocials();
+
+    _socialPlatformsSelected = socials.map((e) {
+      return _socialPlatforms.firstWhere(
+            (p) => p.id.toString() == e['platform'],
+        orElse: () => FeqDropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
+      );
+    }).toList();
+
+    setState(() {});
+  }
+
+  Future<List<Map<String, String>>> loadSocials() async {
+    final uid = firebaseAuth.currentUser?.uid;
+    if (uid == null) throw Exception('No logged-in user');
+    final usersRef = firebaseFirestore.collection('users').doc(uid);
+
+    // Run both queries in parallel
+    final results = await Future.wait([
+      firebaseFirestore
+          .collection('social_account')
+          .where('influencer_id', isEqualTo: uid)
+          .get(),
+      firebaseFirestore
+          .collection('social_account')
+          .where('influencer_id', isEqualTo: usersRef)
+          .get(),
+    ]);
+
+    // Combine both snapshots
+    final allDocs = {
+      for (var doc in [...results[0].docs, ...results[1].docs]) doc.id: doc
+    }.values.toList(); // remove duplicates by using doc.id as key
+
+    // Convert to simple map models
+    return allDocs
+        .map((d) {
+      final m = d.data();
+      return {
+        'platform': (m['platform'] ?? m['platform_name'] ?? '').toString(),
+        'username': (m['username'] ?? '').toString(),
+      };
+    })
+        .where((e) =>
+    (e['platform'] ?? '').isNotEmpty ||
+        (e['username'] ?? '').isNotEmpty)
+        .toList();
   }
 
   void _syncEndDateWithStartDate() {
@@ -229,39 +281,10 @@ class _InfluncerAddExperienceWidgetState extends State<InfluncerAddExperienceWid
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: AppBar(
-        backgroundColor: t.containers,
-        centerTitle: true,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        // لا تولّد ليدر تلقائي
-        title: Text(
-          'إضافة عمل إعلاني',
-          style: GoogleFonts.interTight(textStyle: t.headlineSmall.copyWith(color: t.primaryText)),
-        ),
-        // نثبت زر الرجوع يمين دائماً باستخدام Stack داخل flexibleSpace
-        flexibleSpace: SafeArea(
-          child: Stack(
-            children: [
-              Positioned(
-                right: 16, // بادينق 16 يمين
-                top: 8,
-                child: FlutterFlowIconButton(
-                  borderRadius: 8,
-                  buttonSize: 40,
-                  icon: Icon(
-                    Icons.arrow_forward_ios,
-                    color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                    size: 22,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-            ],
-          ),
-        ),
+      appBar: FeqAppBar(
+        title: 'إضافة عمل إعلاني',
+        showBack: true,
       ),
-
       body: SafeArea(
         top: true,
         child: Padding(
@@ -292,15 +315,7 @@ class _InfluncerAddExperienceWidgetState extends State<InfluncerAddExperienceWid
                                 // الشركة / المنظمة
                                 Padding(
                                   padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 20, 5),
-                                  child: Text(
-                                    'الشركة / المنظمة',
-                                    style: GoogleFonts.inter(
-                                      textStyle: t.bodyMedium.copyWith(
-                                        color: t.primaryText,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
+                                  child: FeqLabeled('الشركة / المنظمة'),
                                 ),
                                 Padding(
                                   padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 12),
@@ -379,12 +394,7 @@ class _InfluncerAddExperienceWidgetState extends State<InfluncerAddExperienceWid
                                 // عنوان الحملة
                                 Padding(
                                   padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
-                                  child: Text(
-                                    'عنوان الحملة',
-                                    style: GoogleFonts.inter(
-                                      textStyle: t.bodyMedium.copyWith(color: t.primaryText, fontSize: 16),
-                                    ),
-                                  ),
+                                  child: FeqLabeled('عنوان الحملة'),
                                 ),
                                 Padding(
                                   padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 16),
@@ -615,12 +625,7 @@ class _InfluncerAddExperienceWidgetState extends State<InfluncerAddExperienceWid
                                 // تفاصيل العمل الإعلاني
                                 Padding(
                                   padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
-                                  child: Text(
-                                    'تفاصيل العمل الإعلاني',
-                                    style: GoogleFonts.inter(
-                                      textStyle: t.bodyMedium.copyWith(color: t.primaryText, fontSize: 16),
-                                    ),
-                                  ),
+                                  child: FeqLabeled('تفاصيل العمل الإعلاني'),
                                 ),
                                 Padding(
                                   padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 16),
@@ -655,20 +660,12 @@ class _InfluncerAddExperienceWidgetState extends State<InfluncerAddExperienceWid
 
                                 Padding(
                                   padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
-                                  child: Text(
-                                    'المنصة التي نشر فيها العمل الإعلاني',
-                                    style: GoogleFonts.inter(
-                                      textStyle: t.bodyMedium.copyWith(
-                                        color: t.primaryText,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
+                                  child: FeqLabeled('المنصة التي نشر فيها العمل الإعلاني'),
                                 ),
                                 Padding(
                                   padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 16),
                                   child: FeqSearchableDropdown<FeqDropDownList>(
-                                    items: _socialPlatforms,
+                                    items: _socialPlatformsSelected,
                                     value: _selectedPlatform,
                                     onChanged: (v) {
                                       setState(() => _selectedPlatform = v);

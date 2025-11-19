@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../features/setting/presentation/account_settings_widget.dart';
+import '../../flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
@@ -16,84 +19,77 @@ class FeqLabeled extends StatelessWidget {
   final TextDirection textDirection;
 
   const FeqLabeled(
-      this.label, {
-        super.key,
-        this.child,
-        this.errorText,
-        this.labelPadding,
-        this.childPadding,
-        this.errorPadding,
-        this.required = true,
-        this.textDirection = TextDirection.rtl,
-      });
+    this.label, {
+    super.key,
+    this.child,
+    this.errorText,
+    this.labelPadding,
+    this.childPadding,
+    this.errorPadding,
+    this.required = true,
+    this.textDirection = TextDirection.rtl,
+  });
 
   @override
   Widget build(BuildContext context) {
     final t = FlutterFlowTheme.of(context);
     return Directionality(
-        textDirection: textDirection,
-        child: Column(
-          crossAxisAlignment: textDirection == TextDirection.rtl
-              ? CrossAxisAlignment.start
-              : CrossAxisAlignment.end,
-          children: [
-            Padding(
-              padding: labelPadding ??
-                  (textDirection == TextDirection.rtl
-                      ? const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5)
-                      : const EdgeInsetsDirectional.fromSTEB(20, 5, 0, 5)),
-              child: RichText(
-                text: TextSpan(
-                  children: [
+      textDirection: textDirection,
+      child: Column(
+        crossAxisAlignment: textDirection == TextDirection.rtl ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+        children: [
+          Padding(
+            padding:
+                labelPadding ??
+                (textDirection == TextDirection.rtl
+                    ? const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5)
+                    : const EdgeInsetsDirectional.fromSTEB(20, 5, 0, 5)),
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: label,
+                    style: t.bodyMedium.override(fontFamily: 'Inter', color: t.primaryText, fontSize: 16),
+                  ),
+                  if (required)
                     TextSpan(
-                      text: label,
-                      style: t.bodyMedium.override(
-                        fontFamily: 'Inter',
-                        color: t.primaryText,
-                        fontSize: 16,
-                      ),
+                      text: ' *',
+                      style: t.bodyMedium.override(fontFamily: 'Inter', color: Colors.red, fontSize: 16),
                     ),
-                    if (required)
-                      TextSpan(
-                        text: ' *',
-                        style: t.bodyMedium.override(
-                          fontFamily: 'Inter',
-                          color: Colors.red,
-                          fontSize: 16,
-                        ),
-                      ),
-                  ],
-                ),
+                ],
               ),
             ),
+          ),
+          Padding(
+            padding:
+                childPadding ??
+                (textDirection == TextDirection.rtl
+                    ? const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6)
+                    : const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6)),
+            child: child,
+          ),
+          if (errorText != null && errorText!.isNotEmpty)
             Padding(
-              padding: childPadding ??
+              padding:
+                  errorPadding ??
                   (textDirection == TextDirection.rtl
-                      ? const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6)
-                      : const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6)),
-              child: child,
-            ),
-            if (errorText != null && errorText!.isNotEmpty)
-              Padding(
-                padding: errorPadding ??
-                    (textDirection == TextDirection.rtl
-                        ? const EdgeInsetsDirectional.fromSTEB(0, 6, 24, 10)
-                        : const EdgeInsetsDirectional.fromSTEB(24, 6, 0, 10)),
-                child: Text(
-                  errorText!,
-                  textAlign: textDirection == TextDirection.rtl
-                      ? TextAlign.start
-                      : TextAlign.end,
-                  style: const TextStyle(color: Colors.red, fontSize: 12),
-                ),
+                      ? const EdgeInsetsDirectional.fromSTEB(0, 6, 24, 10)
+                      : const EdgeInsetsDirectional.fromSTEB(24, 6, 0, 10)),
+              child: Text(
+                errorText!,
+                textAlign: textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
               ),
-          ],
-        ));
+            ),
+        ],
+      ),
+    );
   }
 }
 
 /// Unified text field with consistent styling
 class FeqTextFieldBox extends StatelessWidget {
+  final String? initialValue;
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final bool enabled;
@@ -114,6 +110,7 @@ class FeqTextFieldBox extends StatelessWidget {
 
   const FeqTextFieldBox({
     super.key,
+    this.initialValue,
     this.controller,
     this.focusNode,
     this.enabled = true,
@@ -142,6 +139,7 @@ class FeqTextFieldBox extends StatelessWidget {
       child: SizedBox(
         width: width,
         child: TextFormField(
+          initialValue: initialValue,
           controller: controller,
           focusNode: focusNode,
           enabled: enabled,
@@ -152,52 +150,35 @@ class FeqTextFieldBox extends StatelessWidget {
           textCapitalization: textCapitalization,
           maxLines: maxLines,
           onTap: onTap,
-          decoration: decoration ??
+          decoration:
+              decoration ??
               InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(color: theme.secondaryText),
                 isDense: true,
                 filled: true,
                 fillColor: theme.secondaryBackground,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: enabled ? theme.primary : Colors.transparent,
-                    width: enabled ? 1 : 0,
-                  ),
+                  borderSide: BorderSide(color: enabled ? theme.primary : Colors.transparent, width: enabled ? 1 : 0),
                 ),
                 errorBorder: isError
                     ? OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: Colors.red,
-                    width: 1,
-                  ),
-                )
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Colors.red, width: 1),
+                      )
                     : null,
                 focusedErrorBorder: isError
                     ? OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: Colors.red,
-                    width: 1,
-                  ),
-                )
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Colors.red, width: 1),
+                      )
                     : null,
                 suffixIcon: suffixIcon,
               ),
-          style: theme.bodyMedium.override(
-            fontFamily: 'Inter',
-            color: theme.primaryText,
-          ),
+          style: theme.bodyMedium.override(fontFamily: 'Inter', color: theme.primaryText),
           cursorColor: theme.primaryText,
           validator: validator,
           inputFormatters: inputFormatters,
@@ -210,6 +191,7 @@ class FeqTextFieldBox extends StatelessWidget {
 /// Convenience widget combining Labeled and TextFieldBox
 class FeqLabeledTextField extends StatelessWidget {
   final String label;
+  final String? initialValue;
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final bool enabled;
@@ -236,6 +218,7 @@ class FeqLabeledTextField extends StatelessWidget {
   const FeqLabeledTextField({
     super.key,
     required this.label,
+    this.initialValue,
     this.controller,
     this.focusNode,
     this.enabled = true,
@@ -271,6 +254,7 @@ class FeqLabeledTextField extends StatelessWidget {
       required: required,
       textDirection: textDirection,
       child: FeqTextFieldBox(
+        initialValue: initialValue,
         controller: controller,
         focusNode: focusNode,
         enabled: enabled,
@@ -298,12 +282,7 @@ class FeqDropDownList {
   final String nameEn;
   final String? domain; // only for platforms
 
-  const FeqDropDownList({
-    required this.id,
-    required this.nameAr,
-    required this.nameEn,
-    this.domain,
-  });
+  const FeqDropDownList({required this.id, required this.nameAr, required this.nameEn, this.domain});
 
   factory FeqDropDownList.fromJson(Map<String, dynamic> json) => FeqDropDownList(
     id: (json['id'] is int) ? json['id'] : int.parse(json['id'].toString()),
@@ -336,8 +315,7 @@ class FeqSearchableDropdown<T> extends StatefulWidget {
   });
 
   @override
-  State<FeqSearchableDropdown<T>> createState() =>
-      _FeqSearchableDropdownState<T>();
+  State<FeqSearchableDropdown<T>> createState() => _FeqSearchableDropdownState<T>();
 }
 
 class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
@@ -361,9 +339,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
   void _filter() {
     final query = _controller.text.trim().toLowerCase();
     setState(() {
-      _filtered = widget.items
-          .where((e) => _getText(e).toLowerCase().contains(query))
-          .toList();
+      _filtered = widget.items.where((e) => _getText(e).toLowerCase().contains(query)).toList();
     });
   }
 
@@ -392,17 +368,12 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
       textDirection: widget.textDirection,
       child: TextField(
         controller: _controller,
-        textAlign: widget.textDirection == TextDirection.rtl
-            ? TextAlign.start
-            : TextAlign.end,
+        textAlign: widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
         readOnly: true,
         decoration: _inputDecoration(context, isError: widget.isError).copyWith(
           hintText: widget.hint,
           suffixIcon: widget.textDirection == TextDirection.rtl
-              ? const Padding(
-            padding: EdgeInsetsDirectional.only(start: 8.0),
-            child: Icon(Icons.arrow_drop_down),
-          )
+              ? const Padding(padding: EdgeInsetsDirectional.only(start: 8.0), child: Icon(Icons.arrow_drop_down))
               : const Icon(Icons.arrow_drop_down),
         ),
         onTap: () => _showDropdown(context),
@@ -414,9 +385,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (_) => Directionality(
         textDirection: widget.textDirection,
         child: DraggableScrollableSheet(
@@ -429,19 +398,11 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
                 padding: const EdgeInsets.all(16),
                 child: TextField(
                   controller: _controller,
-                  textAlign: widget.textDirection == TextDirection.rtl
-                      ? TextAlign.start
-                      : TextAlign.end,
+                  textAlign: widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
                   decoration: InputDecoration(
-                    hintText: widget.textDirection == TextDirection.rtl
-                        ? 'إبحث...'
-                        : 'Search...',
-                    prefixIcon: widget.textDirection == TextDirection.rtl
-                        ? null
-                        : const Icon(Icons.search),
-                    suffixIcon: widget.textDirection == TextDirection.rtl
-                        ? const Icon(Icons.search)
-                        : null,
+                    hintText: widget.textDirection == TextDirection.rtl ? 'إبحث...' : 'Search...',
+                    prefixIcon: widget.textDirection == TextDirection.rtl ? null : const Icon(Icons.search),
+                    suffixIcon: widget.textDirection == TextDirection.rtl ? const Icon(Icons.search) : null,
                   ),
                   onChanged: (_) => _filter(),
                 ),
@@ -455,9 +416,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
                     return ListTile(
                       title: Text(
                         _getText(item),
-                        textAlign: widget.textDirection == TextDirection.rtl
-                            ? TextAlign.start
-                            : TextAlign.end,
+                        textAlign: widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
                       ),
                       onTap: () {
                         widget.onChanged(item);
@@ -474,8 +433,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
     );
   }
 
-  InputDecoration _inputDecoration(BuildContext context,
-      {bool isError = false}) {
+  InputDecoration _inputDecoration(BuildContext context, {bool isError = false}) {
     final t = FlutterFlowTheme.of(context);
     final errorColor = Theme.of(context).colorScheme.error;
     final BorderSide normalSide = BorderSide.none;
@@ -490,18 +448,9 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
         borderRadius: BorderRadius.circular(12),
         borderSide: isError ? errorSide : normalSide,
       ),
-      disabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: normalSide,
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: errorSide,
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: errorSide,
-      ),
+      disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: normalSide),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: errorSide),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: errorSide),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: isError ? errorSide : focusSide,
@@ -509,6 +458,148 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
       filled: true,
       fillColor: t.primaryBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+    );
+  }
+}
+
+class FeqVerifiedNameWidget extends StatelessWidget {
+  final String name;
+  final bool isVerified;
+
+  const FeqVerifiedNameWidget({super.key, required this.name, this.isVerified = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: theme.headlineSmall.override(
+              fontFamily: GoogleFonts.interTight().fontFamily,
+              fontSize: 22,
+              letterSpacing: 0.0,
+            ),
+          ),
+          if (isVerified) ...[
+            const SizedBox(width: 6),
+            Container(
+              decoration: BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+              padding: const EdgeInsets.all(3),
+              child: const Icon(Icons.check, color: Colors.white, size: 14),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final bool showBack;
+  final bool showLeading;
+  final String? backRoute;
+
+  const FeqAppBar({
+    super.key,
+    required this.title,
+    this.showBack = false,
+    this.showLeading = false,
+    this.backRoute,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(56.0);
+
+  @override
+  Widget build(BuildContext context) {
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(56.0),
+      child: Container(
+        decoration: const BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 4,
+              color: Color(0x33000000),
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: AppBar(
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+          automaticallyImplyLeading: false,
+          elevation: 0,
+          titleSpacing: 0,
+          leading: showLeading
+              ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Align(
+                alignment: const AlignmentDirectional(-1, 1),
+                child: GestureDetector(
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    AccountSettingsPage.routeName,
+                  ),
+                  child: Padding(
+                    padding:
+                    const EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16),
+                    child: FaIcon(
+                      FontAwesomeIcons.bahai,
+                      color: FlutterFlowTheme.of(context).primaryText,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          )
+              : null,
+          title: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: SizedBox(
+                height: 40,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Center(
+                      child: Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: FlutterFlowTheme.of(context).headlineSmall
+                            .copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    if (showBack)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: FlutterFlowIconButton(
+                          borderRadius: 8.0,
+                          buttonSize: 40.0,
+                          icon: Icon(
+                            Icons.arrow_forward_ios,
+                            color: FlutterFlowTheme.of(context).primaryText,
+                            size: 24.0,
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

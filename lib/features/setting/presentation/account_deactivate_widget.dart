@@ -1,18 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/user_session.dart';
-import '../../../pages/login_and_signup/user_login.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 
 class AccountDeactivatePage extends StatefulWidget {
   const AccountDeactivatePage({super.key});
 
-  static String routeName = 'account_deactivate_page';
-  static String routePath = '/account_deactivate_page';
+  static const String routeName = 'account-deactivate';
+  static const String routePath = '/$routeName';
 
   @override
   State<AccountDeactivatePage> createState() => _AccountDeactivatePageState();
@@ -23,6 +23,20 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
   bool _isLoading = false;
+  late bool _isDeactivating = false; // true = deactivate, false = activate
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAccountStatus();
+  }
+
+  Future<void> _loadAccountStatus() async {
+    final status = await UserSession.getAccountStatus();
+    setState(() {
+      _isDeactivating = status != 'disabled';
+    });
+  }
 
   @override
   void dispose() {
@@ -30,34 +44,37 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
     super.dispose();
   }
 
-  Future<void> _deactivateAccount() async {
+  Future<void> _handleAccountStatus() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final theme = FlutterFlowTheme.of(context);
 
     // ✅ Confirmation popup (Arabic)
-    final confirm =
-        await showDialog<bool>(
-          context: context,
-          builder: (ctx) => Directionality(
-            textDirection: TextDirection.rtl,
-            child: AlertDialog(
-              title: const Text('تأكيد التعطيل'),
-              content: const Text(
-                'هل أنت متأكد من رغبتك في تعطيل الحساب مؤقتًا؟ لن تظهر بياناتك للمستخدمين الآخرين حتى تقوم بتسجيل الدخول مرة أخرى.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('لا'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('نعم'),
-                ),
-              ],
+    final confirmMsg = _isDeactivating
+        ? 'هل أنت متأكد من رغبتك في تعطيل الحساب مؤقتًا؟ لن تظهر بياناتك للمستخدمين الآخرين حتى تقوم بتسجيل الدخول مرة أخرى.'
+        : 'هل أنت متأكد من رغبتك في تفعيل الحساب؟ ستظهر بياناتك للمستخدمين الآخرين مرة أخرى.';
+
+    final confirmTitle = _isDeactivating ? 'تأكيد التعطيل' : 'تأكيد التفعيل';
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: Text(confirmTitle),
+          content: Text(confirmMsg),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('لا'),
             ),
-          ),
-        ) ??
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('نعم'),
+            ),
+          ],
+        ),
+      ),
+    ) ??
         false;
 
     if (!confirm) return;
@@ -80,21 +97,29 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
       );
       await user.reauthenticateWithCredential(cred);
 
-      // ✅ Update account_status to disabled
+      // ✅ Update account_status
+      final newStatus = _isDeactivating ? 'disabled' : 'active';
       await firebaseFirestore.collection('users').doc(user.uid).set({
-        'account_status': 'disabled',
+        'account_status': newStatus,
       }, SetOptions(merge: true));
 
+      // ✅ Update SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('account_status', newStatus);
+
+      final successMsg = _isDeactivating ? '✅ تم تعطيل الحساب بنجاح' : '✅ تم تفعيل الحساب بنجاح';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('✅ تم تعطيل الحساب بنجاح'),
+          content: Text(successMsg),
           backgroundColor: theme.success,
         ),
       );
 
-      // ✅ Logout and redirect
-      await UserSession.logout();
-      Navigator.pushReplacementNamed(context, UserLoginPage.routeName);
+      // ✅ Navigate back
+      if (mounted) {
+        final nav = Navigator.of(context);
+        nav.pop();
+      }
     } on FirebaseAuthException catch (e) {
       String msg = '❌ حدث خطأ';
       if (e.code == 'wrong-password') msg = '⚠️ كلمة المرور غير صحيحة';
@@ -118,6 +143,12 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
 
+    final pageTitle = _isDeactivating ? 'تعطيل الحساب' : 'تفعيل الحساب';
+    final _ = _isDeactivating
+        ? 'سيتم تعطيل حسابك مؤقتًا.\nلن تظهر بياناتك للمستخدمين الآخرين\nحتى تسجيل الدخول مرة أخرى.'
+        : 'سيتم تفعيل حسابك.\nستظهر بياناتك للمستخدمين الآخرين مرة أخرى.';
+    final buttonText = _isDeactivating ? 'تعطيل الحساب' : 'تفعيل الحساب';
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -126,7 +157,7 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
           backgroundColor: theme.containers,
           elevation: 0,
           centerTitle: true,
-          title: Text('تعطيل الحساب', style: theme.headlineSmall),
+          title: Text(pageTitle, style: theme.headlineSmall),
         ),
         body: SafeArea(
           child: Padding(
@@ -140,9 +171,8 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
                     textAlign: TextAlign.center,
                     text: TextSpan(
                       style: theme.bodyLarge.copyWith(
-                        color: theme.errorColor,
                         fontWeight: FontWeight.w600,
-                        height: 1.5, // Line height for better readability
+                        height: 1.5,
                       ),
                       children: [
                         const WidgetSpan(
@@ -158,17 +188,23 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
                         ),
                         const TextSpan(text: ' '),
                         TextSpan(
-                          text: 'سيتم تعطيل حسابك مؤقتًا.\n',
-                          style: TextStyle(color: theme.errorColor),
+                          text: _isDeactivating
+                              ? 'سيتم تعطيل حسابك مؤقتًا.\n'
+                              : 'سيتم تفعيل حسابك.\n',
+                          style: TextStyle(
+                            color: _isDeactivating ? Colors.red[900] : Colors.green[700],
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         TextSpan(
-                          text: 'لن تظهر بياناتك للمستخدمين الآخرين\nحتى تسجيل الدخول مرة أخرى.',
+                          text: _isDeactivating
+                              ? 'لن تظهر بياناتك للمستخدمين الآخرين\nحتى تسجيل الدخول مرة أخرى.'
+                              : 'ستظهر بياناتك للمستخدمين الآخرين مرة أخرى.',
                           style: TextStyle(color: theme.secondaryText),
                         ),
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 24),
                   FeqLabeled('كلمة المرور'),
                   const SizedBox(height: 8),
@@ -200,9 +236,8 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
                     ),
                   ),
                   const SizedBox(height: 28),
-
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _deactivateAccount,
+                    onPressed: _isLoading ? null : _handleAccountStatus,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.primary,
                       shape: RoundedRectangleBorder(
@@ -212,11 +247,11 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
-                            'تعطيل الحساب',
-                            style: theme.titleSmall.copyWith(
-                              color: Colors.white,
-                            ),
-                          ),
+                      buttonText,
+                      style: theme.titleSmall.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ],
               ),

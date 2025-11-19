@@ -45,7 +45,7 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
     Color iconColor(int i) => _currentIndex == i ? activeColor : inactiveColor;
 
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
+      padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
       child: Container(
         width: double.infinity,
         height: 56,
