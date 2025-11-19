@@ -80,8 +80,8 @@ class InfluncerEditExperienceWidget extends StatefulWidget {
 
   final String experienceId;
 
-  static String routeName = 'influncer_edit_experience';
-  static String routePath = '/influncerEditExperience';
+  static const String routeName = 'influencer-experience-edit';
+  static const String routePath = '/$routeName';
 
   @override
   State<InfluncerEditExperienceWidget> createState() => _InfluncerEditExperienceWidgetState();
@@ -102,8 +102,8 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
 
   late List<FeqDropDownList> _saudiCompanies;
   FeqDropDownList? _selectedSaudiCompany;
-
   late List<FeqDropDownList> _socialPlatforms;
+  late List<FeqDropDownList> _socialPlatformsSelected = [];
   FeqDropDownList? _selectedPlatform;
   bool _sameDayCompletion = true;
   bool _useCustomCompany = false;
@@ -122,23 +122,68 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
     _model.detailsFocusNode ??= FocusNode();
 
     _shakeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
-
+    _loadUserSocialPlatforms();
     _loadExperience();
+  }
+
+  Future<void> _loadUserSocialPlatforms() async {
+    final socials = await loadSocials();
+
+    _socialPlatformsSelected = socials.map((e) {
+      return _socialPlatforms.firstWhere(
+            (p) => p.id.toString() == e['platform'],
+        orElse: () => FeqDropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
+      );
+    }).toList();
+
+    setState(() {});
+  }
+
+  Future<List<Map<String, String>>> loadSocials() async {
+    final uid = firebaseAuth.currentUser?.uid;
+    if (uid == null) throw Exception('No logged-in user');
+    final usersRef = firebaseFirestore.collection('users').doc(uid);
+
+    // Run both queries in parallel
+    final results = await Future.wait([
+      firebaseFirestore
+          .collection('social_account')
+          .where('influencer_id', isEqualTo: uid)
+          .get(),
+      firebaseFirestore
+          .collection('social_account')
+          .where('influencer_id', isEqualTo: usersRef)
+          .get(),
+    ]);
+
+    // Combine both snapshots
+    final allDocs = {
+      for (var doc in [...results[0].docs, ...results[1].docs]) doc.id: doc
+    }.values.toList(); // remove duplicates by using doc.id as key
+
+    // Convert to simple map models
+    return allDocs
+        .map((d) {
+      final m = d.data();
+      return {
+        'platform': (m['platform'] ?? m['platform_name'] ?? '').toString(),
+        'username': (m['username'] ?? '').toString(),
+      };
+    })
+        .where((e) =>
+    (e['platform'] ?? '').isNotEmpty ||
+        (e['username'] ?? '').isNotEmpty)
+        .toList();
   }
 
   Future<void> _loadExperience() async {
     try {
-      final doc = await firebaseFirestore
-          .collection('experiences')
-          .doc(widget.experienceId)
-          .get();
+      final doc = await firebaseFirestore.collection('experiences').doc(widget.experienceId).get();
 
       if (!doc.exists) {
         setState(() => _loading = false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('لم يتم العثور على هذه الخبرة')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لم يتم العثور على هذه الخبرة')));
         }
         return;
       }
@@ -159,13 +204,12 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
           companyId = int.tryParse(companyIdRaw) ?? 0;
         }
         _selectedSaudiCompany = _saudiCompanies.firstWhere(
-              (c) => c.id == companyId,
+          (c) => c.id == companyId,
           orElse: () => _saudiCompanies.first,
         );
       }
 
-      _model.campaignTitleTextController!.text =
-          (m['campaign_title'] ?? '').toString();
+      _model.campaignTitleTextController!.text = (m['campaign_title'] ?? '').toString();
       _model.detailsTextController!.text = (m['details'] ?? '').toString();
 
       // Load platform
@@ -177,9 +221,9 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
         platformId = int.tryParse(platformIdRaw) ?? 0;
       }
       if (platformId > 0) {
-        _selectedPlatform = _socialPlatforms.firstWhere(
-              (p) => p.id == platformId,
-          orElse: () => _socialPlatforms.first,
+        _selectedPlatform = _socialPlatformsSelected.firstWhere(
+          (p) => p.id == platformId,
+          orElse: () => _socialPlatformsSelected.first,
         );
       }
 
@@ -189,9 +233,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
       if (e is Timestamp) _model.datePicked1 = e.toDate();
 
       // Check if same day
-      if (_model.datePicked1 != null &&
-          _model.datePicked2 != null &&
-          _model.datePicked1 == _model.datePicked2) {
+      if (_model.datePicked1 != null && _model.datePicked2 != null && _model.datePicked1 == _model.datePicked2) {
         _sameDayCompletion = true;
       }
 
@@ -199,9 +241,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
     } catch (e) {
       setState(() => _loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل جلب البيانات: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل جلب البيانات: $e')));
       }
     }
   }
@@ -233,9 +273,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
   Future<void> _updateExperience() async {
     try {
       final companyId = _useCustomCompany ? null : _selectedSaudiCompany!.id;
-      final companyName = _useCustomCompany
-          ? _customCompanyController.text.trim()
-          : _selectedSaudiCompany!.nameAr;
+      final companyName = _useCustomCompany ? _customCompanyController.text.trim() : _selectedSaudiCompany!.nameAr;
 
       final data = {
         'company_name': companyName,
@@ -254,21 +292,14 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
         data['company_other'] = companyName;
       }
 
-      await firebaseFirestore
-          .collection('experiences')
-          .doc(widget.experienceId)
-          .update(data);
+      await firebaseFirestore.collection('experiences').doc(widget.experienceId).update(data);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تحديث الخبرة بنجاح')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تحديث الخبرة بنجاح')));
       Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تعذر التحديث: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تعذر التحديث: $e')));
       }
     }
   }
@@ -303,39 +334,10 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: AppBar(
-        backgroundColor: t.containers,
-        centerTitle: true,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        // لا تولّد ليدر تلقائي
-        title: Text(
-          'تحديث العمل الإعلاني',
-          style: GoogleFonts.interTight(textStyle: t.headlineSmall.copyWith(color: t.primaryText)),
-        ),
-        // نثبت زر الرجوع يمين دائماً باستخدام Stack داخل flexibleSpace
-        flexibleSpace: SafeArea(
-          child: Stack(
-            children: [
-              Positioned(
-                right: 16, // بادينق 16 يمين
-                top: 8,
-                child: FlutterFlowIconButton(
-                  borderRadius: 8,
-                  buttonSize: 40,
-                  icon: Icon(
-                    Icons.arrow_forward_ios,
-                    color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                    size: 22,
-                  ),
-                  onPressed: () => context.pop(),
-                ),
-              ),
-            ],
-          ),
-        ),
+      appBar: FeqAppBar(
+        title: 'تحديث العمل الإعلاني',
+        showBack: true,
       ),
-
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
@@ -368,15 +370,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                       // الشركة / المنظمة
                                       Padding(
                                         padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 20, 5),
-                                        child: Text(
-                                          'الشركة / المنظمة',
-                                          style: GoogleFonts.inter(
-                                            textStyle: t.bodyMedium.copyWith(
-                                              color: t.primaryText,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ),
+                                        child: FeqLabeled('الشركة / المنظمة'),
                                       ),
                                       Padding(
                                         padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 12),
@@ -400,8 +394,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                                 style: t.bodyMedium.copyWith(color: t.primaryText),
                                                 decoration: InputDecoration(
                                                   enabledBorder: OutlineInputBorder(
-                                                    borderSide:
-                                                    BorderSide(color: t.primaryBackground, width: 2),
+                                                    borderSide: BorderSide(color: t.primaryBackground, width: 2),
                                                     borderRadius: BorderRadius.circular(12),
                                                   ),
                                                   focusedBorder: OutlineInputBorder(
@@ -421,24 +414,20 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                               padding: const EdgeInsets.only(top: 8),
                                               child: InkWell(
                                                 onTap: () {
-                                                  setState(
-                                                        () {
-                                                      _useCustomCompany = !_useCustomCompany;
-                                                      if (!_useCustomCompany) {
-                                                        _customCompanyController.clear();
-                                                      } else {
-                                                        _selectedSaudiCompany = null;
-                                                      }
-                                                    },
-                                                  );
+                                                  setState(() {
+                                                    _useCustomCompany = !_useCustomCompany;
+                                                    if (!_useCustomCompany) {
+                                                      _customCompanyController.clear();
+                                                    } else {
+                                                      _selectedSaudiCompany = null;
+                                                    }
+                                                  });
                                                 },
                                                 child: Row(
                                                   mainAxisAlignment: MainAxisAlignment.end,
                                                   children: [
                                                     Text(
-                                                      _useCustomCompany
-                                                          ? 'اختر من قائمة الشركات'
-                                                          : 'أضف شركة جديدة',
+                                                      _useCustomCompany ? 'اختر من قائمة الشركات' : 'أضف شركة جديدة',
                                                       style: t.bodySmall.copyWith(
                                                         color: t.primary,
                                                         decoration: TextDecoration.underline,
@@ -455,12 +444,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                       // عنوان الحملة
                                       Padding(
                                         padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
-                                        child: Text(
-                                          'عنوان الحملة',
-                                          style: GoogleFonts.inter(
-                                            textStyle: t.bodyMedium.copyWith(color: t.primaryText, fontSize: 16),
-                                          ),
-                                        ),
+                                        child: FeqLabeled('عنوان الحملة'),
                                       ),
                                       Padding(
                                         padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 16),
@@ -511,33 +495,32 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                                         onPressed: _sameDayCompletion
                                                             ? null
                                                             : () async {
-                                                          final picked = await showDatePicker(
-                                                            context: context,
-                                                            initialDate:
-                                                            _model.datePicked1 ?? DateTime.now(),
-                                                            firstDate: DateTime(1900),
-                                                            lastDate: DateTime(2050),
-                                                            builder: (context, child) =>
-                                                                wrapInMaterialDatePickerTheme(
-                                                                  context,
-                                                                  child!,
-                                                                  headerBackgroundColor: t.primary,
-                                                                  headerForegroundColor: Colors.white,
-                                                                  pickerBackgroundColor: t.secondaryBackground,
-                                                                  actionButtonForegroundColor: t.primaryText,
-                                                                  iconSize: 24,
-                                                                ),
-                                                          );
-                                                          if (picked != null) {
-                                                            setState(
-                                                                  () => _model.datePicked1 = DateTime(
-                                                                picked.year,
-                                                                picked.month,
-                                                                picked.day,
-                                                              ),
-                                                            );
-                                                          }
-                                                        },
+                                                                final picked = await showDatePicker(
+                                                                  context: context,
+                                                                  initialDate: _model.datePicked1 ?? DateTime.now(),
+                                                                  firstDate: DateTime(1900),
+                                                                  lastDate: DateTime(2050),
+                                                                  builder: (context, child) =>
+                                                                      wrapInMaterialDatePickerTheme(
+                                                                        context,
+                                                                        child!,
+                                                                        headerBackgroundColor: t.primary,
+                                                                        headerForegroundColor: Colors.white,
+                                                                        pickerBackgroundColor: t.secondaryBackground,
+                                                                        actionButtonForegroundColor: t.primaryText,
+                                                                        iconSize: 24,
+                                                                      ),
+                                                                );
+                                                                if (picked != null) {
+                                                                  setState(
+                                                                    () => _model.datePicked1 = DateTime(
+                                                                      picked.year,
+                                                                      picked.month,
+                                                                      picked.day,
+                                                                    ),
+                                                                  );
+                                                                }
+                                                              },
                                                         text: 'تاريخ الإنتهاء',
                                                         options: FFButtonOptions(
                                                           width: 140,
@@ -587,20 +570,19 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                                             initialDate: _model.datePicked2 ?? DateTime.now(),
                                                             firstDate: DateTime(1900),
                                                             lastDate: DateTime.now(),
-                                                            builder: (context, child) =>
-                                                                wrapInMaterialDatePickerTheme(
-                                                                  context,
-                                                                  child!,
-                                                                  headerBackgroundColor: t.primary,
-                                                                  headerForegroundColor: Colors.white,
-                                                                  pickerBackgroundColor: t.secondaryBackground,
-                                                                  actionButtonForegroundColor: t.primaryText,
-                                                                  iconSize: 24,
-                                                                ),
+                                                            builder: (context, child) => wrapInMaterialDatePickerTheme(
+                                                              context,
+                                                              child!,
+                                                              headerBackgroundColor: t.primary,
+                                                              headerForegroundColor: Colors.white,
+                                                              pickerBackgroundColor: t.secondaryBackground,
+                                                              actionButtonForegroundColor: t.primaryText,
+                                                              iconSize: 24,
+                                                            ),
                                                           );
                                                           if (picked != null) {
                                                             setState(
-                                                                  () => _model.datePicked2 = DateTime(
+                                                              () => _model.datePicked2 = DateTime(
                                                                 picked.year,
                                                                 picked.month,
                                                                 picked.day,
@@ -621,10 +603,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                                             ),
                                                           ),
                                                           elevation: 0,
-                                                          borderSide: BorderSide(
-                                                            color: t.tertiary,
-                                                            width: 2,
-                                                          ),
+                                                          borderSide: BorderSide(color: t.tertiary, width: 2),
                                                           borderRadius: BorderRadius.circular(12),
                                                         ),
                                                       ),
@@ -679,10 +658,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                                 !_datesValid)
                                               const Padding(
                                                 padding: EdgeInsets.only(top: 8),
-                                                child: Text(
-                                                  'ادخل تواريخ صحيحة',
-                                                  style: TextStyle(color: Colors.red),
-                                                ),
+                                                child: Text('ادخل تواريخ صحيحة', style: TextStyle(color: Colors.red)),
                                               ),
                                           ],
                                         ),
@@ -691,12 +667,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                       // تفاصيل العمل الإعلاني
                                       Padding(
                                         padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
-                                        child: Text(
-                                          'تفاصيل العمل الإعلاني',
-                                          style: GoogleFonts.inter(
-                                            textStyle: t.bodyMedium.copyWith(color: t.primaryText, fontSize: 16),
-                                          ),
-                                        ),
+                                        child: FeqLabeled('تفاصيل العمل الإعلاني'),
                                       ),
                                       Padding(
                                         padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 16),
@@ -724,27 +695,20 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                             fillColor: t.primaryBackground,
                                           ),
                                           textAlign: TextAlign.end,
-                                          validator: (v) =>
-                                              (v == null || v.trim().isEmpty) ? 'يرجى إدخال تفاصيل العمل الإعلاني' : null,
+                                          validator: (v) => (v == null || v.trim().isEmpty)
+                                              ? 'يرجى إدخال تفاصيل العمل الإعلاني'
+                                              : null,
                                         ),
                                       ),
 
                                       Padding(
                                         padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
-                                        child: Text(
-                                          'المنصة التي نشر فيها العمل الإعلاني',
-                                          style: GoogleFonts.inter(
-                                            textStyle: t.bodyMedium.copyWith(
-                                              color: t.primaryText,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ),
+                                        child: FeqLabeled('المنصة التي نشر فيها العمل الإعلاني'),
                                       ),
                                       Padding(
                                         padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 16),
                                         child: FeqSearchableDropdown<FeqDropDownList>(
-                                          items: _socialPlatforms,
+                                          items: _socialPlatformsSelected,
                                           value: _selectedPlatform,
                                           onChanged: (v) {
                                             setState(() => _selectedPlatform = v);

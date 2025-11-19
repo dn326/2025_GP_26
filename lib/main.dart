@@ -1,5 +1,7 @@
 // هنا نربط الصفحات
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:elan_flutterproject/features/business/presentation/explore_widget.dart';
+import 'package:elan_flutterproject/features/influencer/presentation/home_widget.dart';
 import 'package:elan_flutterproject/pages/login_and_signup/business_setupprofile.dart';
 import 'package:elan_flutterproject/pages/login_and_signup/influencer_setupprofile.dart';
 import 'package:elan_flutterproject/pages/login_and_signup/user_login.dart';
@@ -60,6 +62,8 @@ class MyApp extends StatelessWidget {
           final selectedIndex = args is int ? args : 0;
           return MainScreen(selectedIndex: selectedIndex);
         },
+        BusinessExploreWidget.routeName: (context) => const BusinessExploreWidget(),
+        InfluencerHomeWidget.routeName: (context) => const InfluencerHomeWidget(),
         ComingSoonWidget.routeName: (context) => const ComingSoonWidget(),
         AccountChangePasswordPage.routeName: (context) =>
             const AccountChangePasswordPage(),

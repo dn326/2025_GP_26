@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/components/feq_components.dart';
 import '../../../core/services/user_session.dart';
 import '../../../pages/login_and_signup/user_login.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -11,8 +11,8 @@ import 'account_delete_widget.dart';
 import 'account_details_widget.dart';
 
 class AccountSettingsPage extends StatefulWidget {
-  static const String routePath = '/account_settings_page';
-  static String routeName = 'account_settings_page';
+  static const String routeName = 'account-settings';
+  static const String routePath = '/$routeName';
 
   const AccountSettingsPage({super.key});
 
@@ -21,22 +21,22 @@ class AccountSettingsPage extends StatefulWidget {
 }
 
 class _AccountSettingsPageState extends State<AccountSettingsPage> {
-  late String userType = "business";
+  late String userType = '';
+  late String accountStatus = '';
 
   @override
   void initState() {
     super.initState();
-    _loadUAsyncData();
+    _loadAsyncData();
   }
 
-  Future<void> _loadUAsyncData() async {
-    final prefs = await SharedPreferences.getInstance();
-    userType = prefs.getString('user_type') ?? '';
+  Future<void> _loadAsyncData() async {
+    userType = (await UserSession.getUserType()) ?? '';
+    accountStatus = (await UserSession.getAccountStatus()) ?? 'active';
     if (!mounted) return;
     if (userType.isEmpty) {
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
+      final nav = Navigator.of(context);
+      nav.pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
     } else {
       setState(() {});
     }
@@ -44,96 +44,69 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (userType.isEmpty) {
+    if (userType.isEmpty || accountStatus.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final theme = FlutterFlowTheme.of(context);
+
+    final isAccountDisabled = accountStatus == 'disabled';
+    final deactivateButtonText = isAccountDisabled ? 'تفعيل الحساب' : 'تعطيل الحساب';
+
     return Directionality(
-      textDirection: TextDirection.rtl, // ✅ يمين-يسار
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         backgroundColor: theme.backgroundElan,
-        appBar: AppBar(
-          backgroundColor: theme.containers,
-          elevation: 0,
-          centerTitle: true,
-          title: Text('إعدادات حسابك', style: theme.headlineSmall),
-          // في RTL الـ leading يكون على اليمين تلقائياً
-          leading: Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: theme.primaryText,
-                size: 22,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
+        appBar: FeqAppBar(
+          title: 'إعدادات حسابك',
+          showBack: true,
         ),
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               child: Container(
                 width: double.infinity,
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 24,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 32,
-                  horizontal: 16,
-                ),
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
                 decoration: BoxDecoration(
                   color: theme.containers,
-                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))],
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      'حسابك',
-                      style: theme.headlineSmall,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text('حسابك', style: theme.headlineSmall, textAlign: TextAlign.center),
                     const SizedBox(height: 24),
 
                     _SettingsButton(
                       text: 'معلومات الحساب',
-                      onPressed: () => Navigator.pushNamed(
-                        context,
-                        AccountDetailsPage.routeName,
-                      ),
+                      onPressed: () => Navigator.pushNamed(context, AccountDetailsPage.routeName),
                       color: theme.secondaryButtonsOnLight,
                     ),
                     const SizedBox(height: 12),
 
-                    _SettingsButton(
-                      text: 'تعطيل الحساب',
-                      onPressed: () => Navigator.pushNamed(
-                        context,
-                        AccountDeactivatePage.routeName,
+                    if (userType == "influencer")
+                      _SettingsButton(
+                        text: deactivateButtonText,
+                        onPressed: () async {
+                          await Navigator.pushNamed(context, AccountDeactivatePage.routeName);
+                          _loadAsyncData(); // Reload account status
+                        },
+                        color: theme.secondaryButtonsOnLight,
                       ),
-                      color: theme.secondaryButtonsOnLight,
-                    ),
                     const SizedBox(height: 12),
 
                     _SettingsButton(
                       text: 'تغيير كلمة المرور',
-                      onPressed: () => Navigator.pushNamed(
-                        context,
-                        AccountChangePasswordPage.routeName,
-                      ),
+                      onPressed: () => Navigator.pushNamed(context, AccountChangePasswordPage.routeName),
                       color: theme.secondaryButtonsOnLight,
                     ),
                     const SizedBox(height: 12),
 
                     _SettingsButton(
                       text: 'حذف الحساب',
-                      onPressed: () => Navigator.pushNamed(
-                        context,
-                        AccountDeletePage.routeName,
-                      ),
+                      onPressed: () => Navigator.pushNamed(context, AccountDeletePage.routeName),
                       color: theme.secondaryButtonsOnLight,
                     ),
 
@@ -141,21 +114,18 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
                     FFButtonWidget(
                       onPressed: () async {
+                        final nav = Navigator.of(context);
                         await UserSession.logout();
-                        Navigator.pushReplacementNamed(
-                          context,
-                          UserLoginPage.routeName,
-                        );
+                        if (mounted) {
+                          nav.pushReplacementNamed(UserLoginPage.routeName);
+                        }
                       },
                       text: 'تسجيل خروج',
                       options: FFButtonOptions(
                         width: 160,
                         height: 50,
                         color: theme.primary,
-                        textStyle: theme.titleSmall.copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
+                        textStyle: theme.titleSmall.copyWith(color: Colors.white, fontSize: 16),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
@@ -195,14 +165,9 @@ class _SettingsButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        child: Text(
-          text,
-          style: theme.titleSmall.copyWith(color: theme.primaryText),
-        ),
+        child: Text(text, style: theme.titleSmall.copyWith(color: theme.primaryText)),
       ),
     );
   }

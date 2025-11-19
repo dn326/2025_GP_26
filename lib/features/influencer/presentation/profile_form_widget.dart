@@ -112,8 +112,8 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
   String? _profileDocId;
   String? _influencerSubDocId;
 
-  File? _pickedImage;
-  Uint8List? _pickedBytes;
+  File? pickedImage;
+  Uint8List? pickedBytes;
   String? _imageUrl;
 
   bool _loading = true;
@@ -125,6 +125,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
   bool _initialized = false;
   String _initialSnapshot = '';
   late bool dirty = false;
+  late String _userEmail = '';
   bool _nameEmpty = false;
   bool _contentEmpty = false;
   bool _bothContactsEmpty = false;
@@ -134,7 +135,8 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
   PhoneOwner _phoneOwner = PhoneOwner.personal;
   EmailOwner _emailOwner = EmailOwner.personal;
 
-  String _userEmail = '';
+  bool _useCustomEmail = false;
+  final TextEditingController _customEmailController = TextEditingController();
 
   late AnimationController _shakeCtrl;
 
@@ -179,9 +181,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
   }
 
   void _initSetupMode() {
-    final userEmail = firebaseAuth.currentUser?.email ?? '';
-    _userEmail = userEmail;
-    _model.emailTextController!.text = _userEmail;
+    _userEmail = firebaseAuth.currentUser?.email ?? '';
     setState(() {
       _loading = false;
       _initialized = true;
@@ -195,6 +195,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       _model.influncerDescreptionTextController,
       _model.phoneNumberTextController,
       _model.emailTextController,
+      _customEmailController,
     ]) {
       c?.addListener(_onAnyFieldChanged);
     }
@@ -222,7 +223,9 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
   void _recomputeValidation() {
     final name = _model.influncerNameTextController?.text.trim() ?? '';
     final phone = _model.phoneNumberTextController?.text.trim() ?? '';
-    final email = _model.emailTextController?.text.trim() ?? '';
+    final email = _useCustomEmail
+        ? _customEmailController.text.trim()
+        : _userEmail;
 
     _nameEmpty = name.isEmpty;
     _contentEmpty = _selectedInfluencerContentType == null;
@@ -243,7 +246,9 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
   bool get _isFormValid {
     final name = _model.influncerNameTextController?.text.trim() ?? '';
     final phone = _model.phoneNumberTextController?.text.trim() ?? '';
-    final email = _model.emailTextController?.text.trim() ?? '';
+    final email = _useCustomEmail
+        ? _customEmailController.text.trim()
+        : _userEmail;
 
     if (name.isEmpty) return false;
     if (_selectedInfluencerContentType == null) return false;
@@ -301,8 +306,8 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       debugPrint('Feq - URL: ${result.downloadUrl}');
       setState(() {
         _imageUrl = result.downloadUrl;
-        _pickedImage = result.file;
-        _pickedBytes = result.bytes;
+        pickedImage = result.file;
+        pickedBytes = result.bytes;
         _uploadingImage = false;
       });
 
@@ -323,8 +328,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         return;
       }
 
-      final userEmail = firebaseAuth.currentUser?.email ?? '';
-      _userEmail = userEmail;
+      _userEmail = firebaseAuth.currentUser?.email ?? '';
 
       final usersSnap = await firebaseFirestore.collection('users').where('user_id', isEqualTo: uid).limit(1).get();
 
@@ -361,22 +365,26 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         _model.influncerNameTextController!.text = userProfileModel.name;
         _model.influncerDescreptionTextController!.text = userProfileModel.description;
 
-        final savedEmail = userProfileModel.contactEmail;
         final savedPhone = userProfileModel.phoneNumber;
 
         final phoneOwnerStr = profileDoc.data()['phone_owner'] ?? 'personal';
         _phoneOwner = phoneOwnerStr == 'assistant' ? PhoneOwner.assistant : PhoneOwner.personal;
 
+        _model.phoneNumberTextController!.text = savedPhone;
+
         final emailOwnerStr = profileDoc.data()['email_owner'] ?? 'personal';
         _emailOwner = emailOwnerStr == 'assistant' ? EmailOwner.assistant : EmailOwner.personal;
 
-        if (_emailOwner == EmailOwner.personal) {
-          _model.emailTextController!.text = _userEmail;
-        } else {
-          _model.emailTextController!.text = savedEmail;
-        }
+        final useCustomEmail = profileDoc.data()['use_custom_email'] as bool? ?? false;
+        _useCustomEmail = useCustomEmail;
 
-        _model.phoneNumberTextController!.text = savedPhone;
+        if (_useCustomEmail) {
+          final savedEmail = userProfileModel.contactEmail;
+          _customEmailController.text = savedEmail;
+        } else {
+          _emailOwner = EmailOwner.personal;
+          _userEmail = firebaseAuth.currentUser?.email ?? '';
+        }
 
         final rawImageUrl = userProfileModel.profileImage;
         if (rawImageUrl != null && rawImageUrl.isNotEmpty) {
@@ -467,7 +475,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
     _recomputeValidation();
 
     final phoneError = _validatePhone(_model.phoneNumberTextController?.text);
-    final emailError = _validateEmail(_model.emailTextController?.text);
+    final emailError = _validateEmail(null); // Pass null since we check inside the method
 
     if (_nameEmpty ||
         _contentEmpty ||
@@ -530,10 +538,13 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         'profile_id': uid,
         'name': _model.influncerNameTextController!.text.trim(),
         'description': _model.influncerDescreptionTextController!.text.trim(),
-        'contact_email': _model.emailTextController!.text.trim(),
+        'contact_email': _useCustomEmail
+            ? _customEmailController.text.trim()
+            : _userEmail,
         'phone_number': _model.phoneNumberTextController!.text.trim(),
         'phone_owner': _phoneOwner.name,
-        'email_owner': _emailOwner.name,
+        'email_owner': _useCustomEmail ? _emailOwner.name : 'personal',
+        'use_custom_email': _useCustomEmail,
       };
 
       if (_imageUrl != null && _imageUrl!.isNotEmpty) {
@@ -592,9 +603,9 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         _initialSnapshot = _currentSnapshot();
         dirty = false;
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(isSetupMode ? 'تم الحفظ بنجاح' : 'تم التحديث بنجاح')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isSetupMode ? 'تم الحفظ بنجاح' : 'تم التحديث بنجاح')),
+        );
 
         if (isSetupMode) {
           final user = firebaseAuth.currentUser!;
@@ -607,7 +618,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
             Navigator.pushReplacementNamed(context, MainScreen.routeName);
           }
         } else {
-          context.pushNamed(InfluncerProfileWidget.routeName);
+          Navigator.pushReplacementNamed(context, MainScreen.routeName);
         }
       }
     } catch (e) {
@@ -643,7 +654,10 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
   }
 
   String? _validateEmail(String? value) {
-    final v = value?.trim() ?? '';
+    final v = _useCustomEmail
+        ? _customEmailController.text.trim()
+        : _userEmail;
+
     if (v.isEmpty) return null;
     if (!RegExp(r'^[\w.-]+@[\w.-]+\.\w+$').hasMatch(v)) {
       return 'البريد الإلكتروني غير صحيح';
@@ -658,46 +672,10 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: AppBar(
-        backgroundColor: t.containers,
-        centerTitle: true,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Text(
-          isSetupMode ? 'إنشاء الملف الشخصي' : 'تعديل الملف الشخصي',
-          textAlign: TextAlign.center,
-          style: t.headlineSmall.override(
-            fontFamily: 'Inter Tight',
-            color: t.primaryText,
-            letterSpacing: 0.0,
-            fontWeight: t.headlineSmall.fontWeight,
-            fontStyle: t.headlineSmall.fontStyle,
-          ),
-        ),
-        flexibleSpace: isEditMode
-            ? SafeArea(
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: 16,
-                      top: 8,
-                      child: FlutterFlowIconButton(
-                        borderRadius: 8,
-                        buttonSize: 40,
-                        icon: Icon(
-                          Icons.arrow_forward_ios,
-                          color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                          size: 24,
-                        ),
-                        onPressed: () async {
-                          context.pushNamed(InfluncerProfileWidget.routeName);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : null,
+      appBar: FeqAppBar(
+        title: isSetupMode ? 'إنشاء الملف الشخصي' : 'تعديل الملف الشخصي',
+        showBack: isEditMode,
+        backRoute: InfluncerProfileWidget.routeName,
       ),
       body: SafeArea(
         top: true,
@@ -745,8 +723,8 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                               onImagePicked: (url, file, bytes) {
                                                 setState(() {
                                                   _imageUrl = url;
-                                                  _pickedImage = file;
-                                                  _pickedBytes = bytes;
+                                                  pickedImage = file;
+                                                  pickedBytes = bytes;
                                                 });
                                               },
                                             ),
@@ -774,30 +752,38 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                         ],
                                       ),
                                     ),
-                                    FeqLabeledTextField(
-                                      label: 'الاسم ',
-                                      controller: _model.influncerNameTextController,
-                                      focusNode: _model.influncerNameFocusNode,
-                                      textCapitalization: TextCapitalization.words,
-                                      width: double.infinity,
-                                      isError: _showErrors && _nameEmpty,
-                                      errorText: _showErrors && _nameEmpty ? 'يرجى إدخال الاسم.' : null,
-                                      decoration: inputDecoration(context, isError: _showErrors && _nameEmpty),
-                                    ),
-                                    FeqLabeled(
-                                      'نوع المحتوى',
-                                      errorText: _showErrors && _contentEmpty ? 'يرجى اختيار نوع المحتوى.' : null,
-                                      child: FeqSearchableDropdown<FeqDropDownList>(
-                                        items: _influencerContentTypes,
-                                        value: _selectedInfluencerContentType,
-                                        onChanged: (v) {
-                                          setState(() => _selectedInfluencerContentType = v);
-                                          _onAnyFieldChanged();
-                                        },
-                                        hint: 'اختر أو ابحث...',
-                                        isError: _showErrors && _contentEmpty,
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                      child: FeqLabeledTextField(
+                                        label: 'الاسم ',
+                                        controller: _model.influncerNameTextController,
+                                        focusNode: _model.influncerNameFocusNode,
+                                        textCapitalization: TextCapitalization.words,
+                                        width: double.infinity,
+                                        isError: _showErrors && _nameEmpty,
+                                        errorText: _showErrors && _nameEmpty ? 'يرجى إدخال الاسم.' : null,
+                                        decoration: inputDecoration(context, isError: _showErrors && _nameEmpty),
                                       ),
                                     ),
+
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                      child: FeqLabeled(
+                                        'نوع المحتوى',
+                                        errorText: _showErrors && _contentEmpty ? 'يرجى اختيار نوع المحتوى.' : null,
+                                        child: FeqSearchableDropdown<FeqDropDownList>(
+                                          items: _influencerContentTypes,
+                                          value: _selectedInfluencerContentType,
+                                          onChanged: (v) {
+                                            setState(() => _selectedInfluencerContentType = v);
+                                            _onAnyFieldChanged();
+                                          },
+                                          hint: 'اختر أو ابحث...',
+                                          isError: _showErrors && _contentEmpty,
+                                        ),
+                                      ),
+                                    ),
+
                                     Padding(
                                       padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
                                       child: Container(
@@ -1004,15 +990,17 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                       ),
                                     ),
 
-                                    // Description
-                                    FeqLabeledTextField(
-                                      label: 'النبذة الشخصية',
-                                      controller: _model.influncerDescreptionTextController,
-                                      focusNode: _model.influncerDescreptionFocusNode,
-                                      textCapitalization: TextCapitalization.sentences,
-                                      width: double.infinity,
-                                      maxLines: 3,
-                                      decoration: inputDecoration(context),
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                      child: FeqLabeledTextField(
+                                        label: 'النبذة الشخصية',
+                                        controller: _model.influncerDescreptionTextController,
+                                        focusNode: _model.influncerDescreptionFocusNode,
+                                        textCapitalization: TextCapitalization.sentences,
+                                        width: double.infinity,
+                                        maxLines: 3,
+                                        decoration: inputDecoration(context),
+                                      ),
                                     ),
 
                                     // Contact Information Section
@@ -1020,6 +1008,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                       padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                                       child: FeqLabeled('معلومات التواصل'),
                                     ),
+
                                     // Phone Section
                                     Padding(
                                       padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6),
@@ -1106,35 +1095,67 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                       ),
                                     ),
 
+                                    // ==================== EMAIL SECTION ====================
                                     // Email Section
                                     Padding(
                                       padding: const EdgeInsetsDirectional.fromSTEB(20, 15, 20, 6),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
-                                          FeqLabeledTextField(
-                                            label: 'البريد الإلكتروني',
-                                            required: false,
-                                            controller: _model.emailTextController,
-                                            focusNode: _model.emailFocusNode,
-                                            keyboardType: TextInputType.emailAddress,
-                                            enabled: _emailOwner == EmailOwner.assistant,
-                                            decoration: inputDecoration(
-                                              context,
-                                              isError: _showErrors && _bothContactsEmpty,
-                                            ).copyWith(hintText: 'البريد الإلكتروني'),
-                                          ),
+                                          // Display field (changes based on selection)
+                                          if (!_useCustomEmail)
+                                            // Show logged-in email as read-only
+                                            Column(
+                                              crossAxisAlignment: CrossAxisAlignment.end,
+                                              children: [
+                                                FeqLabeled('البريد الإلكتروني', required: false),
+                                                Padding(
+                                                  padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 0),
+                                                  child: Container(
+                                                      width: double.infinity,
+                                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                      decoration: BoxDecoration(
+                                                        color: t.containers,
+                                                        border: Border.all(color: t.secondary, width: 2),
+                                                        borderRadius: BorderRadius.circular(12),
+                                                      ),
+                                                      child: Text(
+                                                        _userEmail,
+                                                        textDirection: TextDirection.rtl,
+                                                        style: FlutterFlowTheme.of(context)
+                                                            .bodyMedium
+                                                            .override(fontFamily: 'Inter', color: FlutterFlowTheme.of(context).primaryText),
+                                                      )
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          else
+                                          // Show input field for custom email
+                                            FeqLabeledTextField(
+                                              label: 'البريد الإلكتروني',
+                                              required: false,
+                                              controller: _customEmailController,
+                                              focusNode: _model.emailFocusNode,
+                                              keyboardType: TextInputType.emailAddress,
+                                              decoration: inputDecoration(
+                                                context,
+                                                isError: _showErrors && _bothContactsEmpty,
+                                              ).copyWith(hintText: 'أدخل البريد الإلكتروني'),
+                                            ),
+
                                           // Email Radio Buttons
                                           Padding(
-                                            padding: const EdgeInsets.only(top: 8),
+                                            padding: const EdgeInsets.only(top: 12),
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.end,
                                               children: [
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
+                                                      _useCustomEmail = false;
                                                       _emailOwner = EmailOwner.personal;
-                                                      _model.emailTextController!.text = _userEmail;
+                                                      _customEmailController.clear();
                                                     });
                                                     _onAnyFieldChanged();
                                                   },
@@ -1149,13 +1170,14 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                                           fontSize: 14,
                                                         ),
                                                       ),
-                                                      RadioMenuButton<EmailOwner>(
-                                                        value: EmailOwner.personal,
-                                                        groupValue: _emailOwner,
+                                                      RadioMenuButton<bool>(
+                                                        value: false,
+                                                        groupValue: _useCustomEmail,
                                                         onChanged: (value) {
                                                           setState(() {
-                                                            _emailOwner = value!;
-                                                            _model.emailTextController!.text = _userEmail;
+                                                            _useCustomEmail = value ?? false;
+                                                            _emailOwner = EmailOwner.personal;
+                                                            _customEmailController.clear();
                                                           });
                                                           _onAnyFieldChanged();
                                                         },
@@ -1167,10 +1189,8 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      _emailOwner = EmailOwner.assistant;
-                                                      if (_model.emailTextController!.text == _userEmail) {
-                                                        _model.emailTextController!.clear();
-                                                      }
+                                                      _useCustomEmail = true;
+                                                      _customEmailController.clear();
                                                     });
                                                     _onAnyFieldChanged();
                                                   },
@@ -1178,22 +1198,20 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                                     mainAxisAlignment: MainAxisAlignment.end,
                                                     children: [
                                                       Text(
-                                                        'البريد الإلكتروني الخاص بمنسق أعمالي',
+                                                        'إضافة بريد إلكتروني مختلف',
                                                         style: t.bodyMedium.override(
                                                           fontFamily: 'Inter',
                                                           color: t.primaryText,
                                                           fontSize: 14,
                                                         ),
                                                       ),
-                                                      RadioMenuButton<EmailOwner>(
-                                                        value: EmailOwner.assistant,
-                                                        groupValue: _emailOwner,
+                                                      RadioMenuButton<bool>(
+                                                        value: true,
+                                                        groupValue: _useCustomEmail,
                                                         onChanged: (value) {
                                                           setState(() {
-                                                            _emailOwner = value!;
-                                                            if (_model.emailTextController!.text == _userEmail) {
-                                                              _model.emailTextController!.clear();
-                                                            }
+                                                            _useCustomEmail = value ?? false;
+                                                            _customEmailController.clear();
                                                           });
                                                           _onAnyFieldChanged();
                                                         },
@@ -1202,6 +1220,73 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                                     ],
                                                   ),
                                                 ),
+                                                if (_useCustomEmail) ...[
+                                                  const SizedBox(height: 12),
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(right: 32),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                                      children: [
+                                                        InkWell(
+                                                          onTap: () {
+                                                            setState(() => _emailOwner = EmailOwner.personal);
+                                                            _onAnyFieldChanged();
+                                                          },
+                                                          child: Row(
+                                                            mainAxisAlignment: MainAxisAlignment.end,
+                                                            children: [
+                                                              Text(
+                                                                'الخاص بي',
+                                                                style: t.bodySmall.override(
+                                                                  fontFamily: 'Inter',
+                                                                  color: t.primaryText,
+                                                                  fontSize: 13,
+                                                                ),
+                                                              ),
+                                                              RadioMenuButton<EmailOwner>(
+                                                                value: EmailOwner.personal,
+                                                                groupValue: _emailOwner,
+                                                                onChanged: (value) {
+                                                                  setState(() => _emailOwner = value!);
+                                                                  _onAnyFieldChanged();
+                                                                },
+                                                                child: const SizedBox.shrink(),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        InkWell(
+                                                          onTap: () {
+                                                            setState(() => _emailOwner = EmailOwner.assistant);
+                                                            _onAnyFieldChanged();
+                                                          },
+                                                          child: Row(
+                                                            mainAxisAlignment: MainAxisAlignment.end,
+                                                            children: [
+                                                              Text(
+                                                                'الخاص بمنسق أعمالي',
+                                                                style: t.bodySmall.override(
+                                                                  fontFamily: 'Inter',
+                                                                  color: t.primaryText,
+                                                                  fontSize: 13,
+                                                                ),
+                                                              ),
+                                                              RadioMenuButton<EmailOwner>(
+                                                                value: EmailOwner.assistant,
+                                                                groupValue: _emailOwner,
+                                                                onChanged: (value) {
+                                                                  setState(() => _emailOwner = value!);
+                                                                  _onAnyFieldChanged();
+                                                                },
+                                                                child: const SizedBox.shrink(),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
                                               ],
                                             ),
                                           ),
@@ -1229,7 +1314,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                             padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 24),
                                             child: FFButtonWidget(
                                               onPressed: () async {
-                                                context.pushNamed(InfluncerProfileWidget.routeName);
+                                                Navigator.of(context).pop();
                                               },
                                               text: 'إلغاء',
                                               options: FFButtonOptions(

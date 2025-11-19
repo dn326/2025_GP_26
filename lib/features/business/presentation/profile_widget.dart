@@ -1,14 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:elan_flutterproject/core/components/feq_components.dart';
 import 'package:elan_flutterproject/core/services/firebase_service_utils.dart';
 import 'package:elan_flutterproject/features/business/presentation/campaign_screen.dart';
 import 'package:elan_flutterproject/features/business/presentation/profile_form_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/firebase_service.dart';
 import '../../../core/widgets/image_picker_widget.dart';
-import '../../setting/presentation/account_settings_widget.dart';
 import '../data/models/profile_data_model.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -16,7 +15,8 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 
 class BusinessProfileScreen extends StatefulWidget {
-  const BusinessProfileScreen({super.key});
+  final String? uid;
+  const BusinessProfileScreen({super.key, this.uid});
 
   static String routeName = 'business_profile';
   static String routePath = '/businessProfile';
@@ -28,6 +28,7 @@ class BusinessProfileScreen extends StatefulWidget {
 class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   final FeqFirebaseServiceUtils _firebaseService = FeqFirebaseServiceUtils();
   BusinessProfileDataModel? _profileData;
+  late bool _isVerified = false;
   List<Map<String, dynamic>> _campaignList = [];
 
   bool _isLoading = true;
@@ -40,8 +41,17 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
   Future<void> loadProfileData() async {
     try {
-      final data = await _firebaseService.fetchBusinessProfileData();
-      final campaignList = await _firebaseService.fetchBusinessCampaignList();
+      final uid = widget.uid ?? firebaseAuth.currentUser?.uid;
+      if (uid == null) throw Exception('No logged-in user');
+
+      final usersSnap = await firebaseFirestore.collection('users').where('user_id', isEqualTo: uid).limit(1).get();
+
+      if (usersSnap.docs.isEmpty) throw Exception('User record not found');
+      final userDoc = usersSnap.docs.first;
+      _isVerified = userDoc.data()['verified'] ?? false;
+
+      final data = await _firebaseService.fetchBusinessProfileData(uid);
+      final campaignList = await _firebaseService.fetchBusinessCampaignList(uid);
       if (mounted) {
         setState(() {
           _profileData = data;
@@ -100,6 +110,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.uid == null)
             SizedBox(
               width: 140,
               child: Align(
@@ -191,6 +202,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                 ),
               ),
             ),
+            if (widget.uid == null)
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -254,26 +266,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: theme.backgroundElan,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: AppBar(
-            backgroundColor: theme.containers,
-            automaticallyImplyLeading: false,
-            leading: GestureDetector(
-              onTap: () =>
-                  Navigator.pushNamed(context, AccountSettingsPage.routeName),
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16),
-                child: FaIcon(
-                  FontAwesomeIcons.bahai,
-                  color: theme
-                      .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                  size: 28,
-                ),
-              ),
-            ),
-          ),
-        ),
+        appBar: FeqAppBar(title: '', showBack: widget.uid != null, showLeading: widget.uid == null),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : SafeArea(
@@ -309,14 +302,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        _profileData?.businessNameAr ?? 'غير محدد',
-                        textAlign: TextAlign.end,
-                        style: theme.headlineSmall.copyWith(
-                          fontFamily: GoogleFonts.interTight().fontFamily,
-                          fontSize: 22,
-                        ),
-                      ),
+                      FeqVerifiedNameWidget(name: _profileData?.businessNameAr ?? 'غير محدد', isVerified: _isVerified),
                       const SizedBox(height: 4),
                       Text(
                         _profileData?.businessIndustryNameAr ??
@@ -362,7 +348,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+                      if (widget.uid == null)
                       const SizedBox(height: 16),
+                      if (widget.uid == null)
                       FFButtonWidget(
                         onPressed: () {
                           Navigator.pushNamed(
@@ -421,6 +409,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                         ],
                       ),
                       if (_campaignList.isEmpty)
+                        if (widget.uid == null)
                         Padding(
                           padding: const EdgeInsetsDirectional.fromSTEB(
                             16,

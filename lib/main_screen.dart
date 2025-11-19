@@ -1,3 +1,4 @@
+import 'package:elan_flutterproject/features/business/presentation/explore_widget.dart';
 import 'package:elan_flutterproject/pages/login_and_signup/user_login.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '/flutter_flow/main_navbar_widget.dart';
 import 'features/business/presentation/profile_widget.dart';
 import 'features/common/presentation/coming_soon_widget.dart';
+import 'features/influencer/presentation/home_widget.dart';
 import 'features/influencer/presentation/profile_widget.dart';
 
 class MainScreen extends StatefulWidget {
@@ -46,9 +48,9 @@ class _MainScreenState extends State<MainScreen> {
         userType == 'influencer' ? InfluncerProfileWidget():
         BusinessProfileScreen(key: _businessProfileKey),
         const ComingSoonWidget(),
+        userType == 'influencer' ? InfluencerHomeWidget() : ComingSoonWidget(),
         const ComingSoonWidget(),
-        const ComingSoonWidget(),
-        const ComingSoonWidget(),
+        userType == 'influencer' ? ComingSoonWidget() : BusinessExploreWidget()
       ];
       setState(() {
         _isInitialized = true;

@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/features/business/data/models/profile_data_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:image_picker/image_picker.dart';
 
 import '../../features/influencer/data/models/influencer_profile_model.dart';
@@ -51,9 +51,7 @@ class FeqFirebaseServiceUtils {
       final fileName = 'profile_$timestamp.jpg';
 
       // **Folder structure created automatically here**
-      final Reference ref = _storage.ref().child(
-        'users/$userId/profile/$fileName',
-      );
+      final Reference ref = _storage.ref().child('users/$userId/profile/$fileName');
 
       // **OPTIONAL: Add metadata for better management**
       final SettableMetadata metadata = SettableMetadata(
@@ -79,9 +77,7 @@ class FeqFirebaseServiceUtils {
 
       // **Optional: Track upload progress**
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-        print(
-          'Upload progress: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100}%',
-        );
+        print('Upload progress: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100}%');
       });
 
       // **Wait for upload to complete**
@@ -101,11 +97,9 @@ class FeqFirebaseServiceUtils {
   String _getUserFriendlyError(dynamic error) {
     if (error.toString().contains('permission-denied')) {
       return 'ليس لديك صلاحية لرفع الصورة';
-    } else if (error.toString().contains('network') ||
-        error.toString().contains('SocketException')) {
+    } else if (error.toString().contains('network') || error.toString().contains('SocketException')) {
       return 'تحقق من اتصال الإنترنت';
-    } else if (error.toString().contains('unauthenticated') ||
-        error.toString().contains('User not authenticated')) {
+    } else if (error.toString().contains('unauthenticated') || error.toString().contains('User not authenticated')) {
       return 'يجب تسجيل الدخول أولاً';
     } else if (error.toString().contains('object-not-found')) {
       return 'خادم التخزين غير متوفر. تحقق من إعدادات Firebase';
@@ -125,19 +119,12 @@ class FeqFirebaseServiceUtils {
           .get();
 
       // Add user ID and timestamp to profile data
-      final profileData = profile.toJson()
-        ..addAll({
-          'profile_id': userId,
-          'updated_at': FieldValue.serverTimestamp(),
-        });
+      final profileData = profile.toJson()..addAll({'profile_id': userId, 'updated_at': FieldValue.serverTimestamp()});
 
       if (querySnapshot.docs.isNotEmpty) {
         // Update existing document
         final docId = querySnapshot.docs.first.id;
-        await _firestore
-            .collection('profiles')
-            .doc(docId)
-            .set(profileData, SetOptions(merge: true));
+        await _firestore.collection('profiles').doc(docId).set(profileData, SetOptions(merge: true));
       } else {
         // Create new document
         await _firestore.collection('profiles').add(profileData);
@@ -161,19 +148,12 @@ class FeqFirebaseServiceUtils {
           .get();
 
       // Add user ID and timestamp to profile data
-      final profileData = profile.toJson()
-        ..addAll({
-          'profile_id': userId,
-          'updated_at': FieldValue.serverTimestamp(),
-        });
+      final profileData = profile.toJson()..addAll({'profile_id': userId, 'updated_at': FieldValue.serverTimestamp()});
 
       if (querySnapshot.docs.isNotEmpty) {
         // Update existing document
         final docId = querySnapshot.docs.first.id;
-        await _firestore
-            .collection('profiles')
-            .doc(docId)
-            .set(profileData, SetOptions(merge: true));
+        await _firestore.collection('profiles').doc(docId).set(profileData, SetOptions(merge: true));
       } else {
         // Create new document
         await _firestore.collection('profiles').add(profileData);
@@ -185,9 +165,9 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Future<BusinessProfileDataModel?> fetchBusinessProfileData() async {
+  Future<BusinessProfileDataModel?> fetchBusinessProfileData([String? uid]) async {
     try {
-      final userId = currentUserId;
+      final userId = uid ?? currentUserId;
 
       // Query using profile_id field
       final querySnapshot = await _firestore
@@ -207,17 +187,18 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchBusinessCampaignList() async {
+  Future<List<Map<String, dynamic>>> fetchBusinessCampaignList([String? uid]) async {
     try {
+      final userId = uid ?? currentUserId;
       final campaignSnap = await firebaseFirestore
           .collection('campaigns')
-          .where('business_id', isEqualTo: currentUserId)
+          .where('business_id', isEqualTo: userId)
           .get();
       final campaignList = campaignSnap.docs.map((d) {
         final m = d.data();
         return {
           'id': d.id,
-          'business_id': currentUserId,
+          'business_id': userId,
           'title': (m['title'] ?? '').toString(),
           'description': (m['description'] ?? '').toString(),
           'budget_min': m['budget_min'] ?? 0,
@@ -247,10 +228,9 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Future<InfluencerProfileModel?>
-  fetchInfluencerProfileDataByProfileId() async {
+  Future<InfluencerProfileModel?> fetchInfluencerProfileDataByProfileId([String? uid]) async {
     try {
-      final userId = currentUserId;
+      final userId = uid ?? currentUserId;
       final profilesSnap = await firebaseFirestore
           .collection('profiles')
           .where('profile_id', isEqualTo: userId)
@@ -268,10 +248,9 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Future<QueryDocumentSnapshot<Map<String, dynamic>>?>
-  fetchInfluencerProfileByProfileDataByProfileId() async {
+  Future<QueryDocumentSnapshot<Map<String, dynamic>>?> fetchInfluencerProfileByProfileDataByProfileId([String? uid]) async {
     try {
-      final userId = currentUserId;
+      final userId = uid ?? currentUserId;
       final profilesSnap = await firebaseFirestore
           .collection('profiles')
           .where('profile_id', isEqualTo: userId)
@@ -282,10 +261,7 @@ class FeqFirebaseServiceUtils {
       if (profilesSnap.docs.isNotEmpty) {
         final profileDoc = docs.first;
 
-        final influencerSnap = await profileDoc.reference
-            .collection('influencer_profile')
-            .limit(1)
-            .get();
+        final influencerSnap = await profileDoc.reference.collection('influencer_profile').limit(1).get();
         if (influencerSnap.docs.isNotEmpty) {
           final influencerDoc = influencerSnap.docs.first;
           return influencerDoc;
@@ -297,8 +273,8 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Stream<DocumentSnapshot<Map<String, dynamic>>> getProfileStream() {
-    final userId = currentUserId;
+  Stream<DocumentSnapshot<Map<String, dynamic>>> getProfileStream([String? uid]) {
+    final userId = uid ?? currentUserId;
     return _firestore.collection('profiles').doc(userId).snapshots();
   }
 
@@ -310,7 +286,7 @@ class FeqFirebaseServiceUtils {
   // NEW: Sign out method
   Future<void> signOut() async {
     await _auth.signOut();
-    print('👋 User signed out');
+    debugPrint('👋 User signed out');
   }
 
   // NEW: Get current user data
@@ -328,14 +304,8 @@ class FeqFirebaseServiceUtils {
     await _auth.currentUser?.reload();
   }
 
-  Future<DocumentSnapshot<Map<String, dynamic>>> getUserByEmail(
-    String email,
-  ) async {
-    final snapshot = await firebaseFirestore
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .limit(1)
-        .get();
+  Future<DocumentSnapshot<Map<String, dynamic>>> getUserByEmail(String email) async {
+    final snapshot = await firebaseFirestore.collection('users').where('email', isEqualTo: email).limit(1).get();
 
     if (snapshot.docs.isNotEmpty) {
       return snapshot.docs.first;
