@@ -1,8 +1,13 @@
+import 'package:elan_flutterproject/services/subscription_service.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/components/feq_components.dart';
+import '../../../core/services/subscription_local_storage.dart';
 import '../../../core/services/user_session.dart';
 import '../../../pages/login_and_signup/user_login.dart';
+import '../../../pages/subscription/subscription_details_page.dart';
+import '../../../pages/subscription/subscription_plans_page.dart';
+import '../../../services/subscription_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'account_change_password_widget.dart';
@@ -23,11 +28,14 @@ class AccountSettingsPage extends StatefulWidget {
 class _AccountSettingsPageState extends State<AccountSettingsPage> {
   late String userType = '';
   late String accountStatus = '';
+  SubscriptionModel? _subscriptionData;
+  bool _isLoadingSubscription = false;
 
   @override
   void initState() {
     super.initState();
     _loadAsyncData();
+    _loadSubscriptionData();
   }
 
   Future<void> _loadAsyncData() async {
@@ -39,12 +47,86 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
       nav.pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
     } else {
       setState(() {});
+      if (userType == 'business') {
+        _loadSubscriptionData();
+      }
+    }
+  }
+
+  Future<void> _loadSubscriptionData() async {
+    if (_isLoadingSubscription) return;
+
+    setState(() {
+      _isLoadingSubscription = true;
+    });
+
+    try {
+      _subscriptionData = await SubscriptionLocalStorage.loadSubscription();
+
+      if (mounted) {
+        setState(() {
+          _isLoadingSubscription = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _subscriptionData = null;
+          _isLoadingSubscription = false;
+        });
+      }
+    }
+  }
+
+  String _getSubscriptionButtonText() {
+    return 'الاشتراكات';
+  }
+
+  Future<void> _handleSubscriptionButtonTap() async {
+    final subscriptionTier = _subscriptionData?.tier ?? 'free';
+    
+    if (subscriptionTier == 'free') {
+      // Show subscription plans page for free users
+      if (!mounted) return;
+      Navigator.pushNamed(context, SubscriptionPlansPage.routeName).then((_) {
+        _loadSubscriptionData();
+      });
+    } else {
+      // Show subscription details for basic/premium users
+      // Ensure subscription data is available before navigating
+      if (_subscriptionData == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('جاري تحميل بيانات الاشتراك...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        final subscriptionData = await SubscriptionService().getSubscription();
+        final subscriptionModel = SubscriptionModel.fromMap(subscriptionData ?? {});
+        if (!mounted) return;
+        Navigator.pushNamed(
+          context,
+          SubscriptionDetailsPage.routeName,
+          arguments: subscriptionModel,
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      Navigator.pushNamed(
+        context,
+        SubscriptionDetailsPage.routeName,
+        arguments: _subscriptionData,
+      ).then((_) {
+        _loadSubscriptionData();
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (userType.isEmpty || accountStatus.isEmpty) {
+    if (userType.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final theme = FlutterFlowTheme.of(context);
@@ -53,13 +135,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     final deactivateButtonText = isAccountDisabled ? 'تفعيل الحساب' : 'تعطيل الحساب';
 
     return Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: theme.backgroundElan,
-        appBar: FeqAppBar(
-          title: 'إعدادات حسابك',
-          showBack: true,
-        ),
+        appBar: FeqAppBar(title: 'إعدادات حسابك', showBack: true),
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -69,7 +148,9 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
                 decoration: BoxDecoration(
                   color: theme.containers,
-                  boxShadow: const [BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))],
+                  boxShadow: const [
+                    BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2)),
+                  ],
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -99,7 +180,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
                     _SettingsButton(
                       text: 'تغيير كلمة المرور',
-                      onPressed: () => Navigator.pushNamed(context, AccountChangePasswordPage.routeName),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AccountChangePasswordPage.routeName),
                       color: theme.secondaryButtonsOnLight,
                     ),
                     const SizedBox(height: 12),
@@ -109,6 +191,28 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       onPressed: () => Navigator.pushNamed(context, AccountDeletePage.routeName),
                       color: theme.secondaryButtonsOnLight,
                     ),
+
+                    // Only show subscription button for business users
+                    if (userType == 'business') ...[
+                      const SizedBox(height: 12),
+                      _isLoadingSubscription
+                          ? const SizedBox(
+                              width: 230,
+                              height: 45,
+                              child: Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ),
+                            )
+                          : _SettingsButton(
+                              text: _getSubscriptionButtonText(),
+                              onPressed: _handleSubscriptionButtonTap,
+                              color: theme.secondaryButtonsOnLight,
+                            ),
+                    ],
 
                     const SizedBox(height: 40),
 
@@ -157,17 +261,15 @@ class _SettingsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    return SizedBox(
-      width: 230,
-      height: 45,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        child: Text(text, style: theme.titleSmall.copyWith(color: theme.primaryText)),
+    return FFButtonWidget(
+      onPressed: onPressed,
+      text: text,
+      options: FFButtonOptions(
+        width: 230,
+        height: 45,
+        color: color,
+        textStyle: theme.titleSmall.copyWith(color: theme.primaryText),
+        borderRadius: BorderRadius.circular(10),
       ),
     );
   }

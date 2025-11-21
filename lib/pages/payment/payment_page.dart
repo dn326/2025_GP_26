@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -9,7 +10,9 @@ class PaymentPage extends StatefulWidget {
   static const String routeName = 'payment_page';
   static const String routePath = '/payment_page';
 
-  const PaymentPage({super.key});
+  final String? preSelectedPlanId;
+
+  const PaymentPage({super.key, this.preSelectedPlanId});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -18,23 +21,32 @@ class PaymentPage extends StatefulWidget {
 class _PaymentPageState extends State<PaymentPage> {
   String? selectedPlan;
 
+  @override
+  void initState() {
+    super.initState();
+    // Pre-select plan if provided
+    if (widget.preSelectedPlanId != null) {
+      selectedPlan = widget.preSelectedPlanId;
+    }
+  }
+
   final List<Map<String, dynamic>> plans = [
     {
       'id': 'basic',
       'name': 'الخطة الأساسية',
-      'price': 'SAR 99',
-      'duration': 'شهرياً',
+      'price': '300',
+      'duration': 'حتئ انتهاء رصيد الحملات',
       'features': [
         'إنشاء حتى 15 حملة إعلانية',
         'دعم أساسي عبر البريد الإلكتروني',
         'إحصائيات أداء أساسية',
       ],
-      'color': Color(0xFF182B54),
+      'color': const Color(0xFF182B54),
     },
     {
       'id': 'premium',
       'name': 'الخطة المميزة',
-      'price': 'SAR 999',
+      'price': '500',
       'duration': 'سنوياً',
       'features': [
         'حملات غير محدودة',
@@ -42,7 +54,7 @@ class _PaymentPageState extends State<PaymentPage> {
         'تحليلات متقدمة للحملات',
         'مدة الاشتراك 2 سنوات',
       ],
-      'color': Colors.amber.shade700,
+      'color': const Color(0xFFF4EDE2),
     },
   ];
 
@@ -188,12 +200,22 @@ class _PaymentPageState extends State<PaymentPage> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              Text(
-                                plan['price'],
-                                style: t.headlineLarge.copyWith(
-                                  color: t.primary,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                              Row(
+                                children: [
+                                  SvgPicture.asset(
+                                    'assets/svg/riyal.svg',
+                                    colorFilter: ColorFilter.mode(t.primary, BlendMode.srcIn),
+                                    width: 28,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    plan['price'],
+                                    style: t.headlineLarge.copyWith(
+                                      color: t.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

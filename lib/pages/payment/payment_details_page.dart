@@ -1,8 +1,13 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../core/services/subscription_local_storage.dart';
+import '../../services/subscription_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/services/subscription_service.dart';
@@ -14,11 +19,6 @@ class PaymentDetailsPage extends StatefulWidget {
   const PaymentDetailsPage({super.key, required this.planId});
 
   final String planId;
-
-  static PaymentDetailsPage fromRoute(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as String?;
-    return PaymentDetailsPage(planId: args ?? 'basic');
-  }
 
   @override
   State<PaymentDetailsPage> createState() => _PaymentDetailsPageState();
@@ -48,17 +48,17 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     if (widget.planId == 'basic') {
       return {
         'name': 'الخطة الأساسية',
-        'price': 99,
-        'currency': 'SAR',
-        'duration': 'شهرياً',
+        'price': 300,
+        'currency': '',
+        'duration': '',
         'plan_type': 'basic',
       };
     } else {
       return {
-        'name': 'الخطة المميزة',
-        'price': 999,
-        'currency': 'SAR',
-        'duration': 'سنوياً',
+        'name': 'الخطة المتميزة',
+        'price': 500,
+        'currency': '',
+        'duration': '',
         'plan_type': 'premium',
       };
     }
@@ -125,10 +125,40 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           context,
         ).showSnackBar(const SnackBar(content: Text('تمت عملية الدفع بنجاح!')));
 
-        // Navigate back to main screen
-        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        // Save subscription data to local storage after successful payment
+        try {
+          // Fetch the subscription from Firestore to get the actual server timestamp
+          final subscriptionDoc = await FirebaseFirestore.instance
+              .collection('subscriptions')
+              .doc(subscriptionId)
+              .get();
+
+          if (subscriptionDoc.exists) {
+            final subscriptionData = subscriptionDoc.data()!;
+            final subscriptionModel = SubscriptionModel.fromMap({
+              'id': subscriptionId,
+              ...subscriptionData,
+            });
+            await SubscriptionLocalStorage.saveSubscription(subscriptionModel);
+          }
+        } catch (localStorageError) {
+          // Log the error but don't show to user since payment succeeded
+          log('Failed to save subscription to local storage: $localStorageError');
+        }
+
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        }
+        // Navigate back to main screen (MainScreen with profile tab selected)
+        Navigator.of(context).pushNamed(
+          'home_page',
+          // (route) => false,
+          arguments: 3, // Profile tab index
+        );
       }
     } catch (e) {
+      print('======');
+      print(e.toString());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشلت عملية الدفع: $e')));
       }
@@ -199,29 +229,21 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: widget.planId == 'basic'
-                                  ? Colors.blueAccent
-                                  : Colors.amber.shade700,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              planDetails['duration'],
-                              style: t.labelSmall.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
+
                           const SizedBox(height: 16),
-                          Text(
-                            '${planDetails['price']} ${planDetails['currency']}',
-                            style: t.headlineLarge.copyWith(
-                              color: t.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${planDetails['price']} ${planDetails['currency']}',
+                                style: t.headlineLarge.copyWith(
+                                  color: t.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+
+                              SvgPicture.asset('assets/svg/riyal.svg', width: 30),
+                            ],
                           ),
                         ],
                       ),
@@ -298,7 +320,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                     // Pay button
                     FFButtonWidget(
                       onPressed: (selectedPaymentMethod != null && !isProcessing)
-                          ? () => _processPayment()
+                          ? () async => await _processPayment()
                           : () {},
                       text: selectedPaymentMethod == null
                           ? 'اختر طريقة دفع للمتابعة'

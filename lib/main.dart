@@ -9,6 +9,10 @@ import 'package:elan_flutterproject/pages/login_and_signup/user_resetpassword.da
 import 'package:elan_flutterproject/pages/login_and_signup/user_signup.dart';
 import 'package:elan_flutterproject/pages/login_and_signup/user_type.dart';
 import 'package:elan_flutterproject/pages/payment/payment_details_page.dart';
+import 'package:elan_flutterproject/pages/payment/payment_page.dart';
+import 'package:elan_flutterproject/pages/subscription/subscription_details_page.dart';
+import 'package:elan_flutterproject/pages/subscription/subscription_plans_page.dart';
+import 'package:elan_flutterproject/services/subscription_model.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -91,6 +95,32 @@ class MyApp extends StatelessWidget {
 
           return PaymentDetailsPage(planId: planId);
         },
+        PaymentPage.routeName: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          final preSelectedPlanId = args is String ? args : null;
+          return PaymentPage(preSelectedPlanId: preSelectedPlanId);
+        },
+        SubscriptionDetailsPage.routeName: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is! SubscriptionModel) {
+            // If no valid subscription data, go back
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('لم يتم العثور على بيانات الاشتراك'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            });
+            // Return a placeholder while popping
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return SubscriptionDetailsPage(subscriptionData: args);
+        },
+        SubscriptionPlansPage.routeName: (context) => const SubscriptionPlansPage(),
       },
     );
   }
