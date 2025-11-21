@@ -53,11 +53,7 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
           color: t.containers,
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
-            BoxShadow(
-              blurRadius: 4,
-              color: Color(0x33000000),
-              offset: Offset(0, 2),
-            ),
+            BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2)),
           ],
         ),
         child: Row(
@@ -98,29 +94,34 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
                 if (widget.userType == "influencer") {
                   _handleTap(2);
                 } else {
-                  // Check subscription before allowing campaign creation
+                  // Refresh subscription data from Firebase before checking
                   final subscriptionService = SubscriptionService();
+                  await subscriptionService.refreshAndSaveSubscription();
+
                   final canCreate = await subscriptionService.canCreateCampaign();
 
                   if (!mounted) return;
 
                   if (canCreate) {
-                    final result = await Navigator.of(
-                      context,
-                    ).push(MaterialPageRoute(builder: (_) => const CampaignScreen()));
+                    final nav = Navigator.of(context);
+                    final result = await nav.push(
+                      MaterialPageRoute(builder: (_) => const CampaignScreen()),
+                    );
 
                     // Only increment if campaign was successfully created (not edited)
                     if (result == true) {
                       await subscriptionService.incrementCampaignsUsed();
+                      // Refresh subscription data after incrementing
+                      await subscriptionService.refreshAndSaveSubscription();
                     }
 
                     // After campaign is created/edited, simulate tap on profile (index 0)
                     widget.onTap?.call(0);
                   } else {
                     // Navigate to payment page
-                    await Navigator.of(
-                      context,
-                    ).push(MaterialPageRoute(builder: (_) => const PaymentPage()));
+                    if (!mounted) return;
+                    final nav = Navigator.of(context);
+                    await nav.push(MaterialPageRoute(builder: (_) => const PaymentPage()));
                   }
                 }
               },

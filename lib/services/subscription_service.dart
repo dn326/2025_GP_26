@@ -3,6 +3,9 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../core/services/subscription_local_storage.dart';
+import 'subscription_model.dart';
+
 class SubscriptionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -118,6 +121,23 @@ class SubscriptionService {
     } catch (e, st) {
       log('Failed to increment campaignsUsed: $e', error: e, stackTrace: st);
       rethrow;
+    }
+  }
+
+  /// Fetch subscription from Firebase and save to local storage
+  /// Returns the subscription model or null if not found
+  Future<SubscriptionModel?> refreshAndSaveSubscription() async {
+    try {
+      final subscriptionData = await getSubscription();
+      if (subscriptionData != null) {
+        final subscriptionModel = SubscriptionModel.fromMap(subscriptionData);
+        await SubscriptionLocalStorage.saveSubscription(subscriptionModel);
+        return subscriptionModel;
+      }
+      return null;
+    } catch (e) {
+      log('Failed to refresh and save subscription: $e');
+      return null;
     }
   }
 }
