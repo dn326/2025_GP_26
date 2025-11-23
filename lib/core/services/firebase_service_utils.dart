@@ -77,7 +77,7 @@ class FeqFirebaseServiceUtils {
 
       // **Optional: Track upload progress**
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-        print('Upload progress: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100}%');
+        debugPrint('Upload progress: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100}%');
       });
 
       // **Wait for upload to complete**
@@ -201,8 +201,10 @@ class FeqFirebaseServiceUtils {
           'business_id': userId,
           'title': (m['title'] ?? '').toString(),
           'description': (m['description'] ?? '').toString(),
-          'budget_min': m['budget_min'] ?? 0,
-          'budget_max': m['budget_max'] ?? 0,
+          'platform_id': m['platform_id'] ?? 0,
+          'platform_name': (m['platform_name'] ?? '').toString(),
+          // 'budget_min': m['budget_min'] ?? 0,
+          // 'budget_max': m['budget_max'] ?? 0,
           'influencer_content_type_id': m['influencer_content_type_id'] ?? 0,
           'start_date': m['start_date'],
           'end_date': m['end_date'],
