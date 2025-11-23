@@ -206,6 +206,7 @@ class FeqFirebaseServiceUtils {
           // 'budget_min': m['budget_min'] ?? 0,
           // 'budget_max': m['budget_max'] ?? 0,
           'influencer_content_type_id': m['influencer_content_type_id'] ?? 0,
+          'influencer_content_type_name': (m['influencer_content_type_name'] ?? '').toString(),
           'start_date': m['start_date'],
           'end_date': m['end_date'],
           'active': m['active'] ?? false,
