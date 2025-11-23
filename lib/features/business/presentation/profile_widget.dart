@@ -151,6 +151,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     final title = e['title'] as String? ?? '';
     final description = e['description'] as String? ?? '';
     final platformName = e['platform_name'] as String? ?? '';
+    final influencerContentTypeName = e['influencer_content_type_name'] as String? ?? '';
     final s = _fmtDate(e['start_date']);
     final en = _fmtDate(e['end_date']);
     final isVisible = e['visible'] as bool? ?? true;
@@ -325,7 +326,15 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                         ),
                         textAlign: TextAlign.end,
                       ),
-
+                      const SizedBox(height: 8),
+                      Text('نوع المحتوى', style: labelStyle, textAlign: TextAlign.end),
+                      Text(
+                        influencerContentTypeName,
+                        style: valueStyle.copyWith(
+                          color: isExpired ? Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
+                        ),
+                        textAlign: TextAlign.end,
+                      ),
                     ],
                   ),
                 ),

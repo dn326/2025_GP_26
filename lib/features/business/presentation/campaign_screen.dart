@@ -141,6 +141,15 @@ class _CampaignScreenState extends State<CampaignScreen>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+
+    // Add listeners to trigger validation on text changes
+    _model.campaignTitleTextController?.addListener(() {
+      setState(() {}); // Rebuild to re-evaluate _checkFormValid()
+    });
+
+    _model.detailsTextController?.addListener(() {
+      setState(() {}); // Rebuild to re-evaluate _checkFormValid()
+    });
     if (_isEdit) {
       _loadCampaign();
       _checkSubscriptionForExpiredEdit();
@@ -195,6 +204,7 @@ class _CampaignScreenState extends State<CampaignScreen>
               'platform_id': _selectedPlatform?.id,
               'platform_name': _selectedPlatform?.nameAr,
               'influencer_content_type_id': _selectedInfluencerContentType!.id,
+              'influencer_content_type_name': _selectedInfluencerContentType!.nameAr,
               'start_date': Timestamp.fromDate(_model.datePicked2!),
               'end_date': Timestamp.fromDate(_model.datePicked1!),
               'active': _model.isActive,
@@ -217,6 +227,7 @@ class _CampaignScreenState extends State<CampaignScreen>
               'platform_id': _selectedPlatform?.id,
               'platform_name': _selectedPlatform?.nameAr,
               'influencer_content_type_id': _selectedInfluencerContentType!.id,
+              'influencer_content_type_name': _selectedInfluencerContentType!.nameAr,
               'start_date': Timestamp.fromDate(_model.datePicked2!),
               'end_date': Timestamp.fromDate(_model.datePicked1!),
               'active': _model.isActive,
@@ -334,18 +345,12 @@ class _CampaignScreenState extends State<CampaignScreen>
     super.dispose();
   }
 
-  bool get _isFormValid {
-    final title = _model.campaignTitleTextController?.text.trim() ?? '';
-    final details = _model.detailsTextController?.text.trim() ?? '';
-    final platformSelected = _selectedPlatform != null;
-
-    if (title.isEmpty) return false;
-    if (details.isEmpty) return false;
-    if (!platformSelected) return false;
-    if (_selectedInfluencerContentType == null) return false;
-    if (!_datesValid) return false;
-
-    return true;
+  bool _checkFormValid() {
+    return (_model.campaignTitleTextController?.text.trim() ?? '').isNotEmpty &&
+        (_model.detailsTextController?.text.trim() ?? '').isNotEmpty &&
+        _selectedPlatform != null &&
+        _selectedInfluencerContentType != null &&
+        _datesValid;
   }
 
   @override
@@ -683,6 +688,7 @@ class _CampaignScreenState extends State<CampaignScreen>
                                             },
                                             hint: 'اختر أو ابحث...',
                                             isError: _showErrors && _influencerContentTypeEmpty,
+                                            itemLabel: (item) => item.nameAr,
                                           ),
                                         ),
                                       ],
@@ -1283,7 +1289,7 @@ class _CampaignScreenState extends State<CampaignScreen>
                                                     child: child,
                                                   ),
                                               child: FFButtonWidget(
-                                                onPressed: _isFormValid
+                                                onPressed: _checkFormValid()
                                                     ? () async {
                                                         setState(() {
                                                           _showErrors = true;

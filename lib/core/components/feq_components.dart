@@ -303,6 +303,7 @@ class FeqSearchableDropdown<T> extends StatefulWidget {
   final String hint;
   final bool isError;
   final TextDirection textDirection;
+  final String Function(T)? itemLabel;
 
   const FeqSearchableDropdown({
     super.key,
@@ -312,10 +313,12 @@ class FeqSearchableDropdown<T> extends StatefulWidget {
     required this.hint,
     this.isError = false,
     this.textDirection = TextDirection.rtl,
+    this.itemLabel,
   });
 
   @override
-  State<FeqSearchableDropdown<T>> createState() => _FeqSearchableDropdownState<T>();
+  State<FeqSearchableDropdown<T>> createState() =>
+      _FeqSearchableDropdownState<T>();
 }
 
 class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
@@ -332,14 +335,15 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
 
   String _getText(T? item) {
     if (item == null) return '';
-    final obj = item as dynamic;
-    return obj.nameAr?.toString() ?? item.toString();
+    return widget.itemLabel?.call(item) ?? item.toString();
   }
 
   void _filter() {
     final query = _controller.text.trim().toLowerCase();
     setState(() {
-      _filtered = widget.items.where((e) => _getText(e).toLowerCase().contains(query)).toList();
+      _filtered = widget.items
+          .where((e) => _getText(e).toLowerCase().contains(query))
+          .toList();
     });
   }
 
@@ -348,9 +352,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
     super.didUpdateWidget(old);
     if (old.value != widget.value) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _controller.text = _getText(widget.value);
-        }
+        if (mounted) _controller.text = _getText(widget.value);
       });
     }
   }
@@ -368,13 +370,25 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
       textDirection: widget.textDirection,
       child: TextField(
         controller: _controller,
-        textAlign: widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
+        textAlign:
+        widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
         readOnly: true,
         decoration: _inputDecoration(context, isError: widget.isError).copyWith(
           hintText: widget.hint,
-          suffixIcon: widget.textDirection == TextDirection.rtl
-              ? const Padding(padding: EdgeInsetsDirectional.only(start: 8.0), child: Icon(Icons.arrow_drop_down))
-              : const Icon(Icons.arrow_drop_down),
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.value != null)
+                GestureDetector(
+                  onTap: () {
+                    widget.onChanged(null);
+                    _controller.clear();
+                  },
+                  child: const Icon(Icons.clear, size: 20),
+                ),
+              const Icon(Icons.arrow_drop_down),
+            ],
+          ),
         ),
         onTap: () => _showDropdown(context),
       ),
@@ -385,7 +399,8 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (_) => Directionality(
         textDirection: widget.textDirection,
         child: DraggableScrollableSheet(
@@ -398,11 +413,19 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
                 padding: const EdgeInsets.all(16),
                 child: TextField(
                   controller: _controller,
-                  textAlign: widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
+                  textAlign: widget.textDirection == TextDirection.rtl
+                      ? TextAlign.start
+                      : TextAlign.end,
                   decoration: InputDecoration(
-                    hintText: widget.textDirection == TextDirection.rtl ? 'إبحث...' : 'Search...',
-                    prefixIcon: widget.textDirection == TextDirection.rtl ? null : const Icon(Icons.search),
-                    suffixIcon: widget.textDirection == TextDirection.rtl ? const Icon(Icons.search) : null,
+                    hintText: widget.textDirection == TextDirection.rtl
+                        ? 'إبحث...'
+                        : 'Search...',
+                    prefixIcon: widget.textDirection == TextDirection.rtl
+                        ? null
+                        : const Icon(Icons.search),
+                    suffixIcon: widget.textDirection == TextDirection.rtl
+                        ? const Icon(Icons.search)
+                        : null,
                   ),
                   onChanged: (_) => _filter(),
                 ),
@@ -416,7 +439,9 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
                     return ListTile(
                       title: Text(
                         _getText(item),
-                        textAlign: widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
+                        textAlign: widget.textDirection == TextDirection.rtl
+                            ? TextAlign.start
+                            : TextAlign.end,
                       ),
                       onTap: () {
                         widget.onChanged(item);
@@ -448,9 +473,12 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
         borderRadius: BorderRadius.circular(12),
         borderSide: isError ? errorSide : normalSide,
       ),
-      disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: normalSide),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: errorSide),
-      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: errorSide),
+      disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), borderSide: normalSide),
+      errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), borderSide: errorSide),
+      focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), borderSide: errorSide),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: isError ? errorSide : focusSide,
