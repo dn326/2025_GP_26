@@ -38,11 +38,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
   Future<void> loadProfileData() async {
     try {
-      final data = await _firebaseService.fetchBusinessProfileData();
       final campaignList = await _firebaseService.fetchBusinessCampaignList();
       if (mounted) {
         setState(() {
-          // _profileData = data;
           _campaignList = campaignList;
           _isLoading = false;
         });
@@ -378,8 +376,8 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     final s = _fmtDate(e['start_date']);
     final en = _fmtDate(e['end_date']);
     final isVisible = e['visible'] as bool? ?? true;
-    final budgetMin = (e['budget_min'] ?? 0) as int;
-    final budgetMax = (e['budget_max'] ?? 0) as int;
+    // final budgetMin = (e['budget_min'] ?? 0) as int;
+    // final budgetMax = (e['budget_max'] ?? 0) as int;
 
     return Container(
       width: double.infinity,
@@ -508,6 +506,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                     ),
                     const SizedBox(height: 8),
                   ],
+                  /*
                   Text(
                     'الميزانية',
                     style: labelStyle,
@@ -518,6 +517,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                     style: valueStyle,
                     textAlign: TextAlign.end,
                   ),
+                  */
                   const SizedBox(height: 8),
                   Text(
                     'تفاصيل الحملة',

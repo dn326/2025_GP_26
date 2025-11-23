@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/subscription_local_storage.dart';
+import '../../../core/utils/campaign_expiry_helper.dart';
 import '../../../core/utils/subscription_badge_config.dart';
 import '../../../core/widgets/image_picker_widget.dart';
 import '../../../pages/payment/payment_page.dart';
@@ -102,7 +103,6 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
         });
       }
     } catch (e) {
-      print('error');
       log(e.toString());
       if (mounted) {
         setState(() {
@@ -150,129 +150,186 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
     final title = e['title'] as String? ?? '';
     final description = e['description'] as String? ?? '';
+    final platformName = e['platform_name'] as String? ?? '';
     final s = _fmtDate(e['start_date']);
     final en = _fmtDate(e['end_date']);
     final isVisible = e['visible'] as bool? ?? true;
-    final budgetMin = (e['budget_min'] ?? 0) as int;
-    final budgetMax = (e['budget_max'] ?? 0) as int;
+    final isExpired = e.isExpired; // Using extension
 
+    // Get end date for expiry badge
+    final endDate = e['end_date'] is Timestamp
+        ? (e['end_date'] as Timestamp).toDate()
+        : e['end_date'] as DateTime?;
+
+    // Light red background if CAMPAIGN end date is in the past
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: t.tertiary, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: isExpired || endDate!.isBefore(DateTime.now())
+            ? Color(0xFFFEE2E2)  // Light red for expired campaigns
+            : t.tertiary,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (widget.uid == null)
-              SizedBox(
-                width: 140,
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FlutterFlowIconButton(
-                        borderRadius: 8,
-                        buttonSize: 40,
-                        icon: Icon(
-                          Icons.edit_sharp,
-                          color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                          size: 20,
-                        ),
-                        onPressed: () async {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => CampaignScreen(campaignId: e['id'] as String),
-                            ),
-                          );
-                          await loadProfileData();
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      FlutterFlowIconButton(
-                        borderRadius: 8,
-                        buttonSize: 40,
-                        icon: Icon(
-                          Icons.minimize_outlined,
-                          color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                          size: 20,
-                        ),
-                        onPressed: () async {
-                          final expId = e['id'] as String?;
-                          if (expId == null || expId.isEmpty) return;
+            // Expiry badge at the top if needed
+            if (isExpired || e.isExpiringSoon) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CampaignExpiryBadge(
+                    endDate: endDate,
+                    isCompact: true,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
 
-                          final bool? confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('تأكيد الحذف'),
-                              content: const Text(
-                                'هل أنت متأكد من حذف هذه الحملة؟ لا يمكن التراجع عن هذه العملية.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(false),
-                                  child: const Text('إلغاء'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(true),
-                                  child: const Text('حذف'),
-                                ),
-                              ],
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (widget.uid == null)
+                  SizedBox(
+                    width: 140,
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FlutterFlowIconButton(
+                            borderRadius: 8,
+                            buttonSize: 40,
+                            icon: Icon(
+                              Icons.edit_sharp,
+                              color: isExpired
+                                  ? Color(0xFFDC2626).withValues(alpha: 0.5)
+                                  : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                              size: 20,
                             ),
-                          );
-
-                          if (confirm == true) {
-                            try {
-                              await firebaseFirestore.collection('campaigns').doc(expId).delete();
-                              if (!mounted) return;
+                            onPressed: isExpired
+                                ? null
+                                : () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      CampaignScreen(campaignId: e['id'] as String),
+                                ),
+                              );
                               await loadProfileData();
-                            } catch (err) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(
-                                context,
-                              ).showSnackBar(SnackBar(content: Text('تعذّر الحذف: $err')));
-                            }
-                          }
-                        },
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          FlutterFlowIconButton(
+                            borderRadius: 8,
+                            buttonSize: 40,
+                            icon: Icon(
+                              Icons.minimize_outlined,
+                              color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                              size: 20,
+                            ),
+                            onPressed: () async {
+                              final expId = e['id'] as String?;
+                              if (expId == null || expId.isEmpty) return;
+
+                              final bool? confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('تأكيد الحذف'),
+                                  content: const Text(
+                                    'هل أنت متأكد من حذف هذه الحملة؟ لا يمكن التراجع عن هذه العملية.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(false),
+                                      child: const Text('إلغاء'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(true),
+                                      child: const Text('حذف'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirm == true) {
+                                try {
+                                  await firebaseFirestore.collection('campaigns').doc(expId).delete();
+                                  if (!mounted) return;
+                                  await loadProfileData();
+                                } catch (err) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('تعذّر الحذف: $err')),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          Tooltip(
+                            message: isVisible ? 'ظاهر' : 'مخفي',
+                            child: Icon(
+                              isVisible ? Icons.visibility : Icons.visibility_off,
+                              color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                              size: 20,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Tooltip(
-                        message: isVisible ? 'ظاهر' : 'مخفي',
-                        child: Icon(
-                          isVisible ? Icons.visibility : Icons.visibility_off,
-                          color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                          size: 20,
+                    ),
+                  ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
+                      Text(
+                        title,
+                        style: valueStyle.copyWith(
+                          color: isExpired ? Color(0xFFDC2626).withValues(alpha: 0.6) : t.primaryText,
+                          decoration: isExpired ? TextDecoration.lineThrough : null,
                         ),
+                        textAlign: TextAlign.end,
                       ),
+                      const SizedBox(height: 8),
+                      if (s.isNotEmpty || en.isNotEmpty) ...[
+                        Text('الفترة الزمنية', style: labelStyle, textAlign: TextAlign.end),
+                        Text(
+                          'من $s إلى $en',
+                          style: valueStyle.copyWith(
+                            color: isExpired ? Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
+                          ),
+                          textAlign: TextAlign.end,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      Text('تفاصيل الحملة', style: labelStyle, textAlign: TextAlign.end),
+                      Text(
+                        description,
+                        style: valueStyle.copyWith(
+                          color: isExpired ? Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
+                        ),
+                        textAlign: TextAlign.end,
+                      ),
+                      const SizedBox(height: 8),
+                      Text('المنصة', style: labelStyle, textAlign: TextAlign.end),
+                      Text(
+                        platformName,
+                        style: valueStyle.copyWith(
+                          color: isExpired ? Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
+                        ),
+                        textAlign: TextAlign.end,
+                      ),
+
                     ],
                   ),
                 ),
-              ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
-                  Text(title, style: valueStyle, textAlign: TextAlign.end),
-                  const SizedBox(height: 8),
-                  if (s.isNotEmpty || en.isNotEmpty) ...[
-                    Text('الفترة الزمنية', style: labelStyle, textAlign: TextAlign.end),
-                    Text('من $s إلى $en', style: valueStyle, textAlign: TextAlign.end),
-                    const SizedBox(height: 8),
-                  ],
-                  Text('الميزانية', style: labelStyle, textAlign: TextAlign.end),
-                  Text(
-                    'من ${(budgetMin.toString())} إلى ${(budgetMax.toString())}',
-                    style: valueStyle,
-                    textAlign: TextAlign.end,
-                  ),
-                  const SizedBox(height: 8),
-                  Text('تفاصيل الحملة', style: labelStyle, textAlign: TextAlign.end),
-                  Text(description, style: valueStyle, textAlign: TextAlign.end),
-                ],
-              ),
+              ],
             ),
           ],
         ),

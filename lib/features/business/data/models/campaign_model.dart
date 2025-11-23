@@ -11,6 +11,7 @@ class CampaignModel extends FlutterFlowModel {
   TextEditingController? detailsTextController;
   String? Function(BuildContext, String?)? detailsTextControllerValidator;
 
+  /*
   FocusNode? budgetMinFocusNode;
   TextEditingController? budgetMinTextController;
   String? Function(BuildContext, String?)? budgetMinTextControllerValidator;
@@ -18,6 +19,7 @@ class CampaignModel extends FlutterFlowModel {
   FocusNode? budgetMaxFocusNode;
   TextEditingController? budgetMaxTextController;
   String? Function(BuildContext, String?)? budgetMaxTextControllerValidator;
+  */
 
   DateTime? datePicked1;
   DateTime? datePicked2;
@@ -35,9 +37,11 @@ class CampaignModel extends FlutterFlowModel {
     campaignTitleTextController?.dispose();
     detailsFocusNode?.dispose();
     detailsTextController?.dispose();
+    /*
     budgetMinFocusNode?.dispose();
     budgetMinTextController?.dispose();
     budgetMaxFocusNode?.dispose();
     budgetMaxTextController?.dispose();
+    */
   }
 }
