@@ -187,15 +187,23 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchBusinessCampaignList([String? uid]) async {
+  Future<List<Map<String, dynamic>>> fetchBusinessCampaignList([String? uid, String? campaignId]) async {
     try {
       final userId = uid ?? currentUserId;
-      final campaignSnap = await firebaseFirestore
-          .collection('campaigns')
-          .where('business_id', isEqualTo: userId)
-          .get();
+
+      Query query = firebaseFirestore.collection('campaigns');
+
+      if (campaignId != null && campaignId.isNotEmpty) {
+        query = query.where('campaign_id', isEqualTo: campaignId);
+      } else {
+        query = query.where('business_id', isEqualTo: userId);
+      }
+
+      final campaignSnap = await query.get();
+
       final campaignList = campaignSnap.docs.map((d) {
-        final m = d.data();
+        final m = d.data() as Map<String, dynamic>?;
+        if (m == null) return null;
         return {
           'id': d.id,
           'business_id': userId,
@@ -209,10 +217,11 @@ class FeqFirebaseServiceUtils {
           'influencer_content_type_name': (m['influencer_content_type_name'] ?? '').toString(),
           'start_date': m['start_date'],
           'end_date': m['end_date'],
+          'date_added': m['date_added'],
           'active': m['active'] ?? false,
           'visible': m['visible'] ?? false,
         };
-      }).toList();
+      }).whereType<Map<String, dynamic>>().toList();
 
       DateTime? toDate(dynamic v) {
         if (v is Timestamp) return v.toDate();

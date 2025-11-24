@@ -230,6 +230,7 @@ class _CampaignScreenState extends State<CampaignScreen>
               'influencer_content_type_name': _selectedInfluencerContentType!.nameAr,
               'start_date': Timestamp.fromDate(_model.datePicked2!),
               'end_date': Timestamp.fromDate(_model.datePicked1!),
+              'date_added': Timestamp.fromDate(DateTime.now()),
               'active': _model.isActive,
               'visible': _model.isVisible,
             });

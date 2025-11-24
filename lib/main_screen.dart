@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '/flutter_flow/main_navbar_widget.dart';
 import 'features/business/presentation/profile_widget.dart';
 import 'features/common/presentation/coming_soon_widget.dart';
+import 'features/influencer/presentation/campaign_list_widget.dart';
 import 'features/influencer/presentation/home_widget.dart';
 import 'features/influencer/presentation/profile_widget.dart';
 
@@ -50,7 +51,7 @@ class _MainScreenState extends State<MainScreen> {
         const ComingSoonWidget(),
         userType == 'influencer' ? InfluencerHomeWidget() : ComingSoonWidget(),
         const ComingSoonWidget(),
-        userType == 'influencer' ? ComingSoonWidget() : BusinessExploreWidget()
+        userType == 'influencer' ? CampaignListWidget() : BusinessExploreWidget()
       ];
       setState(() {
         _isInitialized = true;
