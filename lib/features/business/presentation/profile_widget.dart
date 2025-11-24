@@ -6,9 +6,9 @@ import 'package:elan_flutterproject/features/business/presentation/campaign_scre
 import 'package:elan_flutterproject/features/business/presentation/profile_form_widget.dart';
 import 'package:elan_flutterproject/pages/subscription/subscription_details_page.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/subscription_local_storage.dart';
 import '../../../core/utils/campaign_expiry_helper.dart';
@@ -16,7 +16,6 @@ import '../../../core/utils/subscription_badge_config.dart';
 import '../../../core/widgets/image_picker_widget.dart';
 import '../../../pages/payment/payment_page.dart';
 import '../../../services/subscription_model.dart';
-import '../../setting/presentation/account_settings_widget.dart';
 import '../data/models/profile_data_model.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -25,10 +24,11 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 
 class BusinessProfileScreen extends StatefulWidget {
   final String? uid;
-  const BusinessProfileScreen({super.key, this.uid});
+  final String? campaignId;
+  const BusinessProfileScreen({super.key, this.uid, this.campaignId});
 
-  static String routeName = 'business_profile';
-  static String routePath = '/businessProfile';
+  static const String routeName = 'business-profile';
+  static const String routePath = '/$routeName';
 
   @override
   State<BusinessProfileScreen> createState() => BusinessProfileWidgetState();
@@ -57,24 +57,36 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     super.didChangeDependencies();
     // Reload subscription data when screen regains focus
     // This ensures data is refreshed when returning from other screens
-    if (!_isLoading && !_isLoadingSubscription) {
-      loadSubscriptionData();
+    if (widget.campaignId == null) {
+      if (!_isLoading && !_isLoadingSubscription) {
+        loadSubscriptionData();
+      }
     }
   }
 
   Future<void> loadProfileData() async {
     try {
-      final data = await _firebaseService.fetchBusinessProfileData();
-      final campaignList = await _firebaseService.fetchBusinessCampaignList();
-      if (mounted) {
-        setState(() {
-          _profileData = data;
-          _campaignList = campaignList;
-          _isLoading = false;
-        });
+      if (widget.campaignId != null) {
+        final campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, widget.campaignId);
+        if (mounted) {
+          setState(() {
+            _campaignList = campaignList;
+            _isLoading = false;
+          });
+        }
+      } else {
+        final data = await _firebaseService.fetchBusinessProfileData(widget.uid);
+        final campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, widget.campaignId);
+        if (mounted) {
+          setState(() {
+            _profileData = data;
+            _campaignList = campaignList;
+            _isLoading = false;
+          });
+        }
+        // Load subscription data after profile data
+        await loadSubscriptionData();
       }
-      // Load subscription data after profile data
-      await loadSubscriptionData();
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -142,6 +154,118 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
   }
 
+  Widget _tileCampaignSpecial(Map<String, dynamic> e) {
+    final t = FlutterFlowTheme.of(context);
+
+    final labelStyle =
+    t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w600);
+    final valueStyle = t.bodyMedium.copyWith(color: t.secondaryText);
+
+    final title = e['title'] as String? ?? '';
+    final description = e['description'] as String? ?? '';
+    final platformName = e['platform_name'] as String? ?? '';
+    final influencerContentTypeName =
+        e['influencer_content_type_name'] as String? ?? '';
+    final s = _fmtDate(e['start_date']);
+    final en = _fmtDate(e['end_date']);
+    final endDate = e['end_date'] is Timestamp
+        ? (e['end_date'] as Timestamp).toDate()
+        : e['end_date'] as DateTime?;
+    final isExpiringSoon = e['end_date'] != null
+        ? CampaignExpiryHelper.isExpiringSoon(endDate)
+        : false;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: t.containers,
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (isExpiringSoon) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          CampaignExpiryBadge(
+                            endDate: endDate,
+                            isCompact: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
+                    Text(
+                      title,
+                      style: valueStyle.copyWith(
+                        color: t.primaryText,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                    const SizedBox(height: 8),
+                    if (s.isNotEmpty || en.isNotEmpty) ...[
+                      Text('الفترة الزمنية', style: labelStyle, textAlign: TextAlign.end),
+                      Text(
+                        'من $s إلى $en',
+                        style: valueStyle.copyWith(
+                          color: t.secondaryText,
+                        ),
+                        textAlign: TextAlign.end,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    Text('تفاصيل الحملة', style: labelStyle, textAlign: TextAlign.end),
+                    Text(
+                      description,
+                      style: valueStyle.copyWith(
+                        color: t.secondaryText,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                    const SizedBox(height: 8),
+                    Text('المنصة', style: labelStyle, textAlign: TextAlign.end),
+                    Text(
+                      platformName,
+                      style: valueStyle.copyWith(
+                        color: t.secondaryText,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                    const SizedBox(height: 8),
+                    Text('نوع المحتوى', style: labelStyle, textAlign: TextAlign.end),
+                    Text(
+                      influencerContentTypeName,
+                      style: valueStyle.copyWith(
+                        color: t.secondaryText,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _tileCampaign(Map<String, dynamic> e) {
     final t = FlutterFlowTheme.of(context);
 
@@ -168,7 +292,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       decoration: BoxDecoration(
         color: isExpired || endDate!.isBefore(DateTime.now())
             ? Color(0xFFFEE2E2)  // Light red for expired campaigns
-            : t.tertiary,
+            :
+        widget.campaignId == null ?
+        t.tertiary: t.containers,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -395,24 +521,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: theme.backgroundElan,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: AppBar(
-            backgroundColor: theme.containers,
-            automaticallyImplyLeading: false,
-            leading: GestureDetector(
-              onTap: () => Navigator.pushNamed(context, AccountSettingsPage.routeName),
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16),
-                child: FaIcon(
-                  FontAwesomeIcons.bahai,
-                  color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                  size: 28,
-                ),
-              ),
-            ),
-          ),
-        ),
+        appBar: FeqAppBar(title: (widget.campaignId != null) ? 'تفاصيل الحملة' : '', showBack: widget.uid != null, showLeading: widget.uid == null),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : SafeArea(
@@ -421,6 +530,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      if (widget.campaignId == null)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -524,6 +634,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 16),
+                            if (widget.uid == null)
                             FFButtonWidget(
                               onPressed: () {
                                 Navigator.pushNamed(
@@ -546,10 +657,14 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                           ],
                         ),
                       ),
+                      if (widget.campaignId == null)
                       const SizedBox(height: 20),
+
+
+
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(16),
+                        padding: (widget.campaignId == null) ? EdgeInsets.all(16) : EdgeInsets.all(0),
                         decoration: BoxDecoration(
                           color: theme.containers,
                           boxShadow: const [
@@ -564,6 +679,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
+                            if (widget.campaignId == null)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -603,18 +719,13 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                               )
                             else
                               Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
+                                padding: (widget.campaignId == null) ? EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16) : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
                                 child: Column(
                                   children: _campaignList
                                       .map(
                                         (e) => Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(
-                                            0,
-                                            0,
-                                            0,
-                                            12,
-                                          ),
-                                          child: _tileCampaign(e),
+                                          padding: (widget.campaignId == null) ? EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12) : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                                          child: (widget.campaignId != null) ? _tileCampaignSpecial(e) : _tileCampaign(e),
                                         ),
                                       )
                                       .toList(),

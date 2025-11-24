@@ -81,6 +81,10 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
 
       // ✅ Delete Firestore docs: users + profiles
       final firestore = firebaseFirestore;
+      final campaignSnap = await firestore.collection('campaigns').where('business_id', isEqualTo: user.uid).get();
+      for (var doc in campaignSnap.docs) {
+        doc.reference.delete();
+      }
       await firestore.collection('profiles').doc(user.uid).delete();
       await firestore.collection('users').doc(user.uid).delete();
 
