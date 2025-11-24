@@ -706,7 +706,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      'اضف الحملات',
+                                      'لا يوجد حملات',
                                       style: theme.labelSmall.override(
                                         fontFamily: GoogleFonts.inter().fontFamily,
                                         color: theme.subtextHints,
