@@ -135,7 +135,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     final deactivateButtonText = isAccountDisabled ? 'تفعيل الحساب' : 'تعطيل الحساب';
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         backgroundColor: theme.backgroundElan,
         appBar: FeqAppBar(title: 'إعدادات حسابك', showBack: true),
