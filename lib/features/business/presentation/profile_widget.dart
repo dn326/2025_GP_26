@@ -5,12 +5,12 @@ import 'package:elan_flutterproject/core/services/firebase_service_utils.dart';
 import 'package:elan_flutterproject/features/business/presentation/campaign_screen.dart';
 import 'package:elan_flutterproject/features/business/presentation/profile_form_widget.dart';
 import 'package:elan_flutterproject/pages/subscription/subscription_details_page.dart';
+import 'package:elan_flutterproject/services/subscription_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
-import '../../../core/services/subscription_local_storage.dart';
 import '../../../core/utils/campaign_expiry_helper.dart';
 import '../../../core/utils/subscription_badge_config.dart';
 import '../../../core/widgets/image_picker_widget.dart';
@@ -105,7 +105,8 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     });
 
     try {
-      final subscriptionModel = await SubscriptionLocalStorage.loadSubscription();
+      // Fetch subscription data from Firebase and save to local storage
+      final subscriptionModel = await SubscriptionService().refreshAndSaveSubscription();
 
       if (mounted) {
         setState(() {
