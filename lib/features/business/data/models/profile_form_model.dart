@@ -28,6 +28,9 @@ class BusinessProfileFormModel
   TextEditingController? emailTextController;
   String? Function(BuildContext, String?)? emailTextControllerValidator;
 
+  TextEditingController? commercialRegisterController;
+  FocusNode? commercialRegisterFocusNode;
+
   // State field(s) for profile image.
   XFile? profileImage;
   bool isImageFromFile = false;
@@ -42,6 +45,8 @@ class BusinessProfileFormModel
     phoneNumberFocusNode ??= FocusNode();
     emailTextController ??= TextEditingController();
     emailFocusNode ??= FocusNode();
+    commercialRegisterController ??= TextEditingController();
+    commercialRegisterFocusNode ??= FocusNode();
 
     // Require at least one of phone or email. If one has value, the other is considered valid.
     phoneNumberTextControllerValidator ??= (context, value) {

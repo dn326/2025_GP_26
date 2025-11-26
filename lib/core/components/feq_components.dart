@@ -42,7 +42,7 @@ class FeqLabeled extends StatelessWidget {
             padding:
                 labelPadding ??
                 (textDirection == TextDirection.rtl
-                    ? const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5)
+                    ? const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 5)
                     : const EdgeInsetsDirectional.fromSTEB(20, 5, 0, 5)),
             child: RichText(
               text: TextSpan(
