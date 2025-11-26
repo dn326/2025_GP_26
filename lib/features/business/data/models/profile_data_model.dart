@@ -1,3 +1,5 @@
+import 'dart:nativewrappers/_internal/vm/lib/ffi_patch.dart';
+
 class BusinessProfileDataModel {
   final int businessId;
   final String businessNameAr;
@@ -7,6 +9,7 @@ class BusinessProfileDataModel {
   final String? phoneNumber;
   final String? email;
   final String? profileImageUrl;
+  final String? socialMedia;
 
   BusinessProfileDataModel({
     required this.businessId,
@@ -17,6 +20,7 @@ class BusinessProfileDataModel {
     this.phoneNumber,
     this.email,
     this.profileImageUrl,
+    this.socialMedia,
   });
 
   factory BusinessProfileDataModel.fromJson(Map<String, dynamic> json) {
