@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/features/influencer/presentation/profile_widget.dart';
@@ -13,12 +14,11 @@ import '../../../core/services/dropdown_list_loader.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/image_picker_service.dart';
 import '../../../core/utils/enum_profile_mode.dart';
-import '../../../core/utils/ext_navigation.dart';
 import '../../../core/widgets/image_picker_widget.dart';
 import '../../../main_screen.dart';
-import '../../../pages/login_and_signup/user_login.dart';
-import '../data/models/influencer_profile_model.dart';
-import '../data/models/profile_form_model.dart';
+import '../../../features/login_and_signup/user_login.dart';
+import '../models/profile_data_model.dart';
+import '../models/profile_form_model.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -84,7 +84,6 @@ InputDecoration platformInputDecoration(BuildContext context, {bool isError = fa
 }
 
 enum PhoneOwner { personal, assistant }
-
 enum EmailOwner { personal, assistant }
 
 class InfluencerProfileFormWidget extends StatefulWidget {
@@ -95,10 +94,6 @@ class InfluencerProfileFormWidget extends StatefulWidget {
   // Routes for Edit mode
   static const String routeNameEdit = 'influencer-profile-edit';
   static const String routePathEdit = '/$routeNameEdit';
-
-  // Routes for Setup mode
-  // static const String routeNameSetup = 'influencer-profile-setup';
-  // static const String routePathSetup = '/$routeNameSetup';
 
   @override
   State<InfluencerProfileFormWidget> createState() => _InfluencerProfileFormWidgetState();
@@ -111,6 +106,22 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
 
   String? _profileDocId;
   String? _influencerSubDocId;
+  String? mediaLicenseNumber;
+  String? mediaLicenseExpiry;
+  String? mediaLicenseStatus;
+
+  DateTime? expDate;
+  String? expDateFormatted;
+
+  bool mediaLicenseRequiredError = false;
+  bool mediaLicenseFormatError = false;
+  bool mediaLicenseFetchingError = false;
+  bool mediaLicenseFetched = false;
+
+  bool isMediaLicenseVerified = false;
+  bool mediaLicenseIsExpiringSoon = false;
+  bool _showLicenseErrors = false;
+
 
   File? pickedImage;
   Uint8List? pickedBytes;
@@ -124,13 +135,16 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
 
   bool _initialized = false;
   String _initialSnapshot = '';
-  late bool dirty = false;
-  late String _userEmail = '';
+  bool dirty = false;
+  String _userEmail = '';
+  
   bool _nameEmpty = false;
   bool _contentEmpty = false;
   bool _bothContactsEmpty = false;
   bool _socialsRequireError = false;
   bool _showErrors = false;
+
+  late AnimationController _shakeCtrl;
 
   PhoneOwner _phoneOwner = PhoneOwner.personal;
   EmailOwner _emailOwner = EmailOwner.personal;
@@ -138,7 +152,6 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
   bool _useCustomEmail = false;
   final TextEditingController _customEmailController = TextEditingController();
 
-  late AnimationController _shakeCtrl;
 
   late List<FeqDropDownList> _influencerContentTypes;
   late List<FeqDropDownList> _socialPlatforms;
@@ -168,6 +181,9 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
     _model.emailTextController ??= TextEditingController();
     _model.emailFocusNode ??= FocusNode();
 
+    _model.mediaLicenseTextController ??= TextEditingController();
+    _model.mediaLicenseFocusNode ??= FocusNode();
+
     _shakeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
 
     _attachFieldListeners();
@@ -182,6 +198,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
 
   void _initSetupMode() {
     _userEmail = firebaseAuth.currentUser?.email ?? '';
+    
     setState(() {
       _loading = false;
       _initialized = true;
@@ -195,6 +212,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       _model.influncerDescreptionTextController,
       _model.phoneNumberTextController,
       _model.emailTextController,
+      _model.mediaLicenseTextController,
       _customEmailController,
     ]) {
       c?.addListener(_onAnyFieldChanged);
@@ -207,6 +225,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
 
   String _currentSnapshot() {
     final socials = _socialRows.map((r) => {'p': r.platform?.id ?? '', 'u': r.usernameCtrl.text.trim()}).toList();
+    
     return {
       'name': _model.influncerNameTextController?.text.trim() ?? '',
       'content_id': _selectedInfluencerContentType?.id ?? 0,
@@ -252,7 +271,6 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
 
     if (name.isEmpty) return false;
     if (_selectedInfluencerContentType == null) return false;
-
     if (phone.isEmpty && email.isEmpty) return false;
 
     if (phone.isNotEmpty && !RegExp(r'^05[0-9]{8}$').hasMatch(phone)) {
@@ -276,7 +294,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
 
     return true;
   }
-
+  
   void _onAnyFieldChanged() {
     if (!_initialized) return;
     _recomputeValidation();
@@ -361,7 +379,8 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         final profileDoc = profilesSnap.docs.first;
         _profileDocId = profileDoc.id;
 
-        InfluencerProfileModel userProfileModel = InfluencerProfileModel.fromJson(profileDoc.data());
+        InfluencerProfileDataModel userProfileModel = InfluencerProfileDataModel.fromJson(profileDoc.data());
+        
         _model.influncerNameTextController!.text = userProfileModel.name;
         _model.influncerDescreptionTextController!.text = userProfileModel.description;
 
@@ -475,7 +494,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
     _recomputeValidation();
 
     final phoneError = _validatePhone(_model.phoneNumberTextController?.text);
-    final emailError = _validateEmail(null); // Pass null since we check inside the method
+    final emailError = _validateEmail(_useCustomEmail ? _customEmailController.text : _userEmail);
 
     if (_nameEmpty ||
         _contentEmpty ||
@@ -495,6 +514,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
           ),
         );
       }
+
       if (phoneError != null) {
         errors.add(
           TextSpan(
@@ -546,6 +566,17 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         'email_owner': _useCustomEmail ? _emailOwner.name : 'personal',
         'use_custom_email': _useCustomEmail,
       };
+
+      if (isSetupMode) {
+        final usersRef = firebaseFirestore.collection('users').doc(uid);
+        
+        await usersRef.set({
+          'media_license_number': mediaLicenseNumber ?? '',
+          'media_license_expiry_date': expDateFormatted ?? '',
+          'verified': isMediaLicenseVerified,
+          'media_license_is_expiring': mediaLicenseIsExpiringSoon,
+        }, SetOptions(merge: true));
+      }
 
       if (_imageUrl != null && _imageUrl!.isNotEmpty) {
         final cleanUrl = _imageUrl!.contains('?') ? _imageUrl!.split('?').first : _imageUrl!;
@@ -608,14 +639,8 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         );
 
         if (isSetupMode) {
-          final user = firebaseAuth.currentUser!;
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('user_id', uid);
-          await prefs.setString('user_type', 'influencer');
-          await prefs.setString('email', user.email!);
-          await prefs.setString('account_status', 'active');
           if (mounted) {
-            Navigator.pushReplacementNamed(context, MainScreen.routeName);
+            Navigator.pushReplacementNamed(context, UserLoginPage.routeName);
           }
         } else {
           Navigator.pushReplacementNamed(context, MainScreen.routeName);
@@ -674,7 +699,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       backgroundColor: t.backgroundElan,
       appBar: FeqAppBar(
         title: isSetupMode ? 'إنشاء الملف الشخصي' : 'تعديل الملف الشخصي',
-        showBack: isEditMode,
+        showBack: true,
         backRoute: InfluncerProfileWidget.routeName,
       ),
       body: SafeArea(
@@ -994,6 +1019,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                       padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                                       child: FeqLabeledTextField(
                                         label: 'النبذة الشخصية',
+                                        required: false,
                                         controller: _model.influncerDescreptionTextController,
                                         focusNode: _model.influncerDescreptionFocusNode,
                                         textCapitalization: TextCapitalization.sentences,
@@ -1024,7 +1050,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                             decoration: inputDecoration(
                                               context,
                                               isError: _showErrors && _bothContactsEmpty,
-                                            ).copyWith(hintText: 'رقم الجوال'),
+                                            ).copyWith(hintText: '05XXXXXXXX'),
                                           ),
                                           // Phone Radio Buttons
                                           Padding(
@@ -1304,6 +1330,128 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                           style: const TextStyle(color: Colors.red, fontSize: 12),
                                         ),
                                       ),
+                                    
+                                    if(isSetupMode)...[ 
+                                      FeqLabeled(
+                                        'رقم الرخصة الإعلامية (موثوق)',
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  // ===== TextField =====
+                                                  TextFormField(
+                                                    controller: _model.mediaLicenseTextController,
+                                                    focusNode: _model.mediaLicenseFocusNode,
+                                                    keyboardType: TextInputType.number,
+                                                    textInputAction: TextInputAction.done,
+                                                    decoration: inputDecoration(
+                                                      context,
+                                                      isError: _showLicenseErrors &&
+                                                          (mediaLicenseRequiredError ||
+                                                          mediaLicenseFormatError ||
+                                                          mediaLicenseFetchingError),
+                                                    ),
+                                                    style: t.bodyLarge.copyWith(color: t.primaryText),
+                                                    textAlign: TextAlign.start,
+                                                  ),
+
+                                                  // ===== Error: Required =====
+                                                  if (_showLicenseErrors && mediaLicenseRequiredError)
+                                                    const Padding(
+                                                      padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
+                                                      child: Text(
+                                                        'يرجى إدخال رقم الرخصة.',
+                                                        style: TextStyle(color: Colors.red, fontSize: 12),
+                                                      ),
+                                                    ),
+
+                                                  // ===== Error: Wrong Format =====
+                                                  if (_showLicenseErrors && mediaLicenseFormatError)
+                                                    const Padding(
+                                                      padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
+                                                      child: Text(
+                                                        'رقم الرخصة يجب أن يكون 6 أرقام صحيحة.',
+                                                        style: TextStyle(color: Colors.red, fontSize: 12),
+                                                      ),
+                                                    ),
+
+                                                  // ===== Error: Invalid / Not Found =====
+                                                  if (_showLicenseErrors && mediaLicenseFetchingError)
+                                                    const Padding(
+                                                      padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
+                                                      child: Text(
+                                                        'رقم الرخصة غير صحيح أو غير موجود.',
+                                                        style: TextStyle(color: Colors.red, fontSize: 12),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+
+                                            const SizedBox(width: 12),
+
+                                            // ===== Verify Button =====
+                                            ElevatedButton(
+                                              onPressed: _fetchLicenseData,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: t.secondaryButtonsOnLight,
+                                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                'تحقق',
+                                                style: TextStyle(color: t.primaryText, fontSize: 14),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // ===== SHOW Fetched License Data =====
+                                      if (mediaLicenseFetched) ...[
+                                        const SizedBox(height: 12),
+
+                                        // License Status
+                                        FeqLabeled(
+                                          'حالة الرخصة',
+                                          required: false,
+                                          child: TextFormField(
+                                            initialValue: mediaLicenseStatus ?? '',
+                                            enabled: false,
+                                            decoration: inputDecoration(context).copyWith(
+                                              disabledBorder: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                                borderSide: BorderSide(color: t.secondary),
+                                              ),
+                                            ),
+                                            style: t.bodyLarge.copyWith(color: t.tertiaryText),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+
+                                        // License Expiry Date
+                                        FeqLabeled(
+                                          'تاريخ انتهاء الرخصة',
+                                          required: false,
+                                          child: TextFormField(
+                                            initialValue: expDateFormatted ?? '',
+                                            enabled: false,
+                                            decoration: inputDecoration(context).copyWith(
+                                              disabledBorder: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                                borderSide: BorderSide(color: t.secondary),
+                                              ),
+                                            ),
+                                            style: t.bodyLarge.copyWith(color: t.tertiaryText),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
 
                                     // Buttons
                                     if (isEditMode)
@@ -1311,28 +1459,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                         children: [
                                           Padding(
-                                            padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 24),
-                                            child: FFButtonWidget(
-                                              onPressed: () async {
-                                                Navigator.of(context).pop();
-                                              },
-                                              text: 'إلغاء',
-                                              options: FFButtonOptions(
-                                                width: 90,
-                                                height: 40,
-                                                color: t.secondary,
-                                                textStyle: t.titleMedium.override(
-                                                  fontFamily: 'Inter Tight',
-                                                  color: t.containers,
-                                                  fontSize: 18,
-                                                ),
-                                                elevation: 2,
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 24),
+                                            padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
                                             child: AnimatedBuilder(
                                               animation: _shakeCtrl,
                                               builder: (context, child) =>
@@ -1341,7 +1468,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                                 onPressed: _isFormValid ? () => _saveAll() : null,
                                                 text: 'تحديث',
                                                 options: FFButtonOptions(
-                                                  width: 200,
+                                                  width: 430,
                                                   height: 40,
                                                   color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                                                   textStyle: t.titleMedium.override(
@@ -1359,31 +1486,33 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                         ],
                                       )
                                     else
-                                      Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 24),
-                                        child: AnimatedBuilder(
-                                          animation: _shakeCtrl,
-                                          builder: (context, child) =>
-                                              Transform.translate(offset: Offset(_shakeOffset(), 0), child: child),
-                                          child: FFButtonWidget(
-                                            onPressed: _isFormValid ? () => _saveAll() : null,
-                                            text: 'إنشاء',
-                                            options: FFButtonOptions(
-                                              width: 200,
-                                              height: 40,
-                                              color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                              textStyle: t.titleMedium.override(
-                                                fontFamily: 'Inter',
-                                                color: t.containers,
+                                      Center(
+                                        child: Padding(
+                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
+                                          child: AnimatedBuilder(
+                                            animation: _shakeCtrl,
+                                            builder: (context, child) =>
+                                                Transform.translate(offset: Offset(_shakeOffset(), 0), child: child),
+                                            child: FFButtonWidget(
+                                              onPressed: _isFormValid ? () => _saveAll() : null,
+                                              text: 'إنشاء',
+                                              options: FFButtonOptions(
+                                                width: 430,
+                                                height: 40,
+                                                color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                textStyle: t.titleMedium.override(
+                                                  fontFamily: 'Inter',
+                                                  color: t.containers,
+                                                ),
+                                                elevation: 2,
+                                                borderRadius: BorderRadius.circular(12),
+                                                disabledColor: Colors.grey,
+                                                disabledTextColor: Colors.white70,
                                               ),
-                                              elevation: 2,
-                                              borderRadius: BorderRadius.circular(12),
-                                              disabledColor: Colors.grey,
-                                              disabledTextColor: Colors.white70,
                                             ),
                                           ),
                                         ),
-                                      ),
+                                      )
                                   ],
                                 ),
                               ),
@@ -1398,6 +1527,96 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       ),
     );
   }
+  
+  Future<void> _fetchLicenseData() async {
+    setState(() {
+      _showLicenseErrors = true;
+      mediaLicenseRequiredError = false;
+      mediaLicenseFormatError = false;
+      mediaLicenseFetchingError = false;
+      mediaLicenseFetched = false;
+    });
+    
+    final num = _model.mediaLicenseTextController?.text.trim() ?? '';
+
+    if (num.isEmpty) {
+      mediaLicenseRequiredError = true;
+      setState(() {});
+      return;
+    }
+
+    if (!RegExp(r'^[0-9]{6}$').hasMatch(num)) {
+      mediaLicenseFormatError = true;
+      setState(() {});
+      return;
+    }
+
+    final url = "https://elaam.gmedia.gov.sa/gcam-licenses/gcam-celebrity-check/$num";
+
+    try {
+
+      final res = await http.get(Uri.parse(url));
+
+      if (res.statusCode != 200 || res.body.contains("بيانات الرخصة غير صحيحة")) {
+        mediaLicenseFetchingError = true;
+        setState(() {});
+        return;
+      }
+
+      final body = res.body;
+
+      // Extract values using regex from the HTML
+      final numReg = RegExp(r'<th>\s*رقم الرخصة\s*<\/th>\s*<td>\s*(.*?)\s*<\/td>');
+      final statusReg = RegExp(r'<th>\s*حالة الرخصة\s*<\/th>.*?<span[^>]*>\s*(.*?)\s*<\/span>', dotAll: true);
+      final expReg = RegExp(r'<th>\s*تاريخ الإنتهاء\s*<\/th>\s*<td>\s*(.*?)\s*<\/td>');
+
+      mediaLicenseExpiry = expReg.firstMatch(body)?.group(1) ?? '';
+      mediaLicenseStatus = statusReg.firstMatch(body)?.group(1) ?? '';
+      mediaLicenseNumber = numReg.firstMatch(body)?.group(1) ?? '';
+
+      if (mediaLicenseExpiry!.isEmpty || mediaLicenseStatus!.isEmpty) {
+        mediaLicenseFetchingError = true;
+        setState(() {});
+        return;
+      }
+
+      // Determine if verified
+      isMediaLicenseVerified = mediaLicenseStatus!.contains("سارية");
+
+      // Determine if expiring in 30 days
+      try {
+        // Clean spaces/newlines
+        final cleaned = mediaLicenseExpiry!.trim();
+
+        // Expected format: yyyy/MM/dd
+        final parts = cleaned.split('/'); 
+
+        expDate = DateTime(
+          int.parse(parts[0]),
+          int.parse(parts[1]),
+          int.parse(parts[2]),
+        );
+
+        expDateFormatted = "${expDate!.year}-${expDate!.month}-${expDate!.day}";
+
+        final now = DateTime.now();
+        mediaLicenseIsExpiringSoon = expDate!.difference(now).inDays <= 30;
+
+      } catch (e) {
+        print("Parsing error: $e");
+        mediaLicenseIsExpiringSoon = false;
+        expDateFormatted = "";
+      }
+
+      mediaLicenseFetched = true;
+      setState(() {});
+
+    } catch (e) {
+      mediaLicenseFetchingError = true;
+      setState(() {});
+    }
+  }
+
 }
 
 class _SocialRow {

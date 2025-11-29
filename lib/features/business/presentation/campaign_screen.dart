@@ -9,11 +9,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/dropdown_list_loader.dart';
 import '../../../flutter_flow/flutter_flow_util.dart';
-import '../../../services/subscription_service.dart';
+import '../../../core/services/subscription_service.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '../data/models/campaign_model.dart';
+import '../models/campaign_model.dart';
 
 Widget wrapInMaterialDatePickerTheme(
   BuildContext context,

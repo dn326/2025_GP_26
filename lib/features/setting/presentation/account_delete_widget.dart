@@ -1,11 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/user_session.dart';
-import '../../../pages/login_and_signup/user_login.dart';
+import '../../../features/login_and_signup/user_login.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 
 class AccountDeletePage extends StatefulWidget {

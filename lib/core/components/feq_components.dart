@@ -1,3 +1,4 @@
+import 'package:elan_flutterproject/features/notification/notification_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -241,7 +242,7 @@ class FeqLabeledTextField extends StatelessWidget {
     this.onTap,
     this.required = true,
     this.textDirection = TextDirection.rtl,
-  });
+});
 
   @override
   Widget build(BuildContext context) {
@@ -532,6 +533,7 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool showBack;
   final bool showLeading;
+  final bool showNotification;
   final String? backRoute;
 
   const FeqAppBar({
@@ -539,6 +541,7 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.title,
     this.showBack = false,
     this.showLeading = false,
+    this.showNotification = false,
     this.backRoute,
   });
 
@@ -564,65 +567,69 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
           automaticallyImplyLeading: false,
           elevation: 0,
           titleSpacing: 0,
+
+          // LEFT SIDE (leading)
           leading: showLeading
-              ? Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Align(
-                alignment: const AlignmentDirectional(-1, 1),
-                child: GestureDetector(
-                  onTap: () => Navigator.pushNamed(
-                    context,
-                    AccountSettingsPage.routeName,
-                  ),
-                  child: Padding(
-                    padding:
-                    const EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16),
+              ? Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 16, 0),
+                  child: GestureDetector(
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      AccountSettingsPage.routeName,
+                    ),
                     child: FaIcon(
                       FontAwesomeIcons.bahai,
                       color: FlutterFlowTheme.of(context).primaryText,
                       size: 28,
                     ),
                   ),
-                ),
-              ),
-            ],
-          )
+                )
               : null,
-          title: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: SizedBox(
-                height: 40,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Center(
-                      child: Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: FlutterFlowTheme.of(context).headlineSmall
-                            .copyWith(fontWeight: FontWeight.w600),
-                      ),
+
+          actions: [
+            if (showNotification)
+              Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
+                  child: GestureDetector(
+                    onTap: () =>  Navigator.pushNamed(context, NotificationListPage.routeName),
+                    child: FaIcon(
+                      Icons.notifications_none,
+                      color: FlutterFlowTheme.of(context).primaryText,
+                      size: 30,
                     ),
-                    if (showBack)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FlutterFlowIconButton(
-                          borderRadius: 8.0,
-                          buttonSize: 40.0,
-                          icon: Icon(
-                            Icons.arrow_forward_ios,
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            size: 24.0,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
+                  ),
+              )
+          ],
+
+          title: SafeArea(
+            child: SizedBox(
+              height: 40,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Center(
+                    child: Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: FlutterFlowTheme.of(context)
+                          .headlineSmall
+                          .copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+
+                  if (showBack)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(470, 0, 16, 0),
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: FaIcon(
+                          Icons.arrow_forward_ios,
+                          color: FlutterFlowTheme.of(context).primaryText,
+                          size: 24,
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
           ),

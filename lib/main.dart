@@ -2,17 +2,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/features/business/presentation/explore_widget.dart';
 import 'package:elan_flutterproject/features/influencer/presentation/home_widget.dart';
-import 'package:elan_flutterproject/pages/login_and_signup/business_setupprofile.dart';
-import 'package:elan_flutterproject/pages/login_and_signup/influencer_setupprofile.dart';
-import 'package:elan_flutterproject/pages/login_and_signup/user_login.dart';
-import 'package:elan_flutterproject/pages/login_and_signup/user_resetpassword.dart';
-import 'package:elan_flutterproject/pages/login_and_signup/user_signup.dart';
-import 'package:elan_flutterproject/pages/login_and_signup/user_type.dart';
-import 'package:elan_flutterproject/pages/payment/payment_details_page.dart';
-import 'package:elan_flutterproject/pages/payment/payment_page.dart';
-import 'package:elan_flutterproject/pages/subscription/subscription_details_page.dart';
-import 'package:elan_flutterproject/pages/subscription/subscription_plans_page.dart';
-import 'package:elan_flutterproject/services/subscription_model.dart';
+import 'package:elan_flutterproject/features/login_and_signup/business_setupprofile.dart';
+import 'package:elan_flutterproject/features/login_and_signup/influencer_setupprofile.dart';
+import 'package:elan_flutterproject/features/login_and_signup/user_login.dart';
+import 'package:elan_flutterproject/features/login_and_signup/user_resetpassword.dart';
+import 'package:elan_flutterproject/features/login_and_signup/user_signup.dart';
+import 'package:elan_flutterproject/features/login_and_signup/user_type.dart';
+import 'package:elan_flutterproject/features/notification/notification_list.dart';
+import 'package:elan_flutterproject/features/payment/payment_details_page.dart';
+import 'package:elan_flutterproject/features/payment/payment_page.dart';
+import 'package:elan_flutterproject/features/setting/presentation/account_update_certificate_widget.dart';
+import 'package:elan_flutterproject/features/subscription/subscription_details_page.dart';
+import 'package:elan_flutterproject/features/subscription/subscription_plans_page.dart';
+import 'package:elan_flutterproject/core/services/subscription_model.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -54,12 +56,12 @@ class MyApp extends StatelessWidget {
             const UserResetPasswordPage(),
         UserTypePage.routeName: (context) => const UserTypePage(),
         UserSignupPage.routeName: (context) => const UserSignupPage(),
-        BusinessSetupProfilePage.routeName: (context) =>
-            const BusinessSetupProfilePage(),
+        //BusinessSetupProfilePage.routeName: (context) =>
+            //const BusinessSetupProfilePage(),
         BusinessProfileFormWidget.routeNameEdit: (context) =>
             const BusinessProfileFormWidget(mode: ProfileMode.edit),
-        InfluencerSetupProfilePage.routeName: (context) =>
-            const InfluencerSetupProfilePage(),
+        //InfluencerSetupProfilePage.routeName: (context) =>
+            //const InfluencerSetupProfilePage(),
         MainScreen.routeName: (context) {
           // Extract selectedIndex from arguments if passed
           final args = ModalRoute.of(context)?.settings.arguments;
@@ -121,6 +123,8 @@ class MyApp extends StatelessWidget {
           return SubscriptionDetailsPage(subscriptionData: args);
         },
         SubscriptionPlansPage.routeName: (context) => const SubscriptionPlansPage(),
+        AccountUpdateCertificatePage.routeName: (context) => const AccountUpdateCertificatePage(),
+        NotificationListPage.routeName: (context) => const NotificationListPage(),
       },
     );
   }

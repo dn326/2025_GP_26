@@ -5,7 +5,7 @@ import '../../../core/services/firebase_service_utils.dart';
 import '../../../core/utils/campaign_expiry_helper.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
 import '../../../core/widgets/image_picker_widget.dart';
-import '../../business/data/models/profile_data_model.dart';
+import '../../business/models/profile_data_model.dart';
 
 enum FeqSortType { dateDesc, dateAsc, titleAsc }
 
@@ -183,7 +183,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
           if (dateEnd != null && dateEnd.isBefore(DateTime.now())) continue;
 
           BusinessProfileDataModel? businessData = await _firebaseService.fetchBusinessProfileData(businessId);
-          if (businessData == null || businessData.businessNameAr.isEmpty) {
+          if (businessData == null || businessData.name.isEmpty) {
             continue;
           }
 
@@ -191,7 +191,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
             FeqCampaignListItem(
               id: data['campaign_id'] as String? ?? '',
               businessId: businessId,
-              businessNameAr: businessData.businessNameAr,
+              businessNameAr: businessData.name,
               businessImageUrl: businessData.profileImageUrl ?? '',
               title: data['title'] as String? ?? '',
               description: data['description'] as String? ?? '',

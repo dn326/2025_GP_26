@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../features/business/presentation/campaign_screen.dart';
-import '../pages/payment/payment_page.dart';
-import '../services/subscription_service.dart';
+import '../features/payment/payment_page.dart';
+import '../core/services/subscription_service.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 

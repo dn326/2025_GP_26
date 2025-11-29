@@ -1,5 +1,5 @@
 import 'package:elan_flutterproject/features/business/presentation/explore_widget.dart';
-import 'package:elan_flutterproject/pages/login_and_signup/user_login.dart';
+import 'package:elan_flutterproject/features/login_and_signup/user_login.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,7 +67,7 @@ class _MainScreenState extends State<MainScreen> {
     // Refresh profile when returning from campaign creation
     if (index == 0 && userType == 'business' && _isInitialized) {
       Future.delayed(Duration.zero, () {
-        _businessProfileKey.currentState?.loadProfileData();
+        _businessProfileKey.currentState?.loadAll();
       });
     }
   }
