@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../services/subscription_model.dart';
-import '../../../services/subscription_service.dart';
+import '../../../core/services/subscription_model.dart';
+import '../../../core/services/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 
 class SubscriptionInfoWidget extends StatefulWidget {

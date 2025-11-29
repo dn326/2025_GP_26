@@ -1,13 +1,14 @@
-import 'package:elan_flutterproject/services/subscription_service.dart';
+import 'package:elan_flutterproject/core/services/subscription_service.dart';
+import 'package:elan_flutterproject/features/setting/presentation/account_update_certificate_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/subscription_local_storage.dart';
 import '../../../core/services/user_session.dart';
-import '../../../pages/login_and_signup/user_login.dart';
-import '../../../pages/subscription/subscription_details_page.dart';
-import '../../../pages/subscription/subscription_plans_page.dart';
-import '../../../services/subscription_model.dart';
+import '../../../features/login_and_signup/user_login.dart';
+import '../../subscription/subscription_details_page.dart';
+import '../../subscription/subscription_plans_page.dart';
+import '../../../core/services/subscription_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'account_change_password_widget.dart';
@@ -165,6 +166,27 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       onPressed: () => Navigator.pushNamed(context, AccountDetailsPage.routeName),
                       color: theme.secondaryButtonsOnLight,
                     ),
+
+                    const SizedBox(height: 12),
+
+                    _SettingsButton(
+                      text: 'تغيير كلمة المرور',
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AccountChangePasswordPage.routeName),
+                      color: theme.secondaryButtonsOnLight,
+                    ),
+                    
+                    const SizedBox(height: 12),
+
+                    _SettingsButton(
+                      text: 'تحديث الوثيقة',
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        AccountUpdateCertificatePage.routeName,
+                      ),
+                      color: theme.secondaryButtonsOnLight,
+                    ),
+                    
                     const SizedBox(height: 12),
 
                     if (userType == "influencer")
@@ -176,25 +198,9 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                         },
                         color: theme.secondaryButtonsOnLight,
                       ),
-                    const SizedBox(height: 12),
-
-                    _SettingsButton(
-                      text: 'تغيير كلمة المرور',
-                      onPressed: () =>
-                          Navigator.pushNamed(context, AccountChangePasswordPage.routeName),
-                      color: theme.secondaryButtonsOnLight,
-                    ),
-                    const SizedBox(height: 12),
-
-                    _SettingsButton(
-                      text: 'حذف الحساب',
-                      onPressed: () => Navigator.pushNamed(context, AccountDeletePage.routeName),
-                      color: theme.secondaryButtonsOnLight,
-                    ),
-
+                    
                     // Only show subscription button for business users
                     if (userType == 'business') ...[
-                      const SizedBox(height: 12),
                       _isLoadingSubscription
                           ? const SizedBox(
                               width: 230,
@@ -213,6 +219,14 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                               color: theme.secondaryButtonsOnLight,
                             ),
                     ],
+                   
+                    const SizedBox(height: 12),
+
+                    _SettingsButton(
+                      text: 'حذف الحساب',
+                      onPressed: () => Navigator.pushNamed(context, AccountDeletePage.routeName),
+                      color: theme.secondaryButtonsOnLight,
+                    ),
 
                     const SizedBox(height: 40),
 
@@ -226,7 +240,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       },
                       text: 'تسجيل خروج',
                       options: FFButtonOptions(
-                        width: 160,
+                        width: 430,
                         height: 50,
                         color: theme.primary,
                         textStyle: theme.titleSmall.copyWith(color: Colors.white, fontSize: 16),
@@ -265,7 +279,7 @@ class _SettingsButton extends StatelessWidget {
       onPressed: onPressed,
       text: text,
       options: FFButtonOptions(
-        width: 230,
+        width: 430,
         height: 45,
         color: color,
         textStyle: theme.titleSmall.copyWith(color: theme.primaryText),

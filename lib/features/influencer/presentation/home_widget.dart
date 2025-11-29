@@ -26,7 +26,7 @@ class _InfluencerHomeWidgetState extends State<InfluencerHomeWidget> {
       appBar: FeqAppBar(title: 'الشركات'),
       body: FeqProfilesListWidget(
         targetUserType: 'business',
-        titleSortField: 'business_name_ar',
+        titleSortField: 'name',
         detailPageBuilder: (context, uid) => BusinessProfileScreen(uid: uid),
         showSearch: true,
         showSorting: false,

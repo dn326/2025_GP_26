@@ -33,7 +33,7 @@ class FeqProfileListItem {
 
 class FeqProfilesListWidget extends StatefulWidget {
   final String targetUserType; // "influencer" or "business"
-  final String titleSortField; // "name" or "business_name_ar"
+  final String titleSortField; // "name" 
   final Widget Function(BuildContext context, String uid) detailPageBuilder;
   final bool showSearch;
   final bool showSorting;
@@ -226,9 +226,9 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
               .toList();
         } else {
           // Handle business data
-          title = (data['business_name_ar'] ?? '').toString().trim();
+          title = (data['name'] ?? '').toString().trim();
           if (title.isEmpty) continue;
-          content2 = (data['business_industry_name_ar'] ?? '').toString();
+          content2 = (data['business_industry_name'] ?? '').toString();
         }
 
         _allItems.add(

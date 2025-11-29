@@ -1,14 +1,13 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:elan_flutterproject/features/business/data/models/profile_data_model.dart';
+import 'package:elan_flutterproject/features/business/models/profile_data_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:image_picker/image_picker.dart';
 
-import '../../features/influencer/data/models/influencer_profile_model.dart';
-import '../../pages/profile/business_profile_model.dart';
+import '../../features/influencer/models/profile_data_model.dart';
 import 'firebase_service.dart';
 
 class FeqFirebaseServiceUtils {
@@ -107,7 +106,7 @@ class FeqFirebaseServiceUtils {
     return 'حدث خطأ غير متوقع';
   }
 
-  Future<void> saveProfile(BusinessProfileModel profile) async {
+  Future<void> saveProfile(BusinessProfileDataModel profile) async {
     try {
       final userId = currentUserId;
 
@@ -240,7 +239,7 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Future<InfluencerProfileModel?> fetchInfluencerProfileDataByProfileId([String? uid]) async {
+  Future<InfluencerProfileDataModel?> fetchInfluencerProfileDataByProfileId([String? uid]) async {
     try {
       final userId = uid ?? currentUserId;
       final profilesSnap = await firebaseFirestore
@@ -251,7 +250,7 @@ class FeqFirebaseServiceUtils {
       final docs = profilesSnap.docs;
 
       if (profilesSnap.docs.isNotEmpty) {
-        return InfluencerProfileModel.fromJson(docs.first.data());
+        return InfluencerProfileDataModel.fromJson(docs.first.data());
       }
 
       return null;

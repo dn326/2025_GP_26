@@ -418,6 +418,180 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        key: scaffoldKey,
+        backgroundColor: theme.backgroundElan,
+        appBar: FeqAppBar(title: 'صفحتي الشخصية', showBack: widget.uid != null, showLeading: widget.uid == null, showNotification: true),
+        body: SafeArea(
+          top: true,
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+              ? Center(child: Text(_error!))
+              : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(8, 16, 8, 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: theme.containers,
+                            boxShadow: const [BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))],
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 8),
+                                child: FeqImagePickerWidget(
+                                  initialImageUrl: _profileImage,
+                                  isUploading: false,
+                                  onTap: () {},
+                                  size: 100,
+                                  onImagePicked: (url, file, bytes) {},
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 8),
+                                child: FeqVerifiedNameWidget(name: _name ?? '', isVerified: _isVerified),
+                              ),
+                              _buildInfoLines(context),
+                              if (widget.uid == null)
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: FFButtonWidget(
+                                  onPressed: () => context.pushNamed(InfluencerProfileFormWidget.routeNameEdit),
+                                  text: 'تعديل الملف الشخصي',
+                                  options: FFButtonOptions(
+                                    width: double.infinity,
+                                    height: 44,
+                                    padding: const EdgeInsetsDirectional.fromSTEB(8, 0, 8, 0),
+                                    color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                    textStyle: theme.titleSmall.override(
+                                      fontFamily: GoogleFonts.interTight().fontFamily,
+                                      color: theme.containers,
+                                      letterSpacing: 0.0,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    hoverColor: theme.subtextHints,
+                                    hoverTextColor: theme.backgroundElan,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+                        
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: theme.containers,
+                            boxShadow: const [BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))],
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (widget.uid == null)
+                                    FlutterFlowIconButton(
+                                      borderRadius: 8,
+                                      buttonSize: 50,
+                                      icon: Icon(
+                                        Icons.add_circle,
+                                        color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                        size: 24,
+                                      ),
+                                      onPressed: () async {
+                                        await Navigator.of(
+                                          context,
+                                        ).push(MaterialPageRoute(builder: (_) => const InfluncerAddExperienceWidget()));
+                                        await _loadAll();
+                                      },
+                                    ),
+                                    if (widget.uid != null)
+                                      Container(),
+                                    Text(
+                                      'الأعمال الإعلانية السابقة',
+                                      textAlign: TextAlign.end,
+                                      style: theme.headlineLarge.override(
+                                        fontFamily: GoogleFonts.interTight().fontFamily,
+                                        fontSize: 22,
+                                        letterSpacing: 0.0,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (_experiences.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: theme.tertiary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'اضف أعمالك ليتعرف الآخرون على تميزك',
+                                        style: theme.labelSmall.override(
+                                          fontFamily: GoogleFonts.inter().fontFamily,
+                                          color: theme.subtextHints,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              else
+                                Padding(
+                                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
+                                  child: Column(
+                                    children: _experiences
+                                        .map(
+                                          (e) => Padding(
+                                            padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
+                                            child: _experienceTile(e),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
   Widget _experienceTile(Map<String, dynamic> e) {
     final t = FlutterFlowTheme.of(context);
 
@@ -533,178 +707,6 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: theme.backgroundElan,
-        appBar: FeqAppBar(title: '', showBack: widget.uid != null, showLeading: widget.uid == null),
-        body: SafeArea(
-          top: true,
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Center(child: Text(_error!))
-              : SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(8, 16, 8, 16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: theme.containers,
-                            boxShadow: const [BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))],
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 8),
-                                child: FeqImagePickerWidget(
-                                  initialImageUrl: _profileImage,
-                                  isUploading: false,
-                                  onTap: () {},
-                                  size: 100,
-                                  onImagePicked: (url, file, bytes) {},
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 8),
-                                child: FeqVerifiedNameWidget(name: _name ?? '', isVerified: _isVerified),
-                              ),
-                              _buildInfoLines(context),
-                              if (widget.uid == null)
-                              Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: FFButtonWidget(
-                                  onPressed: () => context.pushNamed(InfluencerProfileFormWidget.routeNameEdit),
-                                  text: 'تعديل الملف الشخصي',
-                                  options: FFButtonOptions(
-                                    width: double.infinity,
-                                    height: 44,
-                                    padding: const EdgeInsetsDirectional.fromSTEB(8, 0, 8, 0),
-                                    color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                    textStyle: theme.titleSmall.override(
-                                      fontFamily: GoogleFonts.interTight().fontFamily,
-                                      color: theme.containers,
-                                      letterSpacing: 0.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                    hoverColor: theme.subtextHints,
-                                    hoverTextColor: theme.backgroundElan,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: theme.containers,
-                            boxShadow: const [BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))],
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    if (widget.uid == null)
-                                    FlutterFlowIconButton(
-                                      borderRadius: 8,
-                                      buttonSize: 50,
-                                      icon: Icon(
-                                        Icons.add_circle,
-                                        color: theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                        size: 24,
-                                      ),
-                                      onPressed: () async {
-                                        await Navigator.of(
-                                          context,
-                                        ).push(MaterialPageRoute(builder: (_) => const InfluncerAddExperienceWidget()));
-                                        await _loadAll();
-                                      },
-                                    ),
-                                    if (widget.uid != null)
-                                      Container(),
-                                    Text(
-                                      'الأعمال الإعلانية السابقة',
-                                      textAlign: TextAlign.end,
-                                      style: theme.headlineLarge.override(
-                                        fontFamily: GoogleFonts.interTight().fontFamily,
-                                        fontSize: 22,
-                                        letterSpacing: 0.0,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (_experiences.isEmpty)
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: theme.tertiary,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'اضف أعمالك ليتعرف الآخرون على تميزك',
-                                        style: theme.labelSmall.override(
-                                          fontFamily: GoogleFonts.inter().fontFamily,
-                                          color: theme.subtextHints,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              else
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
-                                  child: Column(
-                                    children: _experiences
-                                        .map(
-                                          (e) => Padding(
-                                            padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
-                                            child: _experienceTile(e),
-                                          ),
-                                        )
-                                        .toList(),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
         ),
       ),
     );

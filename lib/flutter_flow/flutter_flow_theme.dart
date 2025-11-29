@@ -15,6 +15,8 @@ class FlutterFlowTheme {
 
   Color get primaryText => const Color(0xFF0C162C); // #0c162c
   Color get secondaryText => const Color(0xFF36496C); // #36496c
+  Color get tertiaryText => const Color.fromARGB(255, 167, 151, 126);
+
 
   // أسماء مخصّصة تستخدمها صفحاتك (من Custom Colors في الصور)
   Color get subtextHints => const Color(0xFF36496C); // #36496c

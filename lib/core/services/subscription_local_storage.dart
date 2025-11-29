@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:elan_flutterproject/services/subscription_service.dart';
+import 'package:elan_flutterproject/core/services/subscription_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../services/subscription_model.dart';
+import 'subscription_model.dart';
 
 class SubscriptionLocalStorage {
   static const String _subscriptionKey = 'subscription_data';
