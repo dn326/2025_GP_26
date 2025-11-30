@@ -1,21 +1,4 @@
-<<<<<<< HEAD
-# elan
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-=======
 Elan
 
 •	Introduction
@@ -24,25 +7,29 @@ Elan is a digital platform designed to simplify influencer marketing for busines
 
 •	Technology
 
-- Programming Languages: JavaScript, Python
-- Frameworks: React, Node.js
-- Database: MySQL
-- Other Tools: Zoom, WhatsApp, Microsoft Word, Figma, GitHub
+- Programming Languages: flutter ,dart 
+- Database: a NoSql firebase
+- Other Tools: Zoom, WhatsApp, Microsoft Word, Figma, GitHub ,flutter flow
 
 •	Launching Instructions
 
 1. Clone the repository:  
    `git clone https://github.com/2025_GP_26.git`
+   
+3.	Navigate to the project directory
+   'cd 2025_GP_26'
 
-2. Install dependencies:  
-   `npm install`
+5.	Open a new terminal in Visual Studio Code
+	Terminal → New Terminal
 
-3. Set up the database:  
-   `npm run migrate`
+6.	Install the latest version of Flutter
+	'flutter upgrade'
 
-4. Start the development server:  
-   `npm start`
+8.	install project packages (Pub Get)
+	'flutter pub get'
 
-5. Visit `http://localhost:3000` to view the project.
-<img width="468" height="638" alt="image" src="https://github.com/user-attachments/assets/deda16e6-9bd4-44e1-906d-1e2cc2fb11ff" />
->>>>>>> b6986313a1cb14a3803bc7dc1270cdfa1a466262
+10. Run the application on Chrome
+   'flutter run -d chrome'
+
+
+
