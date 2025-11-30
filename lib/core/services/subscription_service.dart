@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'compagin_status.dart';
 import 'subscription_local_storage.dart';
 import 'subscription_model.dart';
 
@@ -138,6 +138,67 @@ class SubscriptionService {
     } catch (e) {
       log('Failed to refresh and save subscription: $e');
       return null;
+    }
+  }
+
+  /// Check campaign creation status and return detailed result
+  /// This method determines if a user can create a campaign and why
+  Future<CampaignCreationStatus> checkCampaignCreationStatus() async {
+    try {
+      // Refresh subscription data first
+      final subscription = await refreshAndSaveSubscription();
+
+      // No subscription = free user
+      if (subscription == null || subscription.planType == null) {
+        log('User has no subscription - requires subscription');
+        return CampaignCreationStatus.requiresSubscription();
+      }
+
+      final planType = subscription.planType!;
+
+      // Premium user - check if still active
+      if (planType == 'premium') {
+        final startDate = subscription.startDate;
+        if (startDate == null) {
+          log('Premium subscription has no start date');
+          return CampaignCreationStatus.requiresSubscription();
+        }
+
+        final expiryDate = startDate.add(const Duration(days: 365 * 2));
+        final isActive = DateTime.now().isBefore(expiryDate);
+
+        if (isActive) {
+          log('Premium user - campaign creation allowed');
+          return CampaignCreationStatus.allowed();
+        } else {
+          log('Premium subscription expired - requires renewal');
+          return CampaignCreationStatus.requiresSubscription();
+        }
+      }
+
+      // Basic user - check campaign limit
+      if (planType == 'basic') {
+        final campaignsUsed = subscription.campaignsUsed;
+        final campaignLimit = subscription.campaignLimit;
+
+        if (campaignsUsed < campaignLimit) {
+          log('Basic user under limit ($campaignsUsed/$campaignLimit) - campaign creation allowed');
+          return CampaignCreationStatus.allowed();
+        } else {
+          log('Basic user at limit ($campaignsUsed/$campaignLimit) - requires upgrade');
+          return CampaignCreationStatus.requiresUpgrade(
+            campaignsUsed: campaignsUsed,
+            campaignLimit: campaignLimit,
+          );
+        }
+      }
+
+      // Unknown plan type
+      log('Unknown plan type: $planType');
+      return CampaignCreationStatus.requiresSubscription();
+    } catch (e, stackTrace) {
+      log('Error checking campaign creation status: $e', error: e, stackTrace: stackTrace);
+      rethrow;
     }
   }
 }

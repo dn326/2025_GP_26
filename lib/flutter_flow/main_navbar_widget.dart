@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
+import '../core/utils/subscriptions_dialoges.dart';
 import '../features/business/presentation/campaign_screen.dart';
 import '../features/payment/payment_page.dart';
 import '../core/services/subscription_service.dart';
@@ -81,7 +84,6 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
               onPressed: () => _handleTap(1),
             ),
 
-            // 2) Search
             FlutterFlowIconButton(
               borderRadius: 8,
               buttonSize: 40,
@@ -94,34 +96,71 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
                 if (widget.userType == "influencer") {
                   _handleTap(2);
                 } else {
-                  // Refresh subscription data from Firebase before checking
+                  // Business user - check campaign creation status
                   final subscriptionService = SubscriptionService();
-                  await subscriptionService.refreshAndSaveSubscription();
 
-                  final canCreate = await subscriptionService.canCreateCampaign();
+                  try {
+                    // Check campaign creation status using the new method
+                    final status = await subscriptionService.checkCampaignCreationStatus();
 
-                  if (!mounted) return;
+                    if (!mounted) return;
 
-                  if (canCreate) {
-                    final nav = Navigator.of(context);
-                    final result = await nav.push(
-                      MaterialPageRoute(builder: (_) => const CampaignScreen()),
+                    // Handle based on status result
+                    if (status.isAllowed) {
+                      final nav = Navigator.of(context);
+                      final result = await nav.push(
+                        MaterialPageRoute(builder: (_) => const CampaignScreen()),
+                      );
+
+                      // Only increment if campaign was successfully created (not edited)
+                      if (result == true) {
+                        await subscriptionService.incrementCampaignsUsed();
+                        // Refresh subscription data after incrementing
+                        await subscriptionService.refreshAndSaveSubscription();
+                      }
+
+                      // After campaign is created/edited, simulate tap on profile (index 0)
+                      widget.onTap?.call(0);
+                    } else if (status.needsSubscription) {
+                      // Free user - show subscription required dialog
+                      if (!mounted) return;
+                      final shouldNavigate = await showSubscriptionRequiredDialog(context);
+
+                      // Navigate to payment page if user confirmed
+                      if (shouldNavigate == true && mounted) {
+                        await Navigator.of(
+                          context,
+                        ).push(MaterialPageRoute(builder: (_) => const PaymentPage()));
+                      }
+                    } else if (status.needsUpgrade) {
+                      // Basic user at limit - show upgrade required dialog
+                      if (!mounted) return;
+                      final shouldNavigate = await showUpgradeRequiredDialog(
+                        context,
+                        status.campaignsUsed ?? 0,
+                        status.campaignLimit ?? 15,
+                      );
+
+                      // Navigate to payment page if user confirmed
+                      if (shouldNavigate == true && mounted) {
+                        await Navigator.of(
+                          context,
+                        ).push(MaterialPageRoute(builder: (_) => const PaymentPage()));
+                      }
+                    }
+                  } catch (e, stackTrace) {
+                    // Error handling - show error dialog
+                    log(
+                      'Error during subscription validation: $e',
+                      error: e,
+                      stackTrace: stackTrace,
                     );
 
-                    // Only increment if campaign was successfully created (not edited)
-                    if (result == true) {
-                      await subscriptionService.incrementCampaignsUsed();
-                      // Refresh subscription data after incrementing
-                      await subscriptionService.refreshAndSaveSubscription();
-                    }
-
-                    // After campaign is created/edited, simulate tap on profile (index 0)
-                    widget.onTap?.call(0);
-                  } else {
-                    // Navigate to payment page
                     if (!mounted) return;
-                    final nav = Navigator.of(context);
-                    await nav.push(MaterialPageRoute(builder: (_) => const PaymentPage()));
+                    await showSubscriptionErrorDialog(
+                      context,
+                      'فشل في التحقق من الاشتراك. يرجى المحاولة مرة أخرى',
+                    );
                   }
                 }
               },
