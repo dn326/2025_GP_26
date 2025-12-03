@@ -23,7 +23,7 @@ class _InfluencerHomeWidgetState extends State<InfluencerHomeWidget> {
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: FeqAppBar(title: 'الشركات'),
+      appBar: FeqAppBar(title: 'جهات الأعمال'),
       body: FeqProfilesListWidget(
         targetUserType: 'business',
         titleSortField: 'name',

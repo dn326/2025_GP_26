@@ -246,6 +246,38 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     return Colors.grey;
   }
 
+  IconData _getSocialIconByPlatformId(int platformId) {
+    if (platformId == 1) return FontAwesomeIcons.instagram;
+    if (platformId == 2) return FontAwesomeIcons.youtube;
+    if (platformId == 3) return FontAwesomeIcons.tiktok;
+    if (platformId == 4) return FontAwesomeIcons.facebook;
+    if (platformId == 5) return FontAwesomeIcons.xTwitter;
+    if (platformId == 6) return FontAwesomeIcons.snapchat;
+    if (platformId == 7) return FontAwesomeIcons.pinterest;
+    if (platformId == 8) return FontAwesomeIcons.linkedin;
+    if (platformId == 9) return FontAwesomeIcons.twitch;
+    if (platformId == 10) return FontAwesomeIcons.threads;
+    if (platformId == 11) return FontAwesomeIcons.bluesky;
+    if (platformId == 12) return FontAwesomeIcons.reddit;
+    return FontAwesomeIcons.link;
+  }
+
+  Color _getSocialColorByPlatformId(int platformId) {
+    if (platformId == 1) return const Color(0xFFE4405F);
+    if (platformId == 2) return const Color(0xFFFF0000);
+    if (platformId == 3) return const Color(0xFF000000);
+    if (platformId == 4) return const Color(0xFF1877F2);
+    if (platformId == 5) return const Color(0xFF000000);
+    if (platformId == 6) return const Color(0xFFFFFC00);
+    if (platformId == 7) return const Color(0xFFE60023);
+    if (platformId == 8) return const Color(0xFF0A66C2);
+    if (platformId == 9) return const Color(0xFF9146FF);
+    if (platformId == 10) return const Color(0xFF000000);
+    if (platformId == 11) return const Color(0xFF1185FE);
+    if (platformId == 12) return const Color(0xFFFF4500);
+    return Colors.grey;
+  }
+
   Widget _buildSocialLinks() {
     if (_profileData?.socialMedia == null || _profileData!.socialMedia!.isEmpty) {
       return const SizedBox.shrink();
@@ -280,57 +312,53 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
             if (domain.isEmpty || nameEn.isEmpty) return const SizedBox();
 
-            final url = 'https://$domain/$username';
-            final icon = _getSocialIcon(nameEn);
-            // final color = _getSocialColor(nameEn);
+            final socialUrl = 'https://$domain/$username';
+            final socialIcon = _getSocialIcon(nameEn);
+            final socialColor = _getSocialColor(nameEn);
 
             return Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () async {
-                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                  await launchUrl(Uri.parse(socialUrl), mode: LaunchMode.externalApplication);
                 },
                 borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  // padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 10, 0),
-                  // decoration: BoxDecoration(color: t.tertiary, borderRadius: BorderRadius.circular(8)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              platform.nameAr,
-                              textAlign: TextAlign.right,
-                              style: t.labelSmall.copyWith(color: t.secondaryText, fontSize: 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            platform.nameAr,
+                            textAlign: TextAlign.right,
+                            style: t.labelSmall.copyWith(color: t.secondaryText, fontSize: 10),
+                          ),
+                          Text(
+                            '@$username',
+                            textAlign: TextAlign.right,
+                            style: t.bodyMedium.copyWith(
+                              color: t.primaryText,
+                              fontWeight: FontWeight.w500,
                             ),
-                            Text(
-                              '@$username',
-                              textAlign: TextAlign.right,
-                              style: t.bodyMedium.copyWith(
-                                color: t.primaryText,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      SizedBox(width: 16),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: t.primary.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(icon, size: 20, color: t.primary),
+                    ),
+                    SizedBox(width: 16),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: t.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
                       ),
-                    ],
-                  ),
+                      child: Icon(socialIcon, size: 20, color: t.primary),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -339,7 +367,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           .divide(
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Divider(height: 1, color: t.alternate.withOpacity(0.5)),
+              child: Divider(height: 1, color: t.alternate.withValues(alpha: 0.5)),
             ),
           ),
     );
@@ -351,9 +379,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.primaryBackground.withOpacity(0.5),
+        color: theme.primaryBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.alternate.withOpacity(0.3)),
+        border: Border.all(color: theme.alternate.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -362,7 +390,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
             Align(alignment: Alignment.topRight, child: _buildSocialLinks()),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Divider(height: 1, color: theme.alternate.withOpacity(0.5)),
+              child: Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
             ),
           ],
 
@@ -380,7 +408,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
             if ((_profileData?.phoneNumber ?? '').isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Divider(height: 1, color: theme.alternate.withOpacity(0.5)),
+                child: Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
               ),
             _buildInfoRow(
               theme,
@@ -396,7 +424,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           if ((_profileData?.website ?? '').isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Divider(height: 1, color: theme.alternate.withOpacity(0.5)),
+              child: Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
             ),
             _buildInfoRow(theme, Icons.language_rounded, _profileData!.website!, isLink: true),
           ],
@@ -446,7 +474,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
         const SizedBox(width: 16),
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: theme.primary.withOpacity(0.1), shape: BoxShape.circle),
+          decoration: BoxDecoration(color: theme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
           child: Icon(icon, size: 20, color: theme.primary),
         ),
       ],
@@ -467,10 +495,10 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
         key: scaffoldKey,
         backgroundColor: theme.backgroundElan,
         appBar: FeqAppBar(
-          title: 'صفحتي الشخصية',
+          title: (widget.uid != null) ? '' : 'صفحتي الشخصية',
           showBack: widget.uid != null,
           showLeading: widget.uid == null,
-          showNotification: true,
+          showNotification: widget.uid == null,
         ),
         body: SafeArea(
           top: true,
@@ -492,7 +520,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
+                                color: Colors.black.withValues(alpha: 0.08),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -514,7 +542,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                         topRight: Radius.circular(24),
                                       ),
                                       gradient: LinearGradient(
-                                        colors: [theme.primary, theme.primary.withOpacity(0.7)],
+                                        colors: [theme.primary, theme.primary.withValues(alpha: 0.7)],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                       ),
@@ -529,7 +557,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                             height: 100,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.white.withOpacity(0.1),
+                                              color: Colors.white.withValues(alpha: 0.1),
                                             ),
                                           ),
                                         ),
@@ -541,7 +569,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                             height: 80,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.white.withOpacity(0.1),
+                                              color: Colors.white.withValues(alpha: 0.1),
                                             ),
                                           ),
                                         ),
@@ -558,7 +586,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
+                                            color: Colors.black.withValues(alpha: 0.1),
                                             blurRadius: 8,
                                             offset: const Offset(0, 4),
                                           ),
@@ -631,45 +659,48 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                       const SizedBox(height: 24),
                                     ],
 
-                                    // Description
-                                    if ((_profileData?.description ?? '').isNotEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      Align(
-                                        alignment: Alignment.bottomRight,
-                                        child: Text(
-                                          _profileData!.description!,
-                                          textAlign: TextAlign.right,
-                                          style: theme.bodyMedium.copyWith(
-                                            height: 1.6,
-                                            color: theme.secondaryText,
+                                    if (widget.campaignId == null) ...[
+                                      // Description
+                                      if ((_profileData?.description ?? '').isNotEmpty) ...[
+                                        const SizedBox(height: 8),
+                                        Align(
+                                          alignment: Alignment.bottomRight,
+                                          child: Text(
+                                            _profileData!.description!,
+                                            textAlign: TextAlign.right,
+                                            style: theme.bodyMedium.copyWith(
+                                              height: 1.6,
+                                              color: theme.secondaryText,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 24),
+                                        const SizedBox(height: 24),
 
-                                      // Contact Info
-                                      _buildContactSection(context),
+                                        // Contact Info
+                                        _buildContactSection(context),
 
-                                      const SizedBox(height: 32),
+                                        const SizedBox(height: 32),
 
-                                      FFButtonWidget(
-                                        onPressed: () => context.pushNamed(
-                                          BusinessProfileFormWidget.routeNameEdit,
-                                        ),
-                                        text: 'تعديل الملف الشخصي',
-                                        icon: const Icon(Icons.edit_outlined, size: 20),
-                                        options: FFButtonOptions(
-                                          width: double.infinity,
-                                          height: 44,
-                                          color: theme.primary,
-                                          textStyle: theme.titleSmall.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: GoogleFonts.interTight().fontFamily,
+                                        if (widget.uid == null)
+                                        FFButtonWidget(
+                                          onPressed: () => context.pushNamed(
+                                            BusinessProfileFormWidget.routeNameEdit,
                                           ),
-                                          borderRadius: BorderRadius.circular(12),
+                                          text: 'تعديل الملف الشخصي',
+                                          icon: const Icon(Icons.edit_outlined, size: 20),
+                                          options: FFButtonOptions(
+                                            width: double.infinity,
+                                            height: 44,
+                                            color: theme.primary,
+                                            textStyle: theme.titleSmall.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: GoogleFonts.interTight().fontFamily,
+                                            ),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                     ],
                                   ],
                                 ),
@@ -678,7 +709,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                           ),
                         ),
 
-                        if (widget.campaignId == null) const SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
                         Container(
                           width: double.infinity,
@@ -815,13 +846,14 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   }
 
   Widget _tileCampaignSpecial(Map<String, dynamic> e) {
-    final t = FlutterFlowTheme.of(context);
+    final theme = FlutterFlowTheme.of(context);
 
-    final labelStyle = t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w600);
-    final valueStyle = t.bodyMedium.copyWith(color: t.secondaryText);
+    final labelStyle = theme.bodyMedium.copyWith(color: theme.primaryText, fontWeight: FontWeight.w600);
+    final valueStyle = theme.bodyMedium.copyWith(color: theme.secondaryText);
 
     final title = e['title'] as String? ?? '';
     final description = e['description'] as String? ?? '';
+    final platformId = e['platform_id'] as int? ?? 0;
     final platformName = e['platform_name'] as String? ?? '';
     final influencerContentTypeName = e['influencer_content_type_name'] as String? ?? '';
     final s = _fmtDate(e['start_date']);
@@ -833,9 +865,12 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
         ? CampaignExpiryHelper.isExpiringSoon(endDate)
         : false;
 
+    final socialIcon = _getSocialIconByPlatformId(platformId);
+    final socialColor = _getSocialColorByPlatformId(platformId);
+
     return Container(
       decoration: BoxDecoration(
-        color: t.containers,
+        color: theme.containers,
         boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 3, offset: Offset(0, 2))],
         borderRadius: BorderRadius.circular(16),
       ),
@@ -860,7 +895,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                     Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
                     Text(
                       title,
-                      style: valueStyle.copyWith(color: t.primaryText),
+                      style: valueStyle.copyWith(color: theme.primaryText),
                       textAlign: TextAlign.end,
                     ),
                     const SizedBox(height: 8),
@@ -868,7 +903,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                       Text('الفترة الزمنية', style: labelStyle, textAlign: TextAlign.end),
                       Text(
                         'من $s إلى $en',
-                        style: valueStyle.copyWith(color: t.secondaryText),
+                        style: valueStyle.copyWith(color: theme.secondaryText),
                         textAlign: TextAlign.end,
                       ),
                       const SizedBox(height: 8),
@@ -876,22 +911,45 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                     Text('تفاصيل الحملة', style: labelStyle, textAlign: TextAlign.end),
                     Text(
                       description,
-                      style: valueStyle.copyWith(color: t.secondaryText),
+                      style: valueStyle.copyWith(color: theme.secondaryText),
                       textAlign: TextAlign.end,
                     ),
                     const SizedBox(height: 8),
                     Text('المنصة', style: labelStyle, textAlign: TextAlign.end),
-                    Text(
-                      platformName,
-                      style: valueStyle.copyWith(color: t.secondaryText),
-                      textAlign: TextAlign.end,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          platformName,
+                          style: TextStyle(color: theme.primaryText, fontSize: 13, fontFamily: GoogleFonts.inter().fontFamily),
+                        ),
+                        const SizedBox(width: 6),
+                        FaIcon(socialIcon, color: socialColor, size: 18),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Text('نوع المحتوى', style: labelStyle, textAlign: TextAlign.end),
                     Text(
                       influencerContentTypeName,
-                      style: valueStyle.copyWith(color: t.secondaryText),
+                      style: valueStyle.copyWith(color: theme.secondaryText),
                       textAlign: TextAlign.end,
+                    ),
+                    const SizedBox(height: 8),
+                    FFButtonWidget(
+                      onPressed: () {},
+                      text: 'قدّم',
+                      // icon: const Icon(Icons.edit_outlined, size: 20),
+                      options: FFButtonOptions(
+                        width: double.infinity,
+                        height: 44,
+                        color: theme.primary,
+                        textStyle: theme.titleSmall.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: GoogleFonts.interTight().fontFamily,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ],
                 ),

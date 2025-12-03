@@ -2,8 +2,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/features/business/presentation/explore_widget.dart';
 import 'package:elan_flutterproject/features/influencer/presentation/home_widget.dart';
-import 'package:elan_flutterproject/features/login_and_signup/business_setupprofile.dart';
-import 'package:elan_flutterproject/features/login_and_signup/influencer_setupprofile.dart';
 import 'package:elan_flutterproject/features/login_and_signup/user_login.dart';
 import 'package:elan_flutterproject/features/login_and_signup/user_resetpassword.dart';
 import 'package:elan_flutterproject/features/login_and_signup/user_signup.dart';
