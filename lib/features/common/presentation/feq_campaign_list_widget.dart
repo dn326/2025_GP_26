@@ -187,12 +187,20 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
             continue;
           }
 
+          final rawImageUrl = businessData.profileImageUrl ?? '';
+          String profileImage = '';
+          if (rawImageUrl.isNotEmpty) {
+            profileImage = rawImageUrl.contains('?')
+                ? '${rawImageUrl.split('?').first}?alt=media'
+                : '$rawImageUrl?alt=media';
+          }
+
           _allItems.add(
             FeqCampaignListItem(
               id: data['campaign_id'] as String? ?? '',
               businessId: businessId,
               businessNameAr: businessData.name,
-              businessImageUrl: businessData.profileImageUrl ?? '',
+              businessImageUrl: profileImage,
               title: data['title'] as String? ?? '',
               description: data['description'] as String? ?? '',
               influencerContentTypeId:
@@ -494,65 +502,110 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
       child: Material(
         color: Colors.transparent,
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          child:
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Align(
-                      alignment: const AlignmentDirectional(1, 0),
-                      child: Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
-                    ),
-                    Align(
-                      alignment: const AlignmentDirectional(1, 0),
-                      child: Text(item.title, style: valueStyle, textAlign: TextAlign.end),
-                    ),
-                    // Business name as link
-                    if (item.businessNameAr.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      Align(
-                        alignment: const AlignmentDirectional(1, 0),
-                        child: Text('الجهة المعلنة', style: labelStyle, textAlign: TextAlign.end),
+                    // IMAGE – FIXED ON THE LEFT
+                    if (widget.showImage)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 0, start: 0),
+                        child: FeqImagePickerWidget(
+                          initialImageUrl: item.businessImageUrl,
+                          isUploading: false,
+                          size: 80,
+                          onImagePicked: (url, file, bytes) {},
+                        ),
                       ),
-                      Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            InkWell(
-                              onTap: () => _navigateToCampaignDetail(item),
-                              child: Text(
-                                'عرض تفاصيل الحملة',
-                                style: valueStyle.copyWith(
-                                  color: t.primaryText,
-                                  decoration: TextDecoration.underline,
-                                ),
-                                textAlign: TextAlign.start,
-                              ),
+
+                    // TEXT – ALWAYS UNDER IMAGE HEIGHT
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'عنوان الحملة',
+                            style: labelStyle,
+                            textAlign: TextAlign.end,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            item.title,
+                            style: t.bodyMedium.copyWith(
+                              color: t.primary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
                             ),
-                            Align(
-                              alignment: const AlignmentDirectional(1, 0),
-                              child: Text(item.businessNameAr, style: valueStyle,
-                                  textAlign: TextAlign.start),
-                            ),
-                          ]
+                            textAlign: TextAlign.end,
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ],
                 ),
-              ),
-              if (widget.showImage)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 16),
-                  child: FeqImagePickerWidget(
-                    initialImageUrl: item.businessImageUrl,
-                    isUploading: false,
-                    size: 80,
-                    onImagePicked: (url, file, bytes) {},
+                const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // LEFT SIDE
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IntrinsicWidth(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            /*Text(
+                              'الجهة المعلنة',
+                              style: labelStyle,
+                              textAlign: TextAlign.center,
+                            ),*/
+                            Text(
+                              item.businessNameAr,
+                              style: t.bodyMedium.copyWith(
+                                color: t.primaryText,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
                   ),
                 ),
+
+                // RIGHT SIDE
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () => _navigateToCampaignDetail(item),
+                        child: Text(
+                          'عرض تفاصيل الحملة',
+                          style: valueStyle.copyWith(
+                            color: t.primaryText,
+                            decoration: TextDecoration.underline,
+                          ),
+                          textAlign: TextAlign.end,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             ],
+            ),
           ),
         ),
       ),
@@ -600,6 +653,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: TextField(
+                readOnly: true,
                 onChanged: (v) {
                   _debounceTimer?.cancel();
                   _debounceTimer = Timer(const Duration(milliseconds: 600), () {

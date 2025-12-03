@@ -282,16 +282,16 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
             return const SizedBox.shrink();
           }
 
-          final url = 'https://$domain/$username';
-          final icon = _getSocialIcon(platformNameEn);
-          final color = _getSocialColor(platformNameEn);
+          final socialUrl = 'https://$domain/$username';
+          final socialIcon = _getSocialIcon(platformNameEn);
+          final socialColor = _getSocialColor(platformNameEn);
 
           return Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () async {
                 try {
-                  final uri = Uri.parse(url);
+                  final uri = Uri.parse(socialUrl);
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   } else {
@@ -310,7 +310,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    FaIcon(icon, color: color, size: 18),
+                    FaIcon(socialIcon, color: socialColor, size: 18),
                     const SizedBox(width: 6),
                     Text(
                       '@$username',
@@ -430,7 +430,11 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: theme.backgroundElan,
-        appBar: FeqAppBar(title: 'صفحتي الشخصية', showBack: widget.uid != null, showLeading: widget.uid == null, showNotification: true),
+        appBar: FeqAppBar(
+            title: (widget.uid != null) ? '' : 'صفحتي الشخصية',
+            showBack: widget.uid != null,
+            showLeading: widget.uid == null,
+            showNotification: widget.uid == null),
         body: SafeArea(
           top: true,
           child: _loading

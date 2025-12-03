@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../features/setting/presentation/account_settings_widget.dart';
-import '../../flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
@@ -587,6 +586,18 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
               : null,
 
           actions: [
+            if (showBack)
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: FaIcon(
+                    Icons.arrow_forward_ios,
+                    color: FlutterFlowTheme.of(context).primaryText,
+                    size: 24,
+                  ),
+                ),
+              ),
             if (showNotification)
               Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
@@ -616,19 +627,6 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
                           .copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
-
-                  if (showBack)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(470, 0, 16, 0),
-                      child: GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: FaIcon(
-                          Icons.arrow_forward_ios,
-                          color: FlutterFlowTheme.of(context).primaryText,
-                          size: 24,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),

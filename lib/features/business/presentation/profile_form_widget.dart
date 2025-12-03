@@ -3,14 +3,12 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
-import 'package:oauth1/oauth1.dart' as oauth1;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/features/business/models/profile_data_model.dart';
 import 'package:elan_flutterproject/features/business/models/profile_form_model.dart';
 import 'package:elan_flutterproject/features/business/presentation/profile_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/components/feq_components.dart';

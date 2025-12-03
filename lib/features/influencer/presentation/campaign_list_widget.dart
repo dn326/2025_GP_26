@@ -23,15 +23,15 @@ class _CampaignListWidgetState extends State<CampaignListWidget> {
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: FeqAppBar(title: 'الحملات'),
+      appBar: FeqAppBar(title: 'تصفح الحملات المتاحة'),
       body: FeqCampaignListWidget(
         detailPageBuilder: (context, uid, campaignId) => BusinessProfileScreen(uid: uid, campaignId: campaignId),
-        showSearch: false,
+        showSearch: true,
         showSorting: false,
         paginated: false,
         showBusinessNameHeader: false,
         groupByBusiness: false,
-        showImage: false,
+        showImage: true,
         detailed: false,
         pageSize: 10000,
       ),

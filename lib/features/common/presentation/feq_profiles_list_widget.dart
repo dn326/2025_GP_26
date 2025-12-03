@@ -12,7 +12,6 @@ enum FeqSortType { dateDesc, dateAsc, titleAsc }
 class FeqProfileListItem {
   final String id;
   final String title;
-  final bool verified;
   final String? content1; // subtitle
   final String? content2; // industry or content type
   final List<Map<String, String>> socials;
@@ -22,7 +21,6 @@ class FeqProfileListItem {
   FeqProfileListItem({
     required this.id,
     required this.title,
-    required this.verified,
     this.content1,
     this.content2,
     this.socials = const [],
@@ -126,12 +124,12 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
         query = query.orderBy(widget.titleSortField);
       } else {
         // For influencers querying users collection, try to order by updated_at if available
-        bool descending = _sortType == FeqSortType.dateDesc;
+        // bool descending = _sortType == FeqSortType.dateDesc;
         // Note: If updated_at doesn't exist in all documents, Firestore will skip those documents
         // We handle missing updated_at in post-processing
-        if (widget.targetUserType == 'business') {
-          query = query.orderBy('updated_at', descending: descending);
-        }
+        // if (widget.targetUserType == 'business') {
+        //   query = query.orderBy('updated_at', descending: descending);
+        // }
         // For influencers, we'll sort in memory after fetching
       }
 
@@ -151,7 +149,7 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
       }
 
       int addedCount = 0;
-      int skippedCount = 0;
+      // int skippedCount = 0;
       int maxItems = widget.paginated ? widget.pageSize * 2 : 10000;
 
       for (var doc in snapshot.docs) {
@@ -161,27 +159,25 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
         final profileId = data['profile_id'] as String?;
 
         if (profileId == null || profileId.isEmpty) {
-          skippedCount++;
+          // skippedCount++;
           continue;
         }
 
         // Fetch user data to verify status and type using profile_id
         final userSnap = await FirebaseFirestore.instance.collection('users').doc(profileId).get();
         if (!userSnap.exists) {
-          skippedCount++;
+          // skippedCount++;
           continue;
         }
 
-        bool verified = false;
         final userData = userSnap.data()!;
 
         // Only show active or pending accounts matching target user type
         final accountStatus = userData['account_status'] as String?;
         final userType = userData['user_type'] as String?;
-        verified = data['verified'] ?? false;
 
         if ((accountStatus != 'active' && accountStatus != 'pending') || userType != widget.targetUserType) {
-          skippedCount++;
+          // skippedCount++;
           continue;
         }
 
@@ -206,9 +202,9 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
           if (title.isEmpty) continue;
 
           // Fetch content type from influencer_profile subcollection
-          final inflSnap = await doc.reference.collection('influencer_profile').limit(1).get();
-          if (inflSnap.docs.isNotEmpty) {
-            content2 = inflSnap.docs.first.get('content_type')?.toString();
+          final influencerSnap = await doc.reference.collection('influencer_profile').limit(1).get();
+          if (influencerSnap.docs.isNotEmpty) {
+            content2 = influencerSnap.docs.first.get('content_type')?.toString();
           }
 
           // Fetch social accounts
@@ -235,7 +231,6 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
           FeqProfileListItem(
             id: profileId,
             title: title,
-            verified: verified,
             content1: content1,
             content2: content2,
             socials: socials,
