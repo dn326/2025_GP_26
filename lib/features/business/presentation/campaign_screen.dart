@@ -38,27 +38,16 @@ Widget wrapInMaterialDatePickerTheme(
 
   return Theme(
     data: theme.copyWith(
-      dialogTheme: DialogThemeData(
-        backgroundColor: pickerBg,
-        surfaceTintColor: Colors.transparent,
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: actionFg),
-      ),
+      dialogTheme: DialogThemeData(backgroundColor: pickerBg, surfaceTintColor: Colors.transparent),
+      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: actionFg)),
       datePickerTheme: DatePickerThemeData(
         headerBackgroundColor: headerBg,
         headerForegroundColor: headerFg,
         headerHeadlineStyle: GoogleFonts.interTight(
-          textStyle: t.displayLarge.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 32,
-            color: headerFg,
-          ),
+          textStyle: t.displayLarge.copyWith(fontWeight: FontWeight.w600, fontSize: 32, color: headerFg),
         ),
       ),
-      iconTheme: theme.iconTheme.copyWith(
-        size: iconSize ?? theme.iconTheme.size,
-      ),
+      iconTheme: theme.iconTheme.copyWith(size: iconSize ?? theme.iconTheme.size),
     ),
     child: child,
   );
@@ -76,8 +65,7 @@ class CampaignScreen extends StatefulWidget {
   State<CampaignScreen> createState() => _CampaignScreenState();
 }
 
-class _CampaignScreenState extends State<CampaignScreen>
-    with SingleTickerProviderStateMixin {
+class _CampaignScreenState extends State<CampaignScreen> with SingleTickerProviderStateMixin {
   late CampaignModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -135,12 +123,8 @@ class _CampaignScreenState extends State<CampaignScreen>
     _model.budgetMaxTextController ??= TextEditingController();
     _model.budgetMaxFocusNode ??= FocusNode();
     */
-    _influencerContentTypes =
-        FeqDropDownListLoader.instance.influencerContentTypes;
-    _shakeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
+    _influencerContentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
+    _shakeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
 
     // Add listeners to trigger validation on text changes
     _model.campaignTitleTextController?.addListener(() {
@@ -178,9 +162,7 @@ class _CampaignScreenState extends State<CampaignScreen>
   Future<void> _saveCampaign() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لم يتم العثور على جلسة مستخدم.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لم يتم العثور على جلسة مستخدم.')));
       return;
     }
 
@@ -193,64 +175,51 @@ class _CampaignScreenState extends State<CampaignScreen>
       */
 
       if (_isEdit) {
-        await FirebaseFirestore.instance
-            .collection('campaigns')
-            .doc(widget.campaignId)
-            .update({
-              'title': _model.campaignTitleTextController!.text.trim(),
-              'description': _model.detailsTextController!.text.trim(),
-              // 'budget_min': budgetMin,
-              // 'budget_max': budgetMax,
-              'platform_id': _selectedPlatform?.id,
-              'platform_name': _selectedPlatform?.nameAr,
-              'influencer_content_type_id': _selectedInfluencerContentType!.id,
-              'influencer_content_type_name': _selectedInfluencerContentType!.nameAr,
-              'start_date': Timestamp.fromDate(_model.datePicked2!),
-              'end_date': Timestamp.fromDate(_model.datePicked1!),
-              'active': _model.isActive,
-              'visible': _model.isVisible,
-            });
+        await FirebaseFirestore.instance.collection('campaigns').doc(widget.campaignId).update({
+          'title': _model.campaignTitleTextController!.text.trim(),
+          'description': _model.detailsTextController!.text.trim(),
+          // 'budget_min': budgetMin,
+          // 'budget_max': budgetMax,
+          'platform_id': _selectedPlatform?.id,
+          'platform_name': _selectedPlatform?.nameAr,
+          'influencer_content_type_id': _selectedInfluencerContentType!.id,
+          'influencer_content_type_name': _selectedInfluencerContentType!.nameAr,
+          'start_date': Timestamp.fromDate(_model.datePicked2!),
+          'end_date': Timestamp.fromDate(_model.datePicked1!),
+          'active': _model.isActive,
+          'visible': _model.isVisible,
+        });
 
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم تحديث الحملة بنجاح')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تحديث الحملة بنجاح')));
       } else {
-        final ref = await FirebaseFirestore.instance
-            .collection('campaigns')
-            .add({
-              'business_id': uid,
-              'title': _model.campaignTitleTextController!.text.trim(),
-              'description': _model.detailsTextController!.text.trim(),
-              // 'budget_min': budgetMin,
-              // 'budget_max': budgetMax,
-              'platform_id': _selectedPlatform?.id,
-              'platform_name': _selectedPlatform?.nameAr,
-              'influencer_content_type_id': _selectedInfluencerContentType!.id,
-              'influencer_content_type_name': _selectedInfluencerContentType!.nameAr,
-              'start_date': Timestamp.fromDate(_model.datePicked2!),
-              'end_date': Timestamp.fromDate(_model.datePicked1!),
-              'date_added': Timestamp.fromDate(DateTime.now()),
-              'active': _model.isActive,
-              'visible': _model.isVisible,
-            });
+        final ref = await FirebaseFirestore.instance.collection('campaigns').add({
+          'business_id': uid,
+          'title': _model.campaignTitleTextController!.text.trim(),
+          'description': _model.detailsTextController!.text.trim(),
+          // 'budget_min': budgetMin,
+          // 'budget_max': budgetMax,
+          'platform_id': _selectedPlatform?.id,
+          'platform_name': _selectedPlatform?.nameAr,
+          'influencer_content_type_id': _selectedInfluencerContentType!.id,
+          'influencer_content_type_name': _selectedInfluencerContentType!.nameAr,
+          'start_date': Timestamp.fromDate(_model.datePicked2!),
+          'end_date': Timestamp.fromDate(_model.datePicked1!),
+          'date_added': Timestamp.fromDate(DateTime.now()),
+          'active': _model.isActive,
+          'visible': _model.isVisible,
+        });
 
         await ref.update({'campaign_id': ref.id});
 
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تمت إضافة الحملة بنجاح')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تمت إضافة الحملة بنجاح')));
       }
 
-      Navigator.of(
-        context,
-      ).pop(true); // Return true for successful creation/update
+      Navigator.of(context).pop(true); // Return true for successful creation/update
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('تعذر الحفظ: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تعذر الحفظ: $e')));
       }
     }
   }
@@ -267,17 +236,12 @@ class _CampaignScreenState extends State<CampaignScreen>
 
   Future<void> _loadCampaign() async {
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('campaigns')
-          .doc(widget.campaignId)
-          .get();
+      final doc = await FirebaseFirestore.instance.collection('campaigns').doc(widget.campaignId).get();
 
       if (!doc.exists) {
         setState(() => _loading = false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('لم يتم العثور على هذه الحملة')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لم يتم العثور على هذه الحملة')));
         }
         return;
       }
@@ -287,8 +251,7 @@ class _CampaignScreenState extends State<CampaignScreen>
       int influencerContentTypeId = 0;
       if (influencerContentTypeIdRaw is int) {
         influencerContentTypeId = influencerContentTypeIdRaw;
-      } else if (influencerContentTypeIdRaw is String &&
-          influencerContentTypeIdRaw.isNotEmpty) {
+      } else if (influencerContentTypeIdRaw is String && influencerContentTypeIdRaw.isNotEmpty) {
         influencerContentTypeId = int.tryParse(influencerContentTypeIdRaw) ?? 0;
       }
       _selectedInfluencerContentType = _influencerContentTypes.firstWhere(
@@ -318,7 +281,7 @@ class _CampaignScreenState extends State<CampaignScreen>
       }
       if (platformId > 0) {
         _selectedPlatform = _socialPlatforms.firstWhere(
-              (p) => p.id == platformId,
+          (p) => p.id == platformId,
           orElse: () => _socialPlatforms.first,
         );
       }
@@ -332,9 +295,7 @@ class _CampaignScreenState extends State<CampaignScreen>
     } catch (e) {
       setState(() => _loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('فشل جلب البيانات: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل جلب البيانات: $e')));
       }
     }
   }
@@ -368,9 +329,7 @@ class _CampaignScreenState extends State<CampaignScreen>
         automaticallyImplyLeading: false,
         title: Text(
           _isEdit ? 'تحديث الحملة' : 'إضافة حملة',
-          style: GoogleFonts.interTight(
-            textStyle: t.headlineSmall.copyWith(color: t.primaryText),
-          ),
+          style: GoogleFonts.interTight(textStyle: t.headlineSmall.copyWith(color: t.primaryText)),
         ),
         flexibleSpace: SafeArea(
           child: Stack(
@@ -383,8 +342,7 @@ class _CampaignScreenState extends State<CampaignScreen>
                   buttonSize: 40,
                   icon: Icon(
                     Icons.arrow_forward_ios,
-                    color:
-                        t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                    color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                     size: 22,
                   ),
                   onPressed: () => context.pop(),
@@ -404,8 +362,8 @@ class _CampaignScreenState extends State<CampaignScreen>
                   decoration: BoxDecoration(
                     color: _isEdit && _model.datePicked1 != null
                         ? (_model.datePicked1!.isBefore(DateTime.now())
-                        ? Color(0xFFFEE2E2)  // Light red if campaign expired
-                        : t.backgroundElan)  // Normal background if not expired
+                              ? Color(0xFFFEE2E2) // Light red if campaign expired
+                              : t.backgroundElan) // Normal background if not expired
                         : t.backgroundElan,
                   ),
                   child: Padding(
@@ -413,38 +371,21 @@ class _CampaignScreenState extends State<CampaignScreen>
                     child: SingleChildScrollView(
                       child: Form(
                         key: _formKey,
-                        autovalidateMode: _showErrors
-                            ? AutovalidateMode.always
-                            : AutovalidateMode.disabled,
+                        autovalidateMode: _showErrors ? AutovalidateMode.always : AutovalidateMode.disabled,
                         child: Column(
                           mainAxisSize: MainAxisSize.max,
                           children: [
-                            SubscriptionInfoWidget(
-                              isEditMode: _isEdit,
-                              currentCampaignExpiryDate: _model.datePicked1,
-                            ),
+                            SubscriptionInfoWidget(isEditMode: _isEdit, currentCampaignExpiryDate: _model.datePicked1),
 
                             Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                16,
-                                16,
-                                16,
-                                0,
-                              ),
+                              padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 0),
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: t.containers,
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(16),
-                                  ),
+                                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0,
-                                    16,
-                                    0,
-                                    0,
-                                  ),
+                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
@@ -455,26 +396,14 @@ class _CampaignScreenState extends State<CampaignScreen>
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                16,
-                                16,
-                                16,
-                                0,
-                              ),
+                              padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 0),
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: t.containers,
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(16),
-                                  ),
+                                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0,
-                                    16,
-                                    0,
-                                    0,
-                                  ),
+                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
@@ -499,24 +428,15 @@ class _CampaignScreenState extends State<CampaignScreen>
                                             style: t.bodyMedium.copyWith(color: t.primaryText),
                                             decoration: InputDecoration(
                                               enabledBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: t.primaryBackground,
-                                                  width: 2,
-                                                ),
+                                                borderSide: BorderSide(color: t.primaryBackground, width: 2),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               disabledBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: Color(0xFFE5E7EB),
-                                                  width: 2,
-                                                ),
+                                                borderSide: BorderSide(color: Color(0xFFE5E7EB), width: 2),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               focusedBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: t.primary,
-                                                  width: 2,
-                                                ),
+                                                borderSide: BorderSide(color: t.primary, width: 2),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               errorBorder: const OutlineInputBorder(
@@ -530,12 +450,12 @@ class _CampaignScreenState extends State<CampaignScreen>
                                             ),
                                             textAlign: TextAlign.end,
                                             validator: (v) =>
-                                            (v == null || v.trim().isEmpty) ? 'يرجى إدخال عنوان الحملة' : null,
+                                                (v == null || v.trim().isEmpty) ? 'يرجى إدخال عنوان الحملة' : null,
                                           ),
                                         ),
                                       ],
 
-// DETAILS FIELD - Same disabled logic
+                                      // DETAILS FIELD - Same disabled logic
                                       if (_isEdit && _isCampaignExpired() && !_canEditExpiredCampaign) ...[
                                         _buildDisabledTextField(
                                           'تفاصيل الحملة',
@@ -556,24 +476,15 @@ class _CampaignScreenState extends State<CampaignScreen>
                                             style: t.bodyMedium.copyWith(color: t.primaryText),
                                             decoration: InputDecoration(
                                               enabledBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: t.primaryBackground,
-                                                  width: 2,
-                                                ),
+                                                borderSide: BorderSide(color: t.primaryBackground, width: 2),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               disabledBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: Color(0xFFE5E7EB),
-                                                  width: 2,
-                                                ),
+                                                borderSide: BorderSide(color: Color(0xFFE5E7EB), width: 2),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               focusedBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: t.primary,
-                                                  width: 2,
-                                                ),
+                                                borderSide: BorderSide(color: t.primary, width: 2),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               errorBorder: const OutlineInputBorder(
@@ -587,14 +498,12 @@ class _CampaignScreenState extends State<CampaignScreen>
                                             ),
                                             textAlign: TextAlign.end,
                                             validator: (v) =>
-                                            (v == null || v.trim().isEmpty)
-                                                ? 'يرجى إدخال تفاصيل الحملة'
-                                                : null,
+                                                (v == null || v.trim().isEmpty) ? 'يرجى إدخال تفاصيل الحملة' : null,
                                           ),
                                         ),
                                       ],
 
-// PLATFORM FIELD - Same disabled logic
+                                      // PLATFORM FIELD - Same disabled logic
                                       if (_isEdit && _isCampaignExpired() && !_canEditExpiredCampaign) ...[
                                         Padding(
                                           padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
@@ -607,10 +516,7 @@ class _CampaignScreenState extends State<CampaignScreen>
                                             decoration: BoxDecoration(
                                               color: Color(0xFFF3F4F6),
                                               borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: Color(0xFFE5E7EB),
-                                                width: 2,
-                                              ),
+                                              border: Border.all(color: Color(0xFFE5E7EB), width: 2),
                                             ),
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.end,
@@ -646,7 +552,7 @@ class _CampaignScreenState extends State<CampaignScreen>
                                         ),
                                       ],
 
-// CONTENT TYPE - Same disabled logic
+                                      // CONTENT TYPE - Same disabled logic
                                       if (_isEdit && _isCampaignExpired() && !_canEditExpiredCampaign) ...[
                                         Padding(
                                           padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 16),
@@ -655,10 +561,7 @@ class _CampaignScreenState extends State<CampaignScreen>
                                             decoration: BoxDecoration(
                                               color: Color(0xFFF3F4F6),
                                               borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: Color(0xFFE5E7EB),
-                                                width: 2,
-                                              ),
+                                              border: Border.all(color: Color(0xFFE5E7EB), width: 2),
                                             ),
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.end,
@@ -890,68 +793,41 @@ class _CampaignScreenState extends State<CampaignScreen>
                                     ),
                                   ),
                                 */
-
                                       Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional.fromSTEB(
-                                              0,
-                                              0,
-                                              0,
-                                              16,
-                                            ),
+                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
                                         child: Column(
                                           children: [
                                             Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceAround,
+                                              mainAxisAlignment: MainAxisAlignment.spaceAround,
                                               children: [
                                                 Column(
                                                   children: [
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsetsDirectional.fromSTEB(
-                                                            0,
-                                                            16,
-                                                            0,
-                                                            8,
-                                                          ),
+                                                      padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 8),
                                                       child: FFButtonWidget(
-                                                        onPressed: () async {
+                                                        onPressed: _model.datePicked2 == null ? null : () async {
                                                           final picked = await showDatePicker(
                                                             context: context,
-                                                            initialDate:
-                                                                _model
-                                                                    .datePicked1 ??
-                                                                DateTime.now(),
-                                                            firstDate: DateTime(
-                                                              1900,
-                                                            ),
-                                                            lastDate: DateTime(
-                                                              2050,
-                                                            ),
+                                                            initialDate: _model.datePicked1 ?? _model.datePicked2!,
+                                                            firstDate: _model.datePicked2!,
+                                                            lastDate: DateTime(2050),
                                                             builder: (context, child) => wrapInMaterialDatePickerTheme(
                                                               context,
                                                               child!,
-                                                              headerBackgroundColor:
-                                                                  t.primary,
-                                                              headerForegroundColor:
-                                                                  Colors.white,
-                                                              pickerBackgroundColor:
-                                                                  t.secondaryBackground,
-                                                              actionButtonForegroundColor:
-                                                                  t.primaryText,
+                                                              headerBackgroundColor: t.primary,
+                                                              headerForegroundColor: Colors.white,
+                                                              pickerBackgroundColor: t.secondaryBackground,
+                                                              actionButtonForegroundColor: t.primaryText,
                                                               iconSize: 24,
                                                             ),
                                                           );
                                                           if (picked != null) {
                                                             setState(
-                                                              () => _model.datePicked1 =
-                                                                  DateTime(
-                                                                    picked.year,
-                                                                    picked
-                                                                        .month,
-                                                                    picked.day,
-                                                                  ),
+                                                                  () => _model.datePicked1 = DateTime(
+                                                                picked.year,
+                                                                picked.month,
+                                                                picked.day,
+                                                              ),
                                                             );
                                                           }
                                                         },
@@ -959,48 +835,28 @@ class _CampaignScreenState extends State<CampaignScreen>
                                                         options: FFButtonOptions(
                                                           width: 140,
                                                           height: 50,
-                                                          color: t.tertiary,
-                                                          textStyle:
-                                                              GoogleFonts.inter(
-                                                                textStyle: t
-                                                                    .bodyMedium
-                                                                    .copyWith(
-                                                                      color: t
-                                                                          .primaryText,
-                                                                      fontSize:
-                                                                          16,
-                                                                    ),
-                                                              ),
+                                                          color: _model.datePicked2 == null ? Colors.grey : t.tertiary,
+                                                          textStyle: GoogleFonts.inter(
+                                                            textStyle: t.bodyMedium.copyWith(
+                                                              color: _model.datePicked2 == null ? Colors.grey[600] : t.primaryText,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
                                                           elevation: 0,
-                                                          borderSide:
-                                                              BorderSide(
-                                                                color:
-                                                                    t.tertiary,
-                                                                width: 2,
-                                                              ),
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                12,
-                                                              ),
+                                                          borderSide: BorderSide(color: _model.datePicked2 == null ? Colors.grey : t.tertiary, width: 2),
+                                                          borderRadius: BorderRadius.circular(12),
                                                         ),
                                                       ),
                                                     ),
-                                                    if (_model.datePicked1 !=
-                                                        null)
+                                                    if (_model.datePicked1 != null)
                                                       Text(
                                                         'تم اختيار ${_fmtChosen(_model.datePicked1)}',
-                                                        style: t.labelMedium
-                                                            .copyWith(
-                                                              color:
-                                                                  t.primaryText,
-                                                            ),
+                                                        style: t.labelMedium.copyWith(color: t.primaryText),
                                                       )
                                                     else if (_showDateErrors)
-                                                      const Text(
-                                                        'يرجى اختيار تاريخ الإنتهاء',
-                                                        style: TextStyle(
-                                                          color: Colors.red,
-                                                        ),
+                                                      Text(
+                                                        _model.datePicked2 == null ? 'اختر تاريخ البدء أولاً' : 'يرجى اختيار تاريخ الإنتهاء',
+                                                        style: TextStyle(color: _model.datePicked2 == null ? Colors.orange : Colors.red),
                                                       ),
                                                   ],
                                                 ),
@@ -1008,49 +864,37 @@ class _CampaignScreenState extends State<CampaignScreen>
                                                 Column(
                                                   children: [
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsetsDirectional.fromSTEB(
-                                                            0,
-                                                            16,
-                                                            0,
-                                                            8,
-                                                          ),
+                                                      padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 8),
                                                       child: FFButtonWidget(
                                                         onPressed: () async {
                                                           final picked = await showDatePicker(
                                                             context: context,
-                                                            initialDate:
-                                                                _model
-                                                                    .datePicked2 ??
-                                                                DateTime.now(),
-                                                            firstDate: DateTime(
-                                                              1900,
-                                                            ),
-                                                            lastDate:
-                                                                DateTime.now(),
+                                                            initialDate: _model.datePicked2 ?? DateTime.now(),
+                                                            firstDate: DateTime(2020),
+                                                            lastDate: DateTime(2050),
                                                             builder: (context, child) => wrapInMaterialDatePickerTheme(
                                                               context,
                                                               child!,
-                                                              headerBackgroundColor:
-                                                                  t.primary,
-                                                              headerForegroundColor:
-                                                                  Colors.white,
-                                                              pickerBackgroundColor:
-                                                                  t.secondaryBackground,
-                                                              actionButtonForegroundColor:
-                                                                  t.primaryText,
+                                                              headerBackgroundColor: t.primary,
+                                                              headerForegroundColor: Colors.white,
+                                                              pickerBackgroundColor: t.secondaryBackground,
+                                                              actionButtonForegroundColor: t.primaryText,
                                                               iconSize: 24,
                                                             ),
                                                           );
                                                           if (picked != null) {
                                                             setState(
-                                                              () => _model.datePicked2 =
-                                                                  DateTime(
-                                                                    picked.year,
-                                                                    picked
-                                                                        .month,
-                                                                    picked.day,
-                                                                  ),
+                                                                  () {
+                                                                _model.datePicked2 = DateTime(
+                                                                  picked.year,
+                                                                  picked.month,
+                                                                  picked.day,
+                                                                );
+                                                                // Reset end date if it's before new start date
+                                                                if (_model.datePicked1 != null && _model.datePicked1!.isBefore(_model.datePicked2!)) {
+                                                                  _model.datePicked1 = null;
+                                                                }
+                                                              },
                                                             );
                                                           }
                                                         },
@@ -1059,47 +903,27 @@ class _CampaignScreenState extends State<CampaignScreen>
                                                           width: 140,
                                                           height: 50,
                                                           color: t.tertiary,
-                                                          textStyle:
-                                                              GoogleFonts.inter(
-                                                                textStyle: t
-                                                                    .bodyMedium
-                                                                    .copyWith(
-                                                                      color: t
-                                                                          .primaryText,
-                                                                      fontSize:
-                                                                          16,
-                                                                    ),
-                                                              ),
+                                                          textStyle: GoogleFonts.inter(
+                                                            textStyle: t.bodyMedium.copyWith(
+                                                              color: t.primaryText,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
                                                           elevation: 0,
-                                                          borderSide:
-                                                              BorderSide(
-                                                                color:
-                                                                    t.tertiary,
-                                                                width: 2,
-                                                              ),
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                12,
-                                                              ),
+                                                          borderSide: BorderSide(color: t.tertiary, width: 2),
+                                                          borderRadius: BorderRadius.circular(12),
                                                         ),
                                                       ),
                                                     ),
-                                                    if (_model.datePicked2 !=
-                                                        null)
+                                                    if (_model.datePicked2 != null)
                                                       Text(
                                                         'تم اختيار ${_fmtChosen(_model.datePicked2)}',
-                                                        style: t.labelMedium
-                                                            .copyWith(
-                                                              color:
-                                                                  t.primaryText,
-                                                            ),
+                                                        style: t.labelMedium.copyWith(color: t.primaryText),
                                                       )
                                                     else if (_showDateErrors)
                                                       const Text(
                                                         'يرجى اختيار تاريخ البدء',
-                                                        style: TextStyle(
-                                                          color: Colors.red,
-                                                        ),
+                                                        style: TextStyle(color: Colors.red),
                                                       ),
                                                   ],
                                                 ),
@@ -1111,31 +935,17 @@ class _CampaignScreenState extends State<CampaignScreen>
                                                 _model.datePicked2 != null &&
                                                 !_datesValid)
                                               const Padding(
-                                                padding: EdgeInsets.only(
-                                                  top: 8,
-                                                ),
-                                                child: Text(
-                                                  'ادخل تواريخ صحيحة',
-                                                  style: TextStyle(
-                                                    color: Colors.red,
-                                                  ),
-                                                ),
+                                                padding: EdgeInsets.only(top: 8),
+                                                child: Text('ادخل تواريخ صحيحة', style: TextStyle(color: Colors.red)),
                                               ),
                                           ],
                                         ),
                                       ),
 
                                       Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional.fromSTEB(
-                                              20,
-                                              0,
-                                              20,
-                                              16,
-                                            ),
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 16),
                                         child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Row(
                                               mainAxisSize: MainAxisSize.min,
@@ -1143,21 +953,17 @@ class _CampaignScreenState extends State<CampaignScreen>
                                                 Switch(
                                                   value: _model.isVisible,
                                                   onChanged: (val) {
-                                                    setState(
-                                                      () => _model.isVisible =
-                                                          val,
-                                                    );
+                                                    setState(() => _model.isVisible = val);
                                                   },
                                                   activeThumbColor: t.primary,
                                                 ),
                                                 Text(
                                                   'ظاهر',
                                                   style: GoogleFonts.inter(
-                                                    textStyle: t.bodyMedium
-                                                        .copyWith(
-                                                          color: t.primaryText,
-                                                          fontSize: 14,
-                                                        ),
+                                                    textStyle: t.bodyMedium.copyWith(
+                                                      color: t.primaryText,
+                                                      fontSize: 14,
+                                                    ),
                                                   ),
                                                 ),
                                               ],
@@ -1168,21 +974,17 @@ class _CampaignScreenState extends State<CampaignScreen>
                                                 Switch(
                                                   value: _model.isActive,
                                                   onChanged: (val) {
-                                                    setState(
-                                                      () =>
-                                                          _model.isActive = val,
-                                                    );
+                                                    setState(() => _model.isActive = val);
                                                   },
                                                   activeThumbColor: t.primary,
                                                 ),
                                                 Text(
                                                   'نشط',
                                                   style: GoogleFonts.inter(
-                                                    textStyle: t.bodyMedium
-                                                        .copyWith(
-                                                          color: t.primaryText,
-                                                          fontSize: 14,
-                                                        ),
+                                                    textStyle: t.bodyMedium.copyWith(
+                                                      color: t.primaryText,
+                                                      fontSize: 14,
+                                                    ),
                                                   ),
                                                 ),
                                               ],
@@ -1234,90 +1036,55 @@ class _CampaignScreenState extends State<CampaignScreen>
                                         ),
 
                                       Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                         children: [
                                           Padding(
-                                            padding:
-                                                const EdgeInsetsDirectional.fromSTEB(
-                                                  0,
-                                                  16,
-                                                  0,
-                                                  24,
-                                                ),
+                                            padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 24),
                                             child: FFButtonWidget(
-                                              onPressed: () =>
-                                                  Navigator.of(context).pop(),
+                                              onPressed: () => Navigator.of(context).pop(),
                                               text: 'إلغاء',
                                               options: FFButtonOptions(
                                                 width: 90,
                                                 height: 40,
                                                 color: t.secondary,
                                                 textStyle: GoogleFonts.interTight(
-                                                  textStyle: t.titleMedium
-                                                      .copyWith(
-                                                        color: t
-                                                            .secondaryBackground,
-                                                        fontSize: 20,
-                                                      ),
+                                                  textStyle: t.titleMedium.copyWith(
+                                                    color: t.secondaryBackground,
+                                                    fontSize: 20,
+                                                  ),
                                                 ),
                                                 elevation: 2,
-                                                borderSide: const BorderSide(
-                                                  color: Colors.transparent,
-                                                  width: 1,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
+                                                borderSide: const BorderSide(color: Colors.transparent, width: 1),
+                                                borderRadius: BorderRadius.circular(12),
                                               ),
                                             ),
                                           ),
                                           Padding(
-                                            padding:
-                                                const EdgeInsetsDirectional.fromSTEB(
-                                                  0,
-                                                  16,
-                                                  0,
-                                                  24,
-                                                ),
+                                            padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 24),
                                             child: AnimatedBuilder(
                                               animation: _shakeCtrl,
                                               builder: (context, child) =>
-                                                  Transform.translate(
-                                                    offset: Offset(
-                                                      _shakeOffset(),
-                                                      0,
-                                                    ),
-                                                    child: child,
-                                                  ),
+                                                  Transform.translate(offset: Offset(_shakeOffset(), 0), child: child),
                                               child: FFButtonWidget(
                                                 onPressed: _checkFormValid()
                                                     ? () async {
                                                         setState(() {
                                                           _showErrors = true;
-                                                          _showDateErrors =
-                                                              true;
+                                                          _showDateErrors = true;
                                                         });
 
                                                         if (!_datesValid) {
                                                           await showDialog(
                                                             context: context,
                                                             builder: (ctx) => AlertDialog(
-                                                              title: const Text(
-                                                                'تصحيح التواريخ',
-                                                              ),
+                                                              title: const Text('تصحيح التواريخ'),
                                                               content: const Text(
                                                                 'تاريخ الانتهاء يجب ألا يكون قبل تاريخ البدء.',
                                                               ),
                                                               actions: [
                                                                 TextButton(
-                                                                  onPressed: () =>
-                                                                      Navigator.of(
-                                                                        ctx,
-                                                                      ).pop(),
-                                                                  child:
-                                                                      const Text(
-                                                                        'حسنًا',
-                                                                      ),
+                                                                  onPressed: () => Navigator.of(ctx).pop(),
+                                                                  child: const Text('حسنًا'),
                                                                 ),
                                                               ],
                                                             ),
@@ -1356,30 +1123,20 @@ class _CampaignScreenState extends State<CampaignScreen>
                                                         await _saveCampaign();
                                                       }
                                                     : null,
-                                                text: _isEdit
-                                                    ? 'تحديث'
-                                                    : 'إضافة',
+                                                text: _isEdit ? 'تحديث' : 'إضافة',
                                                 options: FFButtonOptions(
                                                   width: 200,
                                                   height: 40,
-                                                  color: t
-                                                      .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                  textStyle:
-                                                      GoogleFonts.interTight(
-                                                        textStyle: t.titleMedium
-                                                            .copyWith(
-                                                              color:
-                                                                  t.containers,
-                                                              fontSize: 20,
-                                                            ),
-                                                      ),
-                                                  elevation: 2,
-                                                  borderSide: const BorderSide(
-                                                    color: Colors.transparent,
-                                                    width: 1,
+                                                  color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                  textStyle: GoogleFonts.interTight(
+                                                    textStyle: t.titleMedium.copyWith(
+                                                      color: t.containers,
+                                                      fontSize: 20,
+                                                    ),
                                                   ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
+                                                  elevation: 2,
+                                                  borderSide: const BorderSide(color: Colors.transparent, width: 1),
+                                                  borderRadius: BorderRadius.circular(12),
                                                 ),
                                               ),
                                             ),
@@ -1430,23 +1187,19 @@ class _CampaignScreenState extends State<CampaignScreen>
     }
   }
 
-// Check if campaign is expired
+  // Check if campaign is expired
   bool _isCampaignExpired() {
-    return _model.datePicked1 != null &&
-        _model.datePicked1!.isBefore(DateTime.now());
+    return _model.datePicked1 != null && _model.datePicked1!.isBefore(DateTime.now());
   }
 
-// Build a disabled text field widget
+  // Build a disabled text field widget
   Widget _buildDisabledTextField(String label, String value) {
     final t = FlutterFlowTheme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
-          child: FeqLabeled(label),
-        ),
+        Padding(padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5), child: FeqLabeled(label)),
         Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 16),
           child: Container(
@@ -1454,21 +1207,21 @@ class _CampaignScreenState extends State<CampaignScreen>
             decoration: BoxDecoration(
               color: Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Color(0xFFE5E7EB),
-                width: 2,
-              ),
+              border: Border.all(color: Color(0xFFE5E7EB), width: 2),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  value,
-                  style: t.bodyMedium.copyWith(
-                    color: Color(0xFF9CA3AF),
-                    fontStyle: FontStyle.italic,
+                Expanded(
+                  child: Text(
+                    value,
+                    style: t.bodyMedium.copyWith(color: Color(0xFF9CA3AF), fontStyle: FontStyle.italic),
+                    textAlign: TextAlign.end,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Icon(Icons.lock, color: Color(0xFF9CA3AF), size: 18),
               ],
             ),
