@@ -2,15 +2,55 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_model.dart';
+import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart' hide createModel;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
+import '../../../core/services/user_session.dart';
 import '../../../features/login_and_signup/user_login.dart';
 import '../models/account_details_model.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+
+InputDecoration inputDecoration(
+  BuildContext context, {
+  bool isError = false,
+  String? errorText,
+}) {
+  final t = FlutterFlowTheme.of(context);
+
+  return InputDecoration(
+    isDense: true,
+    contentPadding:
+        const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
+    errorText: errorText,
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: t.secondary, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: isError
+            ? Colors.red
+            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        width: 2,
+      ),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    errorBorder: const OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+    ),
+    focusedErrorBorder: const OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+    ),
+    filled: true,
+    fillColor: t.backgroundElan,
+  );
+}
 
 class AccountDetailsPage extends StatefulWidget {
   const AccountDetailsPage({super.key});
@@ -24,173 +64,67 @@ class AccountDetailsPage extends StatefulWidget {
 
 class _AccountDetailPageState extends State<AccountDetailsPage> {
   late final AccountDetailsModel _model;
+
+  final _formKey = GlobalKey<FormState>();
+
   bool _isLoadingData = true;
+  bool _isSaving = false;
+  bool _showError = false;
+
+  TextEditingController get _emailCtrl =>
+      _model.infEmailTextController;
+  FocusNode? get _emailFocus => _model.infEmailFocusNode;
+
+  bool get _isEmailFilled =>
+      _emailCtrl.text.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => AccountDetailsModel());
     _model.initState(context);
+    _emailCtrl.addListener(() {
+      setState(() {}); // Rebuild when user types
+    });
     _loadAccountData();
   }
 
-  Future<void> _loadAccountData() async {
-    try {
-      final user = firebaseAuth.currentUser;
-      if (user == null) throw 'لا يوجد مستخدم مسجّل دخول حالياً';
-
-      if (mounted) {
-        setState(() {
-          _model.infEmailTextController.text = user.email!;
-          _isLoadingData = false;
-        });
-      }
-    } catch (e) {
-      log('Error loading account data: $e');
-      if (mounted) {
-        setState(() => _isLoadingData = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('فشل في تحميل البيانات: $e')));
-      }
-    }
+  @override
+  void dispose() {
+    _model.dispose();
+    super.dispose();
   }
 
-  Future<void> _saveChanges() async {
-    if (!_model.isEditing) return;
-
-    setState(() => _model.isLoading = true);
+  Future<void> _loadAccountData() async {
+    final t = FlutterFlowTheme.of(context);
 
     try {
       final user = firebaseAuth.currentUser;
-      if (user == null) throw 'لا يوجد مستخدم مسجّل دخول حالياً';
-
-      final newEmail = _model.infEmailTextController.text.trim();
-      final oldEmail = user.email!;
-
-      if (newEmail != oldEmail) {
-        final confirmed =
-            await showDialog<bool>(
-              context: context,
-              barrierDismissible: false,
-              builder: (ctx) => Directionality(
-                textDirection: TextDirection.rtl,
-                child: AlertDialog(
-                  title: const Text('تأكيد تعديل البريد الإلكتروني'),
-                  content: const Text(
-                    'سيتم إرسال رسالة تحقق للبريد الإلكتروني الجديد. يرجى التحقق منه لتفعيل الحساب.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('لا'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('نعم'),
-                    ),
-                  ],
-                ),
-              ),
-            ) ??
-            false;
-
-        if (!confirmed) return;
-
-        // Re-authenticate
-        final password = await _showPasswordDialog();
-        if (password == null) return;
-
-        final cred = EmailAuthProvider.credential(
-          email: oldEmail,
-          password: password,
-        );
-        await user.reauthenticateWithCredential(cred);
-
-        // Send verification before updating email
-        await user.verifyBeforeUpdateEmail(newEmail);
-        await user.sendEmailVerification();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم إرسال رسالة تحقق إلى البريد الإلكتروني الجديد'),
-          ),
-        );
-
-        // Wait for verification up to 40 seconds
-        bool verified = false;
-        final timeout = DateTime.now().add(const Duration(seconds: 100));
-
-        while (!verified && DateTime.now().isBefore(timeout)) {
-          await Future.delayed(const Duration(seconds: 3));
-          await user.reload();
-          verified = user.emailVerified;
-        }
-
-        if (verified) {
-          // Update Firestore
-          await firebaseFirestore.collection('users').doc(user.uid).set({
-            'email': newEmail,
-            'account_status': 'active',
-          }, SetOptions(merge: true));
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تم التحقق من البريد الإلكتروني وحفظ التعديلات'),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'انتهت المهلة. يمكنك التحقق من بريدك الإلكتروني لاحقاً لتسجيل الدخول.',
-              ),
-            ),
-          );
-        }
-
-        // Always log out after email change attempt
-        await firebaseAuth.signOut();
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
-        Navigator.of(
-          context,
-        ).pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
-        return; // exit early
+      if (user == null) {
+        throw 'لا يوجد مستخدم مسجّل دخول حالياً';
       }
 
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('تم حفظ التعديلات بنجاح')));
-        setState(() => _model.isEditing = false);
-      }
-    } on FirebaseAuthException {
-      /*
-      String msg = 'فشل في الحفظ: $e';
-      if (e.code == 'wrong-password') msg = '⚠️ كلمة المرور غير صحيحة';
-      if (e.code == 'requires-recent-login') msg = '⚠️ يجب تسجيل الدخول مجددًا';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      */
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
+      if (!mounted) return;
+      setState(() {
+        _emailCtrl.text = user.email ?? '';
+        _isLoadingData = false;
+      });
     } catch (e) {
-      // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل في الحفظ: $e')));
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
-    } finally {
-      setState(() => _model.isLoading = false);
+      log('Error loading account data: $e');
+      if (!mounted) return;
+      setState(() => _isLoadingData = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('فشل في تحميل البيانات '),
+          backgroundColor: t.error,
+        ),
+      );
     }
   }
 
   Future<String?> _showPasswordDialog() async {
     final pwdCtrl = TextEditingController();
+
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
@@ -220,218 +154,366 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
     );
   }
 
-  @override
-  void dispose() {
-    _model.dispose();
-    super.dispose();
+  Future<void> _saveChanges() async {
+    final t = FlutterFlowTheme.of(context);
+
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      setState(() => _showError = true);
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final user = firebaseAuth.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(' لا يوجد مستخدم مسجّل دخول حالياً'),
+          ),
+        );
+        setState(() => _isSaving = false);
+        return;
+      }
+
+      final newEmail = _emailCtrl.text.trim();
+      final oldEmail = user.email ?? '';
+
+      // لا يوجد تغيير
+      if (newEmail == oldEmail) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('تم حفظ التعديلات بنجاح'),
+            backgroundColor: t.success,
+          ),
+        );
+        setState(() => _isSaving = false);
+        return;
+      }
+
+      // تأكيد من المستخدم
+      final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => Directionality(
+              textDirection: TextDirection.rtl,
+              child: AlertDialog(
+                title: const Text('تأكيد تعديل البريد الإلكتروني'),
+                content: const Text(
+                  'سيتم إرسال رسالة تحقق للبريد الإلكتروني الجديد. يرجى التحقق منه لتفعيل الحساب.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('لا'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('نعم'),
+                  ),
+                ],
+              ),
+            ),
+          ) ??
+          false;
+
+      if (!confirm) {
+        setState(() => _isSaving = false);
+        return;
+      }
+
+      // طلب كلمة المرور
+      final password = await _showPasswordDialog();
+      if (password == null || password.isEmpty) {
+        setState(() => _isSaving = false);
+        return;
+      }
+
+      // إعادة المصادقة - وتخصيص الأخطاء الخاصة بها فقط
+      try {
+        final cred = EmailAuthProvider.credential(
+          email: oldEmail,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(cred);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'wrong-password') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('كلمة المرور غير صحيحة'),
+              backgroundColor: t.error,
+            ),
+          );
+          setState(() => _isSaving = false);
+          return;
+        }
+
+        if (e.code == 'requires-recent-login') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('يجب تسجيل الدخول مجددًا'),
+              backgroundColor: t.error,
+            ),
+          );
+          await UserSession.logout();
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            UserLoginPage.routeName,
+            (_) => false,
+          );
+          return;
+        }
+
+        // أي خطأ غير متوقع
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل التحقق من كلمة المرور '),
+            backgroundColor: t.error,
+          ),
+        );
+        setState(() => _isSaving = false);
+        return;
+      }
+
+      // إرسال رسالة تحقق قبل تعديل البريد
+      await user.verifyBeforeUpdateEmail(newEmail);
+      await user.sendEmailVerification();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+              'تم إرسال رسالة تحقق إلى البريد الإلكتروني الجديد'),
+              backgroundColor: t.success,
+
+        ),
+      );
+
+      // Firebase requires logout after verifyBeforeUpdateEmail
+      await UserSession.logout();
+
+      if (!mounted) return;
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        UserLoginPage.routeName,
+        (_) => false,
+      );
+
+    } on FirebaseAuthException catch (e) {
+      String msg = ' حدث خطأ';
+      if (e.code == 'wrong-password') {
+        msg = ' كلمة المرور غير صحيحة';
+      }
+      if (e.code == 'requires-recent-login') {
+        msg = ' يجب تسجيل الدخول مجددًا';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: t.error,
+        ),
+      );
+
+      // الحفاظ على منطقك: تسجيل خروج في الأخطاء الكبيرة
+      await UserSession.logout();
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          UserLoginPage.routeName,
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(' حدث خطأ غير متوقع: $e'),
+          backgroundColor: t.error,
+        ),
+      );
+      await UserSession.logout();
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          UserLoginPage.routeName,
+          (route) => false,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
+    final t = FlutterFlowTheme.of(context);
+
     if (_isLoadingData) {
       return Scaffold(
-        backgroundColor: theme.backgroundElan,
-        body: const Center(child: CircularProgressIndicator()),
+        backgroundColor: t.primaryBackground,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: theme.backgroundElan,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          backgroundColor: theme.containers,
-          elevation: 0,
-          centerTitle: true,
-          title: Text('معلومات الحساب', style: theme.headlineSmall),
-          leading: Padding(
-            padding: const EdgeInsets.only(right: 12, top: 6, bottom: 6),
+
+    return Scaffold(
+      backgroundColor: t.primaryBackground,
+      appBar: FeqAppBar(
+        title: 'معلومات الحساب',
+        showBack: true,
+        backRoute: null,
+      ),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SafeArea(
+          top: true,
+          child: Padding(
+            padding:
+                const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
             child: Container(
-              decoration: BoxDecoration(
-                color: theme.secondaryBackground,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: theme.primaryText,
-                  size: 18,
-                ),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-          ),
-        ),
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Container(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 20,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 24,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.containers,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                width: double.infinity,
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 40,
-                      child: Stack(
-                        children: [
-                          Center(
-                            child: Text(
-                              'معلومات الحساب',
-                              style: theme.titleSmall,
-                            ),
-                          ),
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: const Color(0xB1E1A948),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _model.isEditing = !_model.isEditing;
-                                  });
-                                },
-                              ),
-                            ),
+              decoration:
+                  BoxDecoration(color: t.backgroundElan),
+              child: Padding(
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(
+                        0, 16, 0, 0),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding:
+                        const EdgeInsetsDirectional.fromSTEB(
+                            16, 16, 16, 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: t.containers,
+                        boxShadow: const [
+                          BoxShadow(
+                            blurRadius: 4,
+                            color: Color(0x33000000),
+                            offset: Offset(0, 2),
                           ),
                         ],
+                        borderRadius:
+                            const BorderRadius.all(
+                                Radius.circular(16)),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    const _FieldLabel(text: 'ايميل'),
-                    _TextFieldBox(
-                      controller: _model.infEmailTextController,
-                      focusNode: _model.infEmailFocusNode,
-                      enabled: _model.isEditing,
-                      keyboardType: TextInputType.emailAddress,
-                      hint: '[example@gmail.com](mailto:example@gmail.com)',
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 30),
-                    if (_model.isEditing)
-                      FFButtonWidget(
-                        onPressed: _model.isLoading ? () {} : _saveChanges,
-                        text: _model.isLoading ? 'جاري الحفظ...' : 'حفظ',
-                        options: FFButtonOptions(
-                          height: 44,
-                          width: double.infinity,
-                          color: _model.isLoading
-                              ? theme
-                                    .secondaryButtonsOnLightBackgroundsNavigationBar
-                              : theme
-                                    .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                          textStyle: theme.titleSmall.copyWith(
-                            color: theme.containers,
-                            fontSize: 16,
+                      child: Padding(
+                        padding:
+                            const EdgeInsetsDirectional.fromSTEB(
+                                0, 16, 0, 16),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              // ==== LABEL ====
+                              const FeqLabeled('البريد الإلكتروني'),
+
+                              // ==== EMAIL FIELD ====
+                              Padding(
+                                padding:
+                                    const EdgeInsetsDirectional
+                                        .fromSTEB(
+                                            20, 5, 20, 0),
+                                child: TextFormField(
+                                  controller: _emailCtrl,
+                                  focusNode: _emailFocus,
+                                  keyboardType:
+                                      TextInputType.emailAddress,
+                                  validator: (v) {
+                                    if (v == null ||
+                                        v.trim().isEmpty) {
+                                      return 'البريد الإلكتروني مطلوب';
+                                    }
+                                    return null;
+                                  },
+                                  decoration: inputDecoration(
+                                    context,
+                                    isError: _showError &&
+                                        _emailCtrl.text
+                                            .trim()
+                                            .isEmpty,
+                                    errorText: _showError &&
+                                            _emailCtrl.text
+                                                .trim()
+                                                .isEmpty
+                                        ? 'البريد الإلكتروني مطلوب'
+                                        : null,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              Center(
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets
+                                          .symmetric(
+                                    horizontal: 24,
+                                  ),
+                                  child: Text(
+                                    'يمكنك تعديل بريدك الإلكتروني. سيتم إرسال بريد تحقق إلى العنوان الجديد، وبعد التحقق سيتم تفعيل الحساب.',
+                                    style: t.bodyMedium.copyWith(
+                                      color: t.secondaryText,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 40),
+
+                              // ==== SAVE BUTTON ====
+                              Center(
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsetsDirectional
+                                          .fromSTEB(
+                                              0, 0, 0, 24),
+                                  child: FFButtonWidget(
+                                    onPressed: (_isSaving ||
+                                            !_isEmailFilled)
+                                        ? null
+                                        : _saveChanges,
+                                    text: _isSaving
+                                        ? 'جاري الحفظ...'
+                                        : 'حفظ',
+                                    options: FFButtonOptions(
+                                      width: 430,
+                                      height: 40,
+                                      color: (!_isSaving &&
+                                              _isEmailFilled)
+                                          ? t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
+                                          : Colors
+                                              .grey.shade400,
+                                      textStyle: t.titleMedium
+                                          .override(
+                                        fontFamily: 'Inter',
+                                        color: t.containers,
+                                      ),
+                                      elevation: 2,
+                                      borderRadius:
+                                          BorderRadius.circular(
+                                              12),
+                                      disabledColor:
+                                          Colors.grey.shade400,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          elevation: 2,
-                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                  ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  final String text;
-
-  const _FieldLabel({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8, bottom: 6),
-        child: Text(text, style: theme.bodyLarge),
-      ),
-    );
-  }
-}
-
-class _TextFieldBox extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode? focusNode;
-  final bool enabled;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final String? hint;
-
-  const _TextFieldBox({
-    required this.controller,
-    this.focusNode,
-    required this.enabled,
-    this.keyboardType,
-    this.textInputAction,
-    this.hint,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    return SizedBox(
-      width: 300,
-      child: TextFormField(
-        controller: controller,
-        focusNode: focusNode,
-        enabled: enabled,
-        readOnly: !enabled,
-        keyboardType: keyboardType,
-        textInputAction: textInputAction,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: theme.secondaryText),
-          isDense: true,
-          filled: true,
-          fillColor: theme.secondaryBackground,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(
-              color: enabled ? theme.primary : Colors.transparent,
-              width: enabled ? 1 : 0,
-            ),
-          ),
-        ),
-        style: theme.bodyMedium,
-        cursorColor: theme.primaryText,
       ),
     );
   }

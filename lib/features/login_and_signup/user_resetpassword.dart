@@ -1,5 +1,7 @@
 import 'dart:core';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:elan_flutterproject/core/components/feq_components.dart';
+import 'package:elan_flutterproject/features/login_and_signup/user_login.dart';
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_icon_button.dart';
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_theme.dart';
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart';
@@ -82,59 +84,10 @@ class _UserResetPasswordPageState extends State<UserResetPasswordPage> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: t.primaryBackground,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(56.0),
-          child: Container(
-            decoration: const BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 4,
-                  color: Color(0x33000000),
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: AppBar(
-              backgroundColor: t.secondaryBackground,
-              automaticallyImplyLeading: false,
-              elevation: 0,
-              titleSpacing: 0,
-              title: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FlutterFlowIconButton(
-                          borderRadius: 8.0,
-                          buttonSize: 40.0,
-                          icon: Icon(Icons.arrow_forward_ios,
-                              color: t.primaryText, size: 24.0),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: t.secondaryBackground,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'إعادة تعيين كلمة المرور',
-                            style: t.headlineSmall.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+        appBar: FeqAppBar(
+          title: 'إعادة تعيين كلمة المرور',
+          showBack: true,
+          backRoute: UserLoginPage.routeName,
         ),
         body: SafeArea(
           child: Padding(
@@ -165,12 +118,14 @@ class _UserResetPasswordPageState extends State<UserResetPasswordPage> {
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: t.headlineSmall.fontSize,
+                            color: t.primaryText,
                           ),
                         ),
                         const SizedBox(height: 10),
                         TextFormField(
                           controller: emailController,
                           focusNode: emailFocusNode,
+                          //required: true,
                           keyboardType: TextInputType.emailAddress,
                           textCapitalization: TextCapitalization.none,
                           textAlign: TextAlign.end,
@@ -183,7 +138,7 @@ class _UserResetPasswordPageState extends State<UserResetPasswordPage> {
                             filled: true,
                             fillColor: t.primaryBackground,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: t.secondary),
+                              borderSide: BorderSide(color: t.secondary, width: 2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             focusedBorder: OutlineInputBorder(
