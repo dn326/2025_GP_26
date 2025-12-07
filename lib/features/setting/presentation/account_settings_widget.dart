@@ -158,9 +158,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text('حسابك', style: theme.headlineSmall, textAlign: TextAlign.center),
-                    const SizedBox(height: 24),
-
                     _SettingsButton(
                       text: 'معلومات الحساب',
                       onPressed: () => Navigator.pushNamed(context, AccountDetailsPage.routeName),

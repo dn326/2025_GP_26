@@ -107,6 +107,7 @@ class FeqTextFieldBox extends StatelessWidget {
   final VoidCallback? onTap;
   final TextDirection textDirection;
   final List<TextInputFormatter>? inputFormatters;
+  final TextStyle? style;
 
   const FeqTextFieldBox({
     super.key,
@@ -128,6 +129,7 @@ class FeqTextFieldBox extends StatelessWidget {
     this.decoration,
     this.onTap,
     this.textDirection = TextDirection.rtl,
+    this.style,
   });
 
   @override
@@ -178,7 +180,7 @@ class FeqTextFieldBox extends StatelessWidget {
                     : null,
                 suffixIcon: suffixIcon,
               ),
-          style: theme.bodyMedium.override(fontFamily: 'Inter', color: theme.primaryText),
+          style: style ?? theme.bodyMedium.override( fontFamily: 'Inter', color: theme.primaryText),
           cursorColor: theme.primaryText,
           validator: validator,
           inputFormatters: inputFormatters,
@@ -214,6 +216,8 @@ class FeqLabeledTextField extends StatelessWidget {
   final bool required;
   final TextDirection textDirection;
   final List<TextInputFormatter>? inputFormatters;
+  final TextStyle? style;
+
 
   const FeqLabeledTextField({
     super.key,
@@ -240,7 +244,8 @@ class FeqLabeledTextField extends StatelessWidget {
     this.decoration,
     this.onTap,
     this.required = true,
-    this.textDirection = TextDirection.rtl,
+    this.textDirection = TextDirection.rtl, 
+    this.style,
 });
 
   @override
@@ -271,6 +276,7 @@ class FeqLabeledTextField extends StatelessWidget {
         decoration: decoration,
         onTap: onTap,
         textDirection: textDirection,
+        style: style,
       ),
     );
   }
@@ -535,6 +541,9 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showNotification;
   final String? backRoute;
 
+  //optional callback
+  final Future<void> Function()? onBackTapExtra;
+
   const FeqAppBar({
     super.key,
     required this.title,
@@ -542,6 +551,7 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showLeading = false,
     this.showNotification = false,
     this.backRoute,
+    this.onBackTapExtra,
   });
 
   @override
@@ -566,6 +576,7 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
           automaticallyImplyLeading: false,
           elevation: 0,
           titleSpacing: 0,
+          centerTitle: true,
 
           // LEFT SIDE (leading)
           leading: showLeading
@@ -583,14 +594,22 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ),
                 )
-              : null,
+              : (showBack || showNotification
+                ? const SizedBox(width: 60)  // add space ONLY when actions exist
+                : null), // no space at all if absolutely nothing is shown
 
           actions: [
             if (showBack)
               Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () async {
+                    // Run extra logic if provided (e.g., delete account)
+                    if (onBackTapExtra != null) {
+                      await onBackTapExtra!();
+                    }
+                    Navigator.of(context).pop();
+                  },
                   child: FaIcon(
                     Icons.arrow_forward_ios,
                     color: FlutterFlowTheme.of(context).primaryText,

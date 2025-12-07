@@ -12,7 +12,7 @@ export 'features/login_and_signup/use_login_widget.dart';
 // ===== Auth helpers (إن وجدت عندك) =====
 export 'features/login_and_signup/user_login.dart';
 export 'features/login_and_signup/user_resetpassword.dart';
-export 'features/login_and_signup/user_signup.dart';
+//export 'features/login_and_signup/user_signup.dart';
 export 'features/login_and_signup/user_type.dart';
 
 // ===== Components =====
