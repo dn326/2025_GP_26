@@ -189,9 +189,7 @@ class FeqFirebaseServiceUtils {
   Future<List<Map<String, dynamic>>> fetchBusinessCampaignList([String? uid, String? campaignId]) async {
     try {
       final userId = uid ?? currentUserId;
-
       Query query = firebaseFirestore.collection('campaigns');
-
       if (campaignId != null && campaignId.isNotEmpty) {
         query = query.where('campaign_id', isEqualTo: campaignId);
       } else {
@@ -203,6 +201,9 @@ class FeqFirebaseServiceUtils {
       final campaignList = campaignSnap.docs.map((d) {
         final m = d.data() as Map<String, dynamic>?;
         if (m == null) return null;
+
+        final dateAdded = m['date_added'] ?? m['start_date'];
+
         return {
           'id': d.id,
           'business_id': userId,
@@ -210,13 +211,11 @@ class FeqFirebaseServiceUtils {
           'description': (m['description'] ?? '').toString(),
           'platform_id': m['platform_id'] ?? 0,
           'platform_name': (m['platform_name'] ?? '').toString(),
-          // 'budget_min': m['budget_min'] ?? 0,
-          // 'budget_max': m['budget_max'] ?? 0,
           'influencer_content_type_id': m['influencer_content_type_id'] ?? 0,
           'influencer_content_type_name': (m['influencer_content_type_name'] ?? '').toString(),
           'start_date': m['start_date'],
           'end_date': m['end_date'],
-          'date_added': m['date_added'],
+          'date_added': dateAdded,
           'active': m['active'] ?? false,
           'visible': m['visible'] ?? false,
         };
@@ -228,11 +227,13 @@ class FeqFirebaseServiceUtils {
         return null;
       }
 
+      // sort in memory using date_added or fallback
       campaignList.sort((a, b) {
-        final da = toDate(a['start_date'])?.millisecondsSinceEpoch ?? -1;
-        final db = toDate(b['start_date'])?.millisecondsSinceEpoch ?? -1;
+        final da = toDate(a['date_added'])?.millisecondsSinceEpoch ?? -1;
+        final db = toDate(b['date_added'])?.millisecondsSinceEpoch ?? -1;
         return db.compareTo(da);
       });
+
       return campaignList;
     } catch (e) {
       throw Exception('فشل في تحميل البيانات: ${_getUserFriendlyError(e)}');
