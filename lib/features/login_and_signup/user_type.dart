@@ -1,3 +1,4 @@
+import 'package:elan_flutterproject/core/components/feq_components.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/services/signup_flow_controller.dart';
@@ -31,61 +32,10 @@ class _UserTypePageState extends State<UserTypePage> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(56.0),
-          child: Container(
-            decoration: const BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 4,
-                  color: Color(0x33000000),
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: AppBar(
-              backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-              automaticallyImplyLeading: false,
-              elevation: 0,
-              // set to 0 so the custom shadow is visible
-              titleSpacing: 0,
-              title: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FlutterFlowIconButton(
-                          borderRadius: 8.0,
-                          buttonSize: 40.0,
-                          icon: Icon(
-                            Icons.arrow_forward_ios,
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            size: 24.0,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 6, // move title slightly lower
-                        child: Text(
-                          'إنشاء الحساب',
-                          textAlign: TextAlign.center,
-                          style: FlutterFlowTheme.of(
-                            context,
-                          ).headlineSmall.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+        appBar: FeqAppBar(
+          title: 'إنشاء الحساب',
+          showBack: true,
+          backRoute: UserTypePage.routeName,
         ),
         body: SafeArea(
           child: Center(

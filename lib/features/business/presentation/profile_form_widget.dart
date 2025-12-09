@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:elan_flutterproject/features/login_and_signup/user_signup.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -33,32 +34,7 @@ InputDecoration businessInputDecoration(BuildContext context, {bool isError = fa
       borderSide: BorderSide(color: t.secondary, width: 2),
       borderRadius: BorderRadius.circular(12),
     ),
-    focusedBorder: OutlineInputBorder(
-      borderSide: BorderSide(
-        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-        width: 2,
-      ),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    errorBorder: OutlineInputBorder(
-      borderSide: const BorderSide(color: Colors.red, width: 2),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    focusedErrorBorder: OutlineInputBorder(
-      borderSide: const BorderSide(color: Colors.red, width: 2),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    filled: true,
-    fillColor: t.containers,
-  );
-}
-
-InputDecoration businessPlatformInputDecoration(BuildContext context, {bool isError = false}) {
-  final t = FlutterFlowTheme.of(context);
-  return InputDecoration(
-    isDense: true,
-    contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
-    enabledBorder: OutlineInputBorder(
+    disabledBorder: OutlineInputBorder(
       borderSide: BorderSide(color: t.secondary, width: 2),
       borderRadius: BorderRadius.circular(12),
     ),
@@ -78,7 +54,40 @@ InputDecoration businessPlatformInputDecoration(BuildContext context, {bool isEr
       borderRadius: BorderRadius.circular(12),
     ),
     filled: true,
-    fillColor: t.containers,
+    fillColor: t.primaryBackground,
+  );
+}
+
+InputDecoration businessPlatformInputDecoration(BuildContext context, {bool isError = false}) {
+  final t = FlutterFlowTheme.of(context);
+  return InputDecoration(
+    isDense: true,
+    contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: t.secondary, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    disabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: t.secondary, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        width: 2,
+      ),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    filled: true,
+    fillColor: t.primaryBackground,
   );
 }
 
@@ -114,6 +123,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
   bool commercialRegisterFetched = false;
   bool commercialRegisterIsExpiringSoon = false;
   bool isCommercialRegisterVerified = false;
+  bool commercialRegisterDuplicateError = false;
   bool _showLicenseErrors = false;
 
   File? pickedImage;
@@ -140,7 +150,6 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
   late AnimationController _shakeCtrl;
 
-  PhoneOwner _phoneOwner = PhoneOwner.personal;
   EmailOwner _emailOwner = EmailOwner.personal;
 
   bool _useCustomEmail = false;
@@ -233,7 +242,6 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
       'content_id': _selectedBusinessIndustry?.id ?? 0,
       'desc': _model.businessDescreptionTextController?.text.trim() ?? '',
       'phone': _model.phoneNumberTextController?.text.trim() ?? '',
-      'phone_owner': _phoneOwner.name,
       'email': _model.emailTextController?.text.trim() ?? '',
       'email_owner': _emailOwner.name,
       'website': _model.businessWebsiteTextController?.text.trim() ?? '',
@@ -266,8 +274,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
     final license = _model.commercialRegisterTextController?.text.trim() ?? '';
     commercialRegisterRequiredError = license.isEmpty;
-    commercialRegisterFormatError =
-        license.isNotEmpty && !RegExp(r'^[0-9]{10}$').hasMatch(license);
+    commercialRegisterFormatError = license.isNotEmpty && !RegExp(r'^[0-9]{10}$').hasMatch(license);
 
   }
   
@@ -275,9 +282,8 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
   bool get _isFormValid {
     final name = _model.businessNameTextController?.text.trim() ?? '';
     final phone = _model.phoneNumberTextController?.text.trim() ?? '';
-    final email = _useCustomEmail
-        ? _customEmailController.text.trim()
-        : _userEmail;
+    final email = _useCustomEmail ? _customEmailController.text.trim() : _userEmail;
+    final license = _model.commercialRegisterTextController?.text.trim() ?? '';
 
     if (name.isEmpty) return false;
     if (_selectedBusinessIndustry == null) return false;
@@ -302,6 +308,14 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
     }
 
     if (!hasCompletePair) return false;
+
+    if (isSetupMode) {
+      if (license.isEmpty) return false;
+      if (!RegExp(r'^[0-9]{10}$').hasMatch(license)) return false;
+      if (!commercialRegisterFetched) return false;
+      if (commercialRegisterFetchingError) return false;
+      if (!isCommercialRegisterVerified) return false;
+    }
 
     return true;
   }
@@ -396,9 +410,6 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
         _model.businessDescreptionTextController!.text = userProfileModel.description!;
 
         final savedPhone = userProfileModel.phoneNumber;
-
-        final phoneOwnerStr = profileDoc.data()['phone_owner'] ?? 'personal';
-        _phoneOwner = phoneOwnerStr == 'assistant' ? PhoneOwner.assistant : PhoneOwner.personal;
 
         _model.phoneNumberTextController!.text = savedPhone!;
 
@@ -575,7 +586,6 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
         'description': _model.businessDescreptionTextController!.text.trim(),
         'contact_email': _useCustomEmail? _customEmailController.text.trim() : _userEmail,
         'phone_number': _model.phoneNumberTextController!.text.trim(),
-        'phone_owner': _phoneOwner.name,
         'email_owner': _useCustomEmail ? _emailOwner.name : 'personal',
         'use_custom_email': _useCustomEmail,
       };
@@ -702,7 +712,16 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
       appBar: FeqAppBar(
         title: isSetupMode ? 'إنشاء الملف التعريفي' : 'تعديل الملف التعريفي',
         showBack: true,
-        backRoute: BusinessProfileScreen.routeName,
+        backRoute: isSetupMode
+            ? UserSignupPage.routeName // for setup mode
+            : BusinessProfileScreen.routeName, // for edit mode
+
+        // 🔹 Only delete account in setup mode, and only on this page
+        onBackTapExtra: isSetupMode
+            ? () async {
+                await _DeleteAccount();   // your existing method
+              }
+            : null, 
       ),
       body: SafeArea(
         top: true,
@@ -1272,7 +1291,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                         crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
                                           FeqLabeledTextField(
-                                            label: 'رقم الجوال ',
+                                            label: 'رقم التواصل ',
                                             required: false,
                                             controller: _model.phoneNumberTextController,
                                             focusNode: _model.phoneNumberFocusNode,
@@ -1283,70 +1302,6 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                             ).copyWith(hintText: '05XXXXXXXX'),
                                           ),
                                           // Phone Radio Buttons
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 8),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.end,
-                                              children: [
-                                                InkWell(
-                                                  onTap: () {
-                                                    setState(() => _phoneOwner = PhoneOwner.personal);
-                                                    _onAnyFieldChanged();
-                                                  },
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.end,
-                                                    children: [
-                                                      Text(
-                                                        'رقم الجوال الخاص بي',
-                                                        style: t.bodyMedium.override(
-                                                          fontFamily: 'Inter',
-                                                          color: t.primaryText,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                      RadioMenuButton<PhoneOwner>(
-                                                        value: PhoneOwner.personal,
-                                                        groupValue: _phoneOwner,
-                                                        onChanged: (value) {
-                                                          setState(() => _phoneOwner = value!);
-                                                          _onAnyFieldChanged();
-                                                        },
-                                                        child: const SizedBox.shrink(),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                InkWell(
-                                                  onTap: () {
-                                                    setState(() => _phoneOwner = PhoneOwner.assistant);
-                                                    _onAnyFieldChanged();
-                                                  },
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.end,
-                                                    children: [
-                                                      Text(
-                                                        'رقم الجوال الخاص بمنسق أعمالي',
-                                                        style: t.bodyMedium.override(
-                                                          fontFamily: 'Inter',
-                                                          color: t.primaryText,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                      RadioMenuButton<PhoneOwner>(
-                                                        value: PhoneOwner.assistant,
-                                                        groupValue: _phoneOwner,
-                                                        onChanged: (value) {
-                                                          setState(() => _phoneOwner = value!);
-                                                          _onAnyFieldChanged();
-                                                        },
-                                                        child: const SizedBox.shrink(),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
                                         ],
                                       ),
                                     ),
@@ -1364,25 +1319,13 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                             Column(
                                               crossAxisAlignment: CrossAxisAlignment.end,
                                               children: [
-                                                FeqLabeled('البريد الإلكتروني', required: false),
-                                                Padding(
-                                                  padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 0),
-                                                  child: Container(
-                                                      width: double.infinity,
-                                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                      decoration: BoxDecoration(
-                                                        color: t.containers,
-                                                        border: Border.all(color: t.secondary, width: 2),
-                                                        borderRadius: BorderRadius.circular(12),
-                                                      ),
-                                                      child: Text(
-                                                        _userEmail,
-                                                        textDirection: TextDirection.rtl,
-                                                        style: FlutterFlowTheme.of(context)
-                                                            .bodyMedium
-                                                            .override(fontFamily: 'Inter', color: FlutterFlowTheme.of(context).primaryText),
-                                                      )
-                                                  ),
+                                                FeqLabeledTextField(
+                                                  label: 'البريد الإلكتروني',
+                                                  style: TextStyle(color: t.tertiaryText),
+                                                  required: false,
+                                                  initialValue: _userEmail,
+                                                  enabled: false,
+                                                  decoration: businessInputDecoration(context),
                                                 ),
                                               ],
                                             )
@@ -1411,7 +1354,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                     setState(() {
                                                       _useCustomEmail = false;
                                                       _emailOwner = EmailOwner.personal;
-                                                      _customEmailController.clear();
+                                                      //_customEmailController.clear();
                                                     });
                                                     _onAnyFieldChanged();
                                                   },
@@ -1419,7 +1362,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                     mainAxisAlignment: MainAxisAlignment.end,
                                                     children: [
                                                       Text(
-                                                        'البريد الإلكتروني الخاص بي',
+                                                        'استخدم البريد الإلكتروني الخاص بالتسجيل',
                                                         style: t.bodyMedium.override(
                                                           fontFamily: 'Inter',
                                                           color: t.primaryText,
@@ -1476,73 +1419,6 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                     ],
                                                   ),
                                                 ),
-                                                if (_useCustomEmail) ...[
-                                                  const SizedBox(height: 12),
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(right: 32),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                                      children: [
-                                                        InkWell(
-                                                          onTap: () {
-                                                            setState(() => _emailOwner = EmailOwner.personal);
-                                                            _onAnyFieldChanged();
-                                                          },
-                                                          child: Row(
-                                                            mainAxisAlignment: MainAxisAlignment.end,
-                                                            children: [
-                                                              Text(
-                                                                'الخاص بي',
-                                                                style: t.bodySmall.override(
-                                                                  fontFamily: 'Inter',
-                                                                  color: t.primaryText,
-                                                                  fontSize: 13,
-                                                                ),
-                                                              ),
-                                                              RadioMenuButton<EmailOwner>(
-                                                                value: EmailOwner.personal,
-                                                                groupValue: _emailOwner,
-                                                                onChanged: (value) {
-                                                                  setState(() => _emailOwner = value!);
-                                                                  _onAnyFieldChanged();
-                                                                },
-                                                                child: const SizedBox.shrink(),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        InkWell(
-                                                          onTap: () {
-                                                            setState(() => _emailOwner = EmailOwner.assistant);
-                                                            _onAnyFieldChanged();
-                                                          },
-                                                          child: Row(
-                                                            mainAxisAlignment: MainAxisAlignment.end,
-                                                            children: [
-                                                              Text(
-                                                                'الخاص بمنسق أعمالي',
-                                                                style: t.bodySmall.override(
-                                                                  fontFamily: 'Inter',
-                                                                  color: t.primaryText,
-                                                                  fontSize: 13,
-                                                                ),
-                                                              ),
-                                                              RadioMenuButton<EmailOwner>(
-                                                                value: EmailOwner.assistant,
-                                                                groupValue: _emailOwner,
-                                                                onChanged: (value) {
-                                                                  setState(() => _emailOwner = value!);
-                                                                  _onAnyFieldChanged();
-                                                                },
-                                                                child: const SizedBox.shrink(),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
                                               ],
                                             ),
                                           ),
@@ -1561,124 +1437,121 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                         ),
                                       ),
 
-                                    if(isSetupMode) ...[                     
-                                    FeqLabeled(
-                                      'رقم السجل التجاري الموحد',
-                                      required: true,
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                // ===== TextField =====
-                                                TextFormField(
-                                                  controller: _model.commercialRegisterTextController,
-                                                  focusNode: _model.commercialRegisterFocusNode,
-                                                  keyboardType: TextInputType.number,
-                                                  textInputAction: TextInputAction.done,
-                                                  decoration: businessInputDecoration(
-                                                    context,
-                                                    isError: _showLicenseErrors &&
-                                                        (commercialRegisterRequiredError ||
-                                                        commercialRegisterFormatError ||
-                                                        commercialRegisterFetchingError),
-                                                  ),
-                                                  style: t.bodyLarge.copyWith(color: t.primaryText),
-                                                  textAlign: TextAlign.start,
-                                                ),
-
-                                                // ===== Error: Required =====
-                                                if (_showLicenseErrors && commercialRegisterRequiredError)
-                                                  const Padding(
-                                                    padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
-                                                    child: Text(
-                                                      'يرجى إدخال الرقم الموحد للسجل التجاري.',
-                                                      style: TextStyle(color: Colors.red, fontSize: 12),
-                                                    ),
-                                                  ),
-
-                                                // ===== Error: Format (must be 10 digits) =====
-                                                if (_showLicenseErrors && commercialRegisterFormatError)
-                                                  const Padding(
-                                                    padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
-                                                    child: Text(
-                                                      'رقم السجل يجب أن يكون 10 أرقام صحيحة.',
-                                                      style: TextStyle(color: Colors.red, fontSize: 12),
-                                                    ),
-                                                  ),
-
-                                                // ===== Error: Could not fetch / invalid =====
-                                                if (_showLicenseErrors && commercialRegisterFetchingError)
-                                                  const Padding(
-                                                    padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
-                                                    child: Text(
-                                                      'رقم السجل غير صحيح أو غير موجود.',
-                                                      style: TextStyle(color: Colors.red, fontSize: 12),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-
-                                          const SizedBox(width: 12),
-
-                                          // ===== Verify Button =====
-                                          ElevatedButton(
-                                            onPressed: _fetchLicenseData,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: t.secondaryButtonsOnLight,
-                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                    if(isSetupMode) ...[ 
+                                      // License Information Section
+                                      Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                        child: Row(
+                                          textDirection: TextDirection.rtl,
+                                          crossAxisAlignment: CrossAxisAlignment.end, 
+                                          children: [
+                                            Expanded(
+                                              child: FeqLabeledTextField(
+                                                label: 'رقم السجل التجاري الموحد',
+                                                required: true,
+                                                controller: _model.commercialRegisterTextController,
+                                                focusNode: _model.commercialRegisterFocusNode,
+                                                keyboardType: TextInputType.number,
+                                                decoration: businessInputDecoration(
+                                                  context,
+                                                  isError: _showLicenseErrors &&
+                                                      (commercialRegisterRequiredError ||
+                                                      commercialRegisterFormatError ||
+                                                      commercialRegisterFetchingError),
+                                                ).copyWith(hintText: '7xxxxxxxxx'),
                                               ),
                                             ),
-                                            child: Text(
-                                              'تحقق',
-                                              style: TextStyle(color: t.primaryText, fontSize: 14),
+
+                                            const SizedBox(width: 10),
+
+                                            Padding(
+                                              padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 0, 7),
+                                              child: ElevatedButton(
+                                                onPressed: _fetchLicenseData,
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: t.secondaryButtonsOnLight,
+                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'تحقق',
+                                                  style: TextStyle(color: t.primaryText, fontSize: 14),
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
+                                    
+                                    // ERROR: Required
+                                    if (_showLicenseErrors && commercialRegisterRequiredError)
+                                      const Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                        child: Text(
+                                          'يرجى إدخال الرقم الموحد للسجل التجاري.',
+                                          style: TextStyle(color: Colors.red, fontSize: 12),
+                                        ),
+                                      ),
+                                    
+                                    // ERROR: Format
+                                    if (_showLicenseErrors && commercialRegisterFormatError)
+                                      const Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                        child: Text(
+                                          'رقم السجل يجب أن يكون 10 أرقام صحيحة.',
+                                          style: TextStyle(color: Colors.red, fontSize: 12),
+                                        ),
+                                      ),
+                                    
+                                    // Duplicate CR number
+                                    if (_showLicenseErrors && commercialRegisterDuplicateError)
+                                      const Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                        child: Text(
+                                          'رقم السجل مستخدم مسبقًا.',
+                                          style: TextStyle(color: Colors.red, fontSize: 12),
+                                        ),
+                                      ),
+
+                                    // Invalid / fetch error
+                                    if (_showLicenseErrors && commercialRegisterFetchingError)
+                                      const Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                        child: Text(
+                                          'رقم السجل غير صحيح أو غير موجود.',
+                                          style: TextStyle(color: Colors.red, fontSize: 12),
+                                        ),
+                                      ),
 
                                     // ===== SHOW Fetched License Data =====
                                     if (commercialRegisterFetched) ...[
                                       const SizedBox(height: 12),
 
                                       // License Status
-                                      FeqLabeled(
-                                        'حالة السجل',
-                                        required: false,
-                                        child: TextFormField(
-                                          initialValue: commercialRegisterStatus ?? '',
+                                      Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                        child: FeqLabeledTextField(
+                                          label: 'حالة السجل',
+                                          required: false,                                            
                                           enabled: false,
-                                          decoration:businessInputDecoration(context).copyWith(
-                                            disabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              borderSide: BorderSide(color: t.secondary),
-                                            ),
-                                          ),
-                                          style: t.bodyLarge.copyWith(color: t.tertiaryText),
-                                          textAlign: TextAlign.start,
+                                          style: TextStyle(color: t.tertiaryText),
+                                          initialValue: commercialRegisterStatus ?? '',
+                                          decoration: businessInputDecoration(context),
                                         ),
                                       ),
 
                                       // License Expiry Date
-                                      FeqLabeled(
-                                        'تاريخ انتهاء السجل',
-                                        required: false,
-                                        child: TextFormField(
-                                          initialValue: commercialRegisterExpiry ?? '',
+                                      Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                        child: FeqLabeledTextField(
+                                          label: 'تاريخ انتهاء السجل',
+                                          required: false,                                            
                                           enabled: false,
-                                          decoration: businessInputDecoration(context).copyWith(
-                                            disabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              borderSide: BorderSide(color: t.secondary),
-                                            ),
-                                          ),
-                                          style: t.bodyLarge.copyWith(color: t.tertiaryText),
-                                          textAlign: TextAlign.start,
+                                          style: TextStyle(color: t.tertiaryText),
+                                          initialValue: commercialRegisterExpiry ?? '',
+                                          decoration: businessInputDecoration(context),
                                         ),
                                       ),
                                     ],
@@ -1690,44 +1563,11 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                         children: [
                                           Padding(
                                             padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
-                                            child: AnimatedBuilder(
-                                              animation: _shakeCtrl,
-                                              builder: (context, child) =>
-                                                  Transform.translate(offset: Offset(_shakeOffset(), 0), child: child),
-                                              child: FFButtonWidget(
-                                                onPressed: _isFormValid ? () => _saveAll() : null,
-                                                text: 'تحديث',
-                                                options: FFButtonOptions(
-                                                  width: 430,
-                                                  height: 40,
-                                                  color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                  textStyle: t.titleMedium.override(
-                                                    fontFamily: 'Inter',
-                                                    color: t.containers,
-                                                  ),
-                                                  elevation: 2,
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  disabledColor: Colors.grey,
-                                                  disabledTextColor: Colors.white70,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    else
-                                      Center(
-                                        child: Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
-                                          child: AnimatedBuilder(
-                                            animation: _shakeCtrl,
-                                            builder: (context, child) =>
-                                                Transform.translate(offset: Offset(_shakeOffset(), 0), child: child),
                                             child: FFButtonWidget(
                                               onPressed: _isFormValid ? () => _saveAll() : null,
-                                              text: 'إنشاء',
+                                              text: 'تحديث',
                                               options: FFButtonOptions(
-                                                width: 430,
+                                                width: 400,
                                                 height: 40,
                                                 color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                                                 textStyle: t.titleMedium.override(
@@ -1739,6 +1579,29 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                 disabledColor: Colors.grey,
                                                 disabledTextColor: Colors.white70,
                                               ),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    else
+                                      Center(
+                                        child: Padding(
+                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
+                                          child: FFButtonWidget(
+                                            onPressed: _isFormValid ? () => _saveAll() : null,
+                                            text: 'إنشاء',
+                                            options: FFButtonOptions(
+                                              width: 400,
+                                              height: 40,
+                                              color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                              textStyle: t.titleMedium.override(
+                                                fontFamily: 'Inter',
+                                                color: t.containers,
+                                              ),
+                                              elevation: 2,
+                                              borderRadius: BorderRadius.circular(12),
+                                              disabledColor: Colors.grey,
+                                              disabledTextColor: Colors.white70,
                                             ),
                                           ),
                                         ),
@@ -1765,6 +1628,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
       commercialRegisterFormatError = false;
       commercialRegisterFetchingError = false;
       commercialRegisterFetched = false;
+      commercialRegisterDuplicateError = false;
     });
 
     final num = _model.commercialRegisterTextController?.text.trim() ?? '';
@@ -1777,6 +1641,24 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
     if (!RegExp(r'^[0-9]{10}$').hasMatch(num)) {
       commercialRegisterFormatError = true;
+      setState(() {});
+      return;
+    }
+
+    try {
+      final dupSnap = await firebaseFirestore
+          .collection('users')
+          .where('commercial_register_number', isEqualTo: num)
+          .limit(1)
+          .get();
+
+      if (dupSnap.docs.isNotEmpty) {
+        commercialRegisterDuplicateError = true; 
+        setState(() {});
+        return;
+      }
+    } catch (e) {
+      commercialRegisterFetchingError = true;
       setState(() {});
       return;
     }
@@ -1801,8 +1683,6 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
       setState(() {});
       return;
     }
-
-    print("Wathq Response: ${response.body}");
 
     // === Decode JSON ===
     Map<String, dynamic> data;
@@ -1842,6 +1722,28 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
     commercialRegisterFetched = true;
     setState(() {});
+  }
+
+  Future<void> _DeleteAccount() async {
+    try {
+      final auth = firebaseAuth;
+      final user = auth.currentUser;
+
+      if (user == null) return;
+
+      // Delete Firestore user record
+      try {
+        await firebaseFirestore.collection('users').doc(user.uid).delete();
+      } catch (_) {
+        // ignore errors (user doc may not exist yet)
+      }
+
+      // Delete auth account
+      await user.delete();
+
+    } catch (e) {
+      // ignore all errors silently
+    }
   }
   
 }

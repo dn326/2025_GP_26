@@ -479,6 +479,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                                 child: FFButtonWidget(
                                   onPressed: () => context.pushNamed(InfluencerProfileFormWidget.routeNameEdit),
                                   text: 'تعديل الملف الشخصي',
+                                  icon: const Icon(Icons.edit_outlined, size: 20),
                                   options: FFButtonOptions(
                                     width: double.infinity,
                                     height: 44,

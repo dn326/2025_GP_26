@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:elan_flutterproject/core/services/firebase_service.dart';
 import 'package:elan_flutterproject/core/utils/enum_profile_mode.dart';
 import 'package:elan_flutterproject/features/business/presentation/profile_form_widget.dart';
 import 'package:elan_flutterproject/features/influencer/presentation/profile_form_widget.dart';
+import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart';
+import 'package:elan_flutterproject/index.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -10,11 +13,42 @@ import 'package:flutter/material.dart';
 import '../../core/components/feq_components.dart';
 import '../../core/services/signup_flow_controller.dart';
 import '../../core/services/terms_and_privacy.dart';
-import '../../flutter_flow/flutter_flow_icon_button.dart';
 import '../../flutter_flow/flutter_flow_theme.dart';
 import '../../flutter_flow/flutter_flow_widgets.dart';
-import 'business_setupprofile.dart';
-import 'influencer_setupprofile.dart';
+
+InputDecoration inputDecoration(BuildContext context, {bool isError = false, String? errorText,}) {
+  final t = FlutterFlowTheme.of(context);
+  return InputDecoration(
+    isDense: true,
+    contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
+    errorText: errorText,
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: t.secondary, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    disabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: t.secondary, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        width: 2,
+      ),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    filled: true,
+    fillColor: t.primaryBackground,
+  );
+}
 
 class UserSignupPage extends StatefulWidget {
   const UserSignupPage({super.key});
@@ -47,6 +81,15 @@ class _UserSignupPageState extends State<UserSignupPage> {
   bool _hasUpper = false;
   bool _hasLower = false;
   bool _hasNumber = false;
+
+  bool _emailError = false;
+  bool _passwordError = false;
+  bool _confirmPasswordError = false;
+  //bool _generalError = false;
+
+  String? _emailErrorMessage;
+  String? _passwordErrorMessage;
+  String? _confirmPasswordErrorMessage;
 
   bool _acceptedTerms = false;
   bool _isAdult = false; // only for influencer
@@ -105,6 +148,7 @@ class _UserSignupPageState extends State<UserSignupPage> {
   }
 
   Future<void> _signUp() async {
+
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يجب الموافقة على شروط الاستخدام وسياسة الخصوصية')),
@@ -113,9 +157,9 @@ class _UserSignupPageState extends State<UserSignupPage> {
     }
 
     if (SignUpFlowController.userType == 'influencer' && !_isAdult) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('يجب تأكيد أن العمر 18 سنة أو أكثر')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يجب تأكيد أن العمر 18 سنة أو أكثر')),
+      );
       return;
     }
 
@@ -125,57 +169,67 @@ class _UserSignupPageState extends State<UserSignupPage> {
     final password = _passwordController1.text.trim();
     final confirmPassword = _passwordController2.text.trim();
 
-    // Email check
+    // 🔹 RESET ALL ERRORS BEFORE CHECKING
+    setState(() {
+      _emailError = false;
+      _passwordError = false;
+      _confirmPasswordError = false;
+
+      _emailErrorMessage = null;
+      _passwordErrorMessage = null;
+      _confirmPasswordErrorMessage = null;
+    });
+
+    bool hasError = false;
+
+
+    // EMAIL VALIDATION
     if (email.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('البريد الإلكتروني مطلوب')));
-      return;
+      _emailError = true;
+      _emailErrorMessage = 'يرجى إدخال البريد الإلكتروني';
+      hasError = true;
+    } else if (!email.contains('@')) {
+      _emailError = true;
+      _emailErrorMessage = 'البريد الإلكتروني غير صالح';
+      hasError = true;
     }
 
-    if (!email.contains('@')) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('البريد الإلكتروني غير صالح')));
-      return;
-    }
-
-    // Password check
+    // PASSWORD VALIDATION
     if (password.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('كلمة المرور مطلوبة')));
-      return;
+      _passwordError = true;
+      _passwordErrorMessage = 'يرجى إدخال كلمة المرور';
+      hasError = true;
+    } else if (!_hasMinLength || !_hasUpper || !_hasLower || !_hasNumber) {
+      _passwordError = true;
+      _passwordErrorMessage = 'كلمة المرور غير صحيحة';
+      hasError = true;
     }
 
-    if (!_hasMinLength || !_hasUpper || !_hasLower || !_hasNumber) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('كلمة المرور غير صحيحة')));
-      return;
+    // CONFIRM PASSWORD
+    if (confirmPassword.isEmpty) {
+      _confirmPasswordError = true;
+      _confirmPasswordErrorMessage = 'يرجى تأكيد كلمة المرور';
+      hasError = true;
+    } else if (password != confirmPassword) {
+      _confirmPasswordError = true;
+      _confirmPasswordErrorMessage = 'كلمة المرور غير متطابقة';
+      hasError = true;
     }
 
-    // Confirm password check
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('كلمة المرور غير متطابقة')));
-      return;
-    }
+    setState(() {});
+    if (hasError) return;   // STOP SIGN UP
 
+    // ─────────────── Firebase Signup ───────────────
     try {
       if (!_feqTesting) {
-        // Create Firebase Auth user
         UserCredential userCredential = await FirebaseAuth.instance
             .createUserWithEmailAndPassword(email: email, password: password);
 
         final user = userCredential.user!;
         final userId = user.uid;
 
-        // Send email verification
         await user.sendEmailVerification();
 
-        // Save in Firestore users collection
         await FirebaseFirestore.instance.collection('users').doc(userId).set({
           'account_status': 'pending',
           'email': email,
@@ -184,10 +238,8 @@ class _UserSignupPageState extends State<UserSignupPage> {
         });
       }
 
-      // Save email temporarily in flow controller
       SignUpFlowController.email = email;
 
-      // Show dialog asking the user to verify email
       if (!mounted) return;
 
       await showDialog(
@@ -201,33 +253,19 @@ class _UserSignupPageState extends State<UserSignupPage> {
           actions: [
             TextButton(
               onPressed: () async {
-                // Show loading
                 showDialog(
                   context: ctxAlertDialog,
                   barrierDismissible: false,
-                  builder: (_) => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  builder: (_) => const Center(child: CircularProgressIndicator()),
                 );
 
                 bool verified = _feqTesting ? _feqTesting : await checkEmailVerified();
 
-                if (kDebugMode) {
-                  print("Is Email Verified? $verified");
-                }
-
-                // Close loading
-                if (Navigator.canPop(ctxAlertDialog)) {
-                  Navigator.pop(ctxAlertDialog);
-                }
+                if (Navigator.canPop(ctxAlertDialog)) Navigator.pop(ctxAlertDialog);
 
                 if (verified) {
-                  // Close verification dialog
-                  if (Navigator.canPop(ctxAlertDialog)) {
-                    Navigator.pop(ctxAlertDialog);
-                  }
+                  if (Navigator.canPop(ctxAlertDialog)) Navigator.pop(ctxAlertDialog);
 
-                  // Navigate to next setup page
                   if (!mounted) return;
 
                   if (SignUpFlowController.userType == 'business') {
@@ -245,7 +283,6 @@ class _UserSignupPageState extends State<UserSignupPage> {
                       ),
                     );
                   }
-
                 } else {
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -269,9 +306,9 @@ class _UserSignupPageState extends State<UserSignupPage> {
       }
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('حدث خطأ غير متوقع')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('حدث خطأ غير متوقع')),
+      );
     }
   }
 
@@ -306,54 +343,11 @@ class _UserSignupPageState extends State<UserSignupPage> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: theme.primaryBackground,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(56.0),
-          child: Container(
-            decoration: const BoxDecoration(
-              boxShadow: [BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2))],
-            ),
-            child: AppBar(
-              backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-              automaticallyImplyLeading: false,
-              elevation: 0, // set to 0 so the custom shadow is visible
-              titleSpacing: 0,
-              title: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FlutterFlowIconButton(
-                          borderRadius: 8.0,
-                          buttonSize: 40.0,
-                          icon: Icon(
-                            Icons.arrow_forward_ios,
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            size: 24.0,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 6, // move title slightly lower
-                        child: Text(
-                          'إنشاء الحساب',
-                          textAlign: TextAlign.center,
-                          style: FlutterFlowTheme.of(
-                            context,
-                          ).headlineSmall.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+        appBar: FeqAppBar(
+          title: 'إنشاء الحساب',
+          showBack: true,
+          backRoute: UserTypePage.routeName,
+          onBackTapExtra: _DeleteAccount,
         ),
         body: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -373,8 +367,6 @@ class _UserSignupPageState extends State<UserSignupPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const SizedBox(height: 10),
-                    Text('بيانات الحساب', style: theme.titleMedium),
                     const SizedBox(height: 16),
 
                     // Email
@@ -384,17 +376,9 @@ class _UserSignupPageState extends State<UserSignupPage> {
                       focusNode: _emailFocus,
                       keyboardType: TextInputType.emailAddress,
                       width: double.infinity,
-                      labelPadding: EdgeInsets.zero,
-                      childPadding: const EdgeInsets.only(top: 8, bottom: 4),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 14,
-                        ),
-                        filled: true,
-                        fillColor: theme.primaryBackground,
-                      ),
+                      childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),                                          
+                      decoration: inputDecoration(context, isError: _emailError,
+                          errorText: _emailError ? _emailErrorMessage  : null,),
                     ),
 
                     const SizedBox(height: 16),
@@ -409,21 +393,15 @@ class _UserSignupPageState extends State<UserSignupPage> {
                           focusNode: _passwordFocus1,
                           obscureText: !_passwordVisibility1,
                           width: double.infinity,
-                          labelPadding: EdgeInsets.zero,
-                          childPadding: const EdgeInsets.only(top: 8, bottom: 4),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 14,
-                            ),
-                            filled: true,
-                            fillColor: theme.primaryBackground,
+                          childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),                                          
+                          decoration: inputDecoration(
+                            context,
+                            isError: _passwordError,
+                            errorText: _passwordError ? _passwordErrorMessage  : null,
+                          ).copyWith(
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _passwordVisibility1
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                                _passwordVisibility1 ? Icons.visibility : Icons.visibility_off,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -463,21 +441,15 @@ class _UserSignupPageState extends State<UserSignupPage> {
                       focusNode: _passwordFocus2,
                       obscureText: !_passwordVisibility2,
                       width: double.infinity,
-                      labelPadding: EdgeInsets.zero,
-                      childPadding: const EdgeInsets.only(top: 8, bottom: 4),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 14,
-                        ),
-                        filled: true,
-                        fillColor: theme.primaryBackground,
+                      childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),                                          
+                      decoration: inputDecoration(
+                        context,
+                        isError: _confirmPasswordError,
+                        errorText: _confirmPasswordError ? _confirmPasswordErrorMessage  : null,
+                      ).copyWith(
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _passwordVisibility2
-                                ? Icons.visibility
-                                : Icons.visibility_off,
+                            _passwordVisibility2 ? Icons.visibility : Icons.visibility_off,
                           ),
                           onPressed: () {
                             setState(() {
@@ -487,6 +459,8 @@ class _UserSignupPageState extends State<UserSignupPage> {
                         ),
                       ),
                     ),
+                    
+                    const SizedBox(height: 16),
 
                     // Terms & Privacy checkbox
                     // Wrap checkboxes in a Column with padding
@@ -567,28 +541,32 @@ class _UserSignupPageState extends State<UserSignupPage> {
                       ],
                     ),
 
-                    const SizedBox(height: 12),
-
-                    FFButtonWidget(
-                      onPressed: () {
-                        if (_isFormValid) {
-                          _signUp();
-                        }
-                      }, // button disabled if form invalid
-                      text: 'إنشاء',
-                      options: FFButtonOptions(
-                        width: double.infinity,
-                        height: 44,
-                        color: _isFormValid ? theme.primary : theme.primary.withValues(alpha: 0.4),
-                        textStyle: theme.bodyMedium.copyWith(
-                          fontSize: 18,
-                          color: _isFormValid
-                              ? theme.secondaryBackground
-                              : theme.secondaryBackground.withValues(alpha: 0.7),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
+                        child: FFButtonWidget(
+                          onPressed: _isFormValid ? () => _signUp() : null,
+                          text: 'إنشاء',
+                          options: FFButtonOptions(
+                            width: 400,
+                            height: 44,
+                            color: _isFormValid
+                                ? theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
+                                : Colors.grey, // disabled state
+                            textStyle: theme.titleMedium.override(
+                              fontFamily: 'Inter',
+                              color: _isFormValid
+                                  ? theme.containers
+                                  : Colors.white70,
+                            ),
+                            elevation: 2,
+                            borderRadius: BorderRadius.circular(12),
+                            disabledColor: Colors.grey,
+                            disabledTextColor: Colors.white70,
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(16),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),
@@ -597,5 +575,27 @@ class _UserSignupPageState extends State<UserSignupPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _DeleteAccount() async {
+    try {
+      final auth = firebaseAuth;
+      final user = auth.currentUser;
+
+      if (user == null) return;
+
+      // Delete Firestore user record
+      try {
+        await firebaseFirestore.collection('users').doc(user.uid).delete();
+      } catch (_) {
+        // ignore errors (user doc may not exist yet)
+      }
+
+      // Delete auth account
+      await user.delete();
+
+    } catch (e) {
+      // ignore all errors silently
+    }
   }
 }

@@ -19,7 +19,7 @@ InputDecoration inputDecoration(BuildContext context, {bool isError = false}) {
     isDense: true,
     contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
     enabledBorder: OutlineInputBorder(
-      borderSide: BorderSide(color: t.secondary),
+      borderSide: BorderSide(color: t.secondary, width: 2),
       borderRadius: BorderRadius.circular(12),
     ),
     focusedBorder: OutlineInputBorder(
@@ -466,543 +466,493 @@ class _AccountUpdateCertificatePageState
   Widget build(BuildContext context) {
     final t = FlutterFlowTheme.of(context);
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        key: scaffoldKey,
+    return Scaffold(
         backgroundColor: t.primaryBackground,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(56.0),
-          child: Container(
-            decoration: const BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 4,
-                  color: Color(0x33000000),
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: AppBar(
-              backgroundColor: t.secondaryBackground,
-              automaticallyImplyLeading: false,
-              elevation: 0,
-              titleSpacing: 0,
-              title: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.arrow_forward_ios,
-                            color: t.primaryText,
-                            size: 24.0,
-                          ),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: t.secondaryBackground,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'تحديث الوثيقة',
-                            style: t.headlineSmall
-                                .copyWith(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+
+        appBar: FeqAppBar(
+          title: 'تحديث الوثيقة',
+          showBack: true,
+          backRoute: null,
         ),
-        body: SafeArea(
-          top: true,
-          child: _initialLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
-                  child: Container(
-                    decoration: BoxDecoration(color: t.backgroundElan),
-                    child: Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
-                      child: SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              16, 16, 16, 16),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: t.containers,
-                              boxShadow: const [
-                                BoxShadow(
-                                  blurRadius: 4,
-                                  color: Color(0x33000000),
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(16)),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                  0, 16, 0, 16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // BUSINESS SECTION
-                                  if (userType == 'business') ...[
-                                    FeqLabeled(
-                                      'رقم السجل التجاري الموحد',
-                                      required: true,
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                TextFormField(
-                                                  controller: _crController,
-                                                  focusNode: _crFocusNode,
-                                                  keyboardType:
-                                                      TextInputType.number,
-                                                  textInputAction:
-                                                      TextInputAction.done,
-                                                  decoration: inputDecoration(
-                                                    context,
-                                                    isError: _showCrErrors &&
-                                                        (commercialRegisterRequiredError ||
-                                                            commercialRegisterFormatError ||
-                                                            commercialRegisterFetchingError),
-                                                  ),
-                                                  style:
-                                                      t.bodyLarge.copyWith(
-                                                    color: t.primaryText,
-                                                  ),
-                                                  textAlign: TextAlign.start,
-                                                ),
-                                                if (_showCrErrors &&
-                                                    commercialRegisterRequiredError)
-                                                  const Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                0, 6, 4, 0),
-                                                    child: Text(
-                                                      'يرجى إدخال الرقم الموحد للسجل التجاري.',
-                                                      style: TextStyle(
-                                                        color: Colors.red,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                if (_showCrErrors &&
-                                                    commercialRegisterFormatError)
-                                                  const Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                0, 6, 4, 0),
-                                                    child: Text(
-                                                      'رقم السجل يجب أن يكون 10 أرقام صحيحة.',
-                                                      style: TextStyle(
-                                                        color: Colors.red,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                if (_showCrErrors &&
-                                                    commercialRegisterFetchingError)
-                                                  const Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                0, 6, 4, 0),
-                                                    child: Text(
-                                                      'رقم السجل غير صحيح أو غير موجود.',
-                                                      style: TextStyle(
-                                                        color: Colors.red,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          ElevatedButton(
-                                            onPressed: _crVerifyLoading
-                                                ? null
-                                                : _fetchBusinessLicenseData,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: t
-                                                  .secondaryButtonsOnLight,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 12,
-                                              ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                            child: _crVerifyLoading
-                                                ? const SizedBox(
-                                                    width: 18,
-                                                    height: 18,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      valueColor:
-                                                          AlwaysStoppedAnimation<
-                                                              Color>(
-                                                        Colors.white,
-                                                      ),
-                                                    ),
-                                                  )
-                                                : Text(
-                                                    'تحقق',
-                                                    style: TextStyle(
-                                                      color: t.primaryText,
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    if (commercialRegisterFetched) ...[
-                                      const SizedBox(height: 12),
-                                      FeqLabeled(
-                                        'حالة السجل',
-                                        required: false,
-                                        child: TextFormField(
-                                          initialValue:
-                                              commercialRegisterStatus ?? '',
-                                          enabled: false,
-                                          decoration:
-                                              inputDecoration(context)
-                                                  .copyWith(
-                                            disabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide(
-                                                color: t.secondary,
-                                              ),
-                                            ),
-                                          ),
-                                          style: t.bodyLarge.copyWith(
-                                            color: t.tertiaryText,
-                                          ),
-                                          textAlign: TextAlign.start,
-                                        ),
-                                      ),
-                                      FeqLabeled(
-                                        'تاريخ انتهاء السجل',
-                                        required: false,
-                                        child: TextFormField(
-                                          initialValue:
-                                              commercialRegisterExpiry ?? '',
-                                          enabled: false,
-                                          decoration:
-                                              inputDecoration(context)
-                                                  .copyWith(
-                                            disabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide(
-                                                color: t.secondary,
-                                              ),
-                                            ),
-                                          ),
-                                          style: t.bodyLarge.copyWith(
-                                            color: t.tertiaryText,
-                                          ),
-                                          textAlign: TextAlign.start,
-                                        ),
-                                      ),
-                                    ],
-                                    Center(
-                                      child: Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional
-                                                .fromSTEB(
-                                          0,
-                                          40,
-                                          0,
-                                          24,
-                                        ),
-                                        child: FFButtonWidget(
-                                          onPressed:
-                                              isBusinessUpdateButtonEnabled
-                                                  ? _updateBusinessCertificate
-                                                  : null,
-                                          text: _crUpdateLoading
-                                              ? 'جاري التحديث...'
-                                              : 'تحديث',
-                                          options: FFButtonOptions(
-                                            width: 430,
-                                            height: 40,
-                                            color: isBusinessUpdateButtonEnabled
-                                                ? t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
-                                                : Colors.grey.shade400,
-                                            textStyle:
-                                                t.titleMedium.override(
-                                              fontFamily: 'Inter',
-                                              color: t.containers,
-                                            ),
-                                            elevation: 2,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            disabledColor:
-                                                Colors.grey.shade400,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
 
-                                  // INFLUENCER SECTION
-                                  if (userType == 'influencer') ...[
-                                    FeqLabeled(
-                                      'رقم الرخصة الإعلامية (موثوق)',
-                                      required: true,
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                TextFormField(
-                                                  controller: _mediaController,
-                                                  focusNode: _mediaFocusNode,
-                                                  keyboardType:
-                                                      TextInputType.number,
-                                                  textInputAction:
-                                                      TextInputAction.done,
-                                                  decoration: inputDecoration(
-                                                    context,
-                                                    isError: _showMediaErrors &&
-                                                        (mediaLicenseRequiredError ||
-                                                            mediaLicenseFormatError ||
-                                                            mediaLicenseFetchingError),
-                                                  ),
-                                                  style:
-                                                      t.bodyLarge.copyWith(
-                                                    color: t.primaryText,
-                                                  ),
-                                                  textAlign: TextAlign.start,
-                                                ),
-                                                if (_showMediaErrors &&
-                                                    mediaLicenseRequiredError)
-                                                  const Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                0, 6, 4, 0),
-                                                    child: Text(
-                                                      'يرجى إدخال رقم الرخصة.',
-                                                      style: TextStyle(
-                                                        color: Colors.red,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                if (_showMediaErrors &&
-                                                    mediaLicenseFormatError)
-                                                  const Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                0, 6, 4, 0),
-                                                    child: Text(
-                                                      'رقم الرخصة يجب أن يكون 6 أرقام صحيحة.',
-                                                      style: TextStyle(
-                                                        color: Colors.red,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                if (_showMediaErrors &&
-                                                    mediaLicenseFetchingError)
-                                                  const Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                0, 6, 4, 0),
-                                                    child: Text(
-                                                      'رقم الرخصة غير صحيح أو غير موجود.',
-                                                      style: TextStyle(
-                                                        color: Colors.red,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          ElevatedButton(
-                                            onPressed: _mediaVerifyLoading
-                                                ? null
-                                                : _fetchMediaLicenseData,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: t
-                                                  .secondaryButtonsOnLight,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 12,
-                                              ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                            child: _mediaVerifyLoading
-                                                ? const SizedBox(
-                                                    width: 18,
-                                                    height: 18,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      valueColor:
-                                                          AlwaysStoppedAnimation<
-                                                              Color>(
-                                                        Colors.white,
-                                                      ),
-                                                    ),
-                                                  )
-                                                : Text(
-                                                    'تحقق',
-                                                    style: TextStyle(
-                                                      color: t.primaryText,
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    if (mediaLicenseFetched) ...[
-                                      const SizedBox(height: 12),
-                                      FeqLabeled(
-                                        'حالة الرخصة',
-                                        required: false,
-                                        child: TextFormField(
-                                          initialValue:
-                                              mediaLicenseStatus ?? '',
-                                          enabled: false,
-                                          decoration:
-                                              inputDecoration(context)
-                                                  .copyWith(
-                                            disabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide(
-                                                color: t.secondary,
-                                              ),
-                                            ),
-                                          ),
-                                          style: t.bodyLarge.copyWith(
-                                            color: t.tertiaryText,
-                                          ),
-                                          textAlign: TextAlign.start,
-                                        ),
-                                      ),
-                                      FeqLabeled(
-                                        'تاريخ انتهاء الرخصة',
-                                        required: false,
-                                        child: TextFormField(
-                                          initialValue:
-                                              mediaLicenseExpiry ?? '',
-                                          enabled: false,
-                                          decoration:
-                                              inputDecoration(context)
-                                                  .copyWith(
-                                            disabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide(
-                                                color: t.secondary,
-                                              ),
-                                            ),
-                                          ),
-                                          style: t.bodyLarge.copyWith(
-                                            color: t.tertiaryText,
-                                          ),
-                                          textAlign: TextAlign.start,
-                                        ),
-                                      ),
-                                    ],
-                                    Center(
-                                      child: Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional
-                                                .fromSTEB(
-                                          0,
-                                          40,
-                                          0,
-                                          24,
-                                        ),
-                                        child: FFButtonWidget(
-                                          onPressed:
-                                              isInfluencerUpdateButtonEnabled
-                                                  ? _updateMediaCertificate
-                                                  : null,
-                                          text: _mediaUpdateLoading
-                                              ? 'جاري التحديث...'
-                                              : 'تحديث',
-                                          options: FFButtonOptions(
-                                            width: 430,
-                                            height: 40,
-                                            color:
-                                                isInfluencerUpdateButtonEnabled
-                                                    ? t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
-                                                    : Colors.grey.shade400,
-                                            textStyle:
-                                                t.titleMedium.override(
-                                              fontFamily: 'Inter',
-                                              color: t.containers,
-                                            ),
-                                            elevation: 2,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            disabledColor:
-                                                Colors.grey.shade400,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-
-                                  if (userType != 'business' &&
-                                      userType != 'influencer')
-                                    Padding(
-                                      padding:
-                                          const EdgeInsetsDirectional.fromSTEB(
-                                              16, 8, 16, 16),
-                                      child: Text(
-                                        'نوع الحساب غير مدعوم لتحديث الوثائق حالياً.',
-                                        style: t.bodyMedium,
-                                      ),
-                                    ),
+        body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SafeArea(
+            top: true,
+            child: _initialLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+                    child: Container(
+                      decoration: BoxDecoration(color: t.backgroundElan),
+                      child: Padding(
+                        padding:
+                            const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                                16, 16, 16, 16),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: t.containers,
+                                boxShadow: const [
+                                  BoxShadow(
+                                    blurRadius: 4,
+                                    color: Color(0x33000000),
+                                    offset: Offset(0, 2),
+                                  ),
                                 ],
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(16)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    0, 16, 0, 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // BUSINESS SECTION
+                                    if (userType == 'business') ...[
+                                      FeqLabeled(
+                                        'رقم السجل التجاري الموحد',
+                                        required: true,
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  TextFormField(
+                                                    controller: _crController,
+                                                    focusNode: _crFocusNode,
+                                                    keyboardType:
+                                                        TextInputType.number,
+                                                    textInputAction:
+                                                        TextInputAction.done,
+                                                    decoration: inputDecoration(
+                                                      context,
+                                                      isError: _showCrErrors &&
+                                                          (commercialRegisterRequiredError ||
+                                                              commercialRegisterFormatError ||
+                                                              commercialRegisterFetchingError),
+                                                    ),
+                                                    style:
+                                                        t.bodyLarge.copyWith(
+                                                      color: t.primaryText,
+                                                    ),
+                                                    textAlign: TextAlign.start,
+                                                  ),
+                                                  if (_showCrErrors &&
+                                                      commercialRegisterRequiredError)
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0, 6, 4, 0),
+                                                      child: Text(
+                                                        'يرجى إدخال الرقم الموحد للسجل التجاري.',
+                                                        style: TextStyle(
+                                                          color: Colors.red,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  if (_showCrErrors &&
+                                                      commercialRegisterFormatError)
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0, 6, 4, 0),
+                                                      child: Text(
+                                                        'رقم السجل يجب أن يكون 10 أرقام صحيحة.',
+                                                        style: TextStyle(
+                                                          color: Colors.red,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  if (_showCrErrors &&
+                                                      commercialRegisterFetchingError)
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0, 6, 4, 0),
+                                                      child: Text(
+                                                        'رقم السجل غير صحيح أو غير موجود.',
+                                                        style: TextStyle(
+                                                          color: Colors.red,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            ElevatedButton(
+                                              onPressed: _crVerifyLoading
+                                                  ? null
+                                                  : _fetchBusinessLicenseData,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: t
+                                                    .secondaryButtonsOnLight,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 16,
+                                                  vertical: 12,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              child: _crVerifyLoading
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                Color>(
+                                                          Colors.white,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : Text(
+                                                      'تحقق',
+                                                      style: TextStyle(
+                                                        color: t.primaryText,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (commercialRegisterFetched) ...[
+                                        const SizedBox(height: 12),
+                                        FeqLabeled(
+                                          'حالة السجل',
+                                          required: false,
+                                          child: TextFormField(
+                                            initialValue:
+                                                commercialRegisterStatus ?? '',
+                                            enabled: false,
+                                            decoration:
+                                                inputDecoration(context)
+                                                    .copyWith(
+                                              disabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                borderSide: BorderSide(
+                                                  color: t.secondary,
+                                                ),
+                                              ),
+                                            ),
+                                            style: t.bodyLarge.copyWith(
+                                              color: t.tertiaryText,
+                                            ),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                        FeqLabeled(
+                                          'تاريخ انتهاء السجل',
+                                          required: false,
+                                          child: TextFormField(
+                                            initialValue:
+                                                commercialRegisterExpiry ?? '',
+                                            enabled: false,
+                                            decoration:
+                                                inputDecoration(context)
+                                                    .copyWith(
+                                              disabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                borderSide: BorderSide(
+                                                  color: t.secondary,
+                                                ),
+                                              ),
+                                            ),
+                                            style: t.bodyLarge.copyWith(
+                                              color: t.tertiaryText,
+                                            ),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                      ],
+                                      Center(
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsetsDirectional
+                                                  .fromSTEB(
+                                            0,
+                                            40,
+                                            0,
+                                            24,
+                                          ),
+                                          child: FFButtonWidget(
+                                            onPressed:
+                                                isBusinessUpdateButtonEnabled
+                                                    ? _updateBusinessCertificate
+                                                    : null,
+                                            text: _crUpdateLoading
+                                                ? 'جاري التحديث...'
+                                                : 'تحديث',
+                                            options: FFButtonOptions(
+                                              width: 430,
+                                              height: 40,
+                                              color: isBusinessUpdateButtonEnabled
+                                                  ? t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
+                                                  : Colors.grey.shade400,
+                                              textStyle:
+                                                  t.titleMedium.override(
+                                                fontFamily: 'Inter',
+                                                color: t.containers,
+                                              ),
+                                              elevation: 2,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              disabledColor:
+                                                  Colors.grey.shade400,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+
+                                    // INFLUENCER SECTION
+                                    if (userType == 'influencer') ...[
+                                      FeqLabeled(
+                                        'رقم الرخصة الإعلامية (موثوق)',
+                                        required: true,
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  TextFormField(
+                                                    controller: _mediaController,
+                                                    focusNode: _mediaFocusNode,
+                                                    keyboardType:
+                                                        TextInputType.number,
+                                                    textInputAction:
+                                                        TextInputAction.done,
+                                                    decoration: inputDecoration(
+                                                      context,
+                                                      isError: _showMediaErrors &&
+                                                          (mediaLicenseRequiredError ||
+                                                              mediaLicenseFormatError ||
+                                                              mediaLicenseFetchingError),
+                                                    ),
+                                                    style:
+                                                        t.bodyLarge.copyWith(
+                                                      color: t.primaryText,
+                                                    ),
+                                                    textAlign: TextAlign.start,
+                                                  ),
+                                                  if (_showMediaErrors &&
+                                                      mediaLicenseRequiredError)
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0, 6, 4, 0),
+                                                      child: Text(
+                                                        'يرجى إدخال رقم الرخصة.',
+                                                        style: TextStyle(
+                                                          color: Colors.red,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  if (_showMediaErrors &&
+                                                      mediaLicenseFormatError)
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0, 6, 4, 0),
+                                                      child: Text(
+                                                        'رقم الرخصة يجب أن يكون 6 أرقام صحيحة.',
+                                                        style: TextStyle(
+                                                          color: Colors.red,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  if (_showMediaErrors &&
+                                                      mediaLicenseFetchingError)
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0, 6, 4, 0),
+                                                      child: Text(
+                                                        'رقم الرخصة غير صحيح أو غير موجود.',
+                                                        style: TextStyle(
+                                                          color: Colors.red,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            ElevatedButton(
+                                              onPressed: _mediaVerifyLoading
+                                                  ? null
+                                                  : _fetchMediaLicenseData,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: t
+                                                    .secondaryButtonsOnLight,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 16,
+                                                  vertical: 12,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              child: _mediaVerifyLoading
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                                Color>(
+                                                          Colors.white,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : Text(
+                                                      'تحقق',
+                                                      style: TextStyle(
+                                                        color: t.primaryText,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (mediaLicenseFetched) ...[
+                                        const SizedBox(height: 12),
+                                        FeqLabeled(
+                                          'حالة الرخصة',
+                                          required: false,
+                                          child: TextFormField(
+                                            initialValue:
+                                                mediaLicenseStatus ?? '',
+                                            enabled: false,
+                                            decoration:
+                                                inputDecoration(context)
+                                                    .copyWith(
+                                              disabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                borderSide: BorderSide(
+                                                  color: t.secondary,
+                                                ),
+                                              ),
+                                            ),
+                                            style: t.bodyLarge.copyWith(
+                                              color: t.tertiaryText,
+                                            ),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                        FeqLabeled(
+                                          'تاريخ انتهاء الرخصة',
+                                          required: false,
+                                          child: TextFormField(
+                                            initialValue:
+                                                mediaLicenseExpiry ?? '',
+                                            enabled: false,
+                                            decoration:
+                                                inputDecoration(context)
+                                                    .copyWith(
+                                              disabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                borderSide: BorderSide(
+                                                  color: t.secondary,
+                                                ),
+                                              ),
+                                            ),
+                                            style: t.bodyLarge.copyWith(
+                                              color: t.tertiaryText,
+                                            ),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                      ],
+                                      Center(
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsetsDirectional
+                                                  .fromSTEB(
+                                            0,
+                                            40,
+                                            0,
+                                            24,
+                                          ),
+                                          child: FFButtonWidget(
+                                            onPressed:
+                                                isInfluencerUpdateButtonEnabled
+                                                    ? _updateMediaCertificate
+                                                    : null,
+                                            text: _mediaUpdateLoading
+                                                ? 'جاري التحديث...'
+                                                : 'تحديث',
+                                            options: FFButtonOptions(
+                                              width: 430,
+                                              height: 40,
+                                              color:
+                                                  isInfluencerUpdateButtonEnabled
+                                                      ? t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
+                                                      : Colors.grey.shade400,
+                                              textStyle:
+                                                  t.titleMedium.override(
+                                                fontFamily: 'Inter',
+                                                color: t.containers,
+                                              ),
+                                              elevation: 2,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              disabledColor:
+                                                  Colors.grey.shade400,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+
+                                    if (userType != 'business' &&
+                                        userType != 'influencer')
+                                      Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional.fromSTEB(
+                                                16, 8, 16, 16),
+                                        child: Text(
+                                          'نوع الحساب غير مدعوم لتحديث الوثائق حالياً.',
+                                          style: t.bodyMedium,
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -1010,8 +960,7 @@ class _AccountUpdateCertificatePageState
                       ),
                     ),
                   ),
-                ),
-        ),
+          ),
       ),
     );
   }

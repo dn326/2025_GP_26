@@ -11,14 +11,16 @@ class AccountDeleteModel extends FlutterFlowModel {
 
     try {
       final firestore = firebaseFirestore;
-      final userRef = firestore.collection('users').doc(user.uid);
-      final profileRef = firestore.collection('profiles').doc(user.uid);
+      final profileQuery = await firestore.collection('profiles').where('profile_id', isEqualTo: user.uid).get();
 
-      await userRef.delete();
-      await profileRef.delete();
+      for (var doc in profileQuery.docs) {
+        await doc.reference.delete();
+      }
+      
+      await firestore.collection('users').doc(user.uid).delete();
       await user.delete();
 
-      return '✅ تم حذف الحساب نهائيًا';
+      return '✅ تم حذف الحساب وجميع البيانات المرتبطة';
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
         return '⚠️ يلزم تسجيل الدخول مجددًا';

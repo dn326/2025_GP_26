@@ -87,9 +87,9 @@ class FlutterFlowTheme {
 
   Color get pagesBackground => primaryBackground;
 
-  Color get error => const Color(0xFFB64B4B);
+  Color get error => const Color.fromARGB(255, 255, 0, 0);
 
-  Color get success => const Color(0xFF5B8A72);
+  Color get success => const Color.fromARGB(255, 76, 175, 80); 
 
   Color get warning => const Color(0xFFE1A948);
 

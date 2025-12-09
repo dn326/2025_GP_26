@@ -126,7 +126,6 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       final phone = (prof['phone_number'] ?? '').toString();
       final email = (prof['contact_email'] ?? '').toString();
       final website = (prof['website'] ?? '').toString();
-      final phoneOwner = (prof['phone_owner'] ?? 'personal').toString();
       final emailOwner = (prof['email_owner'] ?? 'personal').toString();
       final useCustomEmail = prof['use_custom_email'] as bool? ?? false;
 
@@ -167,7 +166,6 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           profileImageUrl: profileImage,
           contactEmail: email,
           phoneNumber: phone,
-          phoneOwner: phoneOwner,
           emailOwner: emailOwner,
           website: website,
           businessIndustryName: prof['business_industry_name']!.toString(),
@@ -675,18 +673,19 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                           ),
                                         ),
                                         const SizedBox(height: 24),
+                                      ],
+                                      
+                                      // Contact Info
+                                      _buildContactSection(context),
 
-                                        // Contact Info
-                                        _buildContactSection(context),
-
-                                        const SizedBox(height: 32),
-
-                                        if (widget.uid == null)
+                                      const SizedBox(height: 32),
+  
+                                      if (widget.uid == null)
                                         FFButtonWidget(
                                           onPressed: () => context.pushNamed(
                                             BusinessProfileFormWidget.routeNameEdit,
                                           ),
-                                          text: 'تعديل الملف الشخصي',
+                                          text: 'تعديل الملف التعريفي',
                                           icon: const Icon(Icons.edit_outlined, size: 20),
                                           options: FFButtonOptions(
                                             width: double.infinity,
@@ -700,7 +699,6 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                         ),
-                                      ],
                                     ],
                                   ],
                                 ),
