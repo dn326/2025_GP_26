@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:elan_flutterproject/features/login_and_signup/user_signup.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,32 +35,7 @@ InputDecoration inputDecoration(BuildContext context, {bool isError = false}) {
       borderSide: BorderSide(color: t.secondary, width: 2),
       borderRadius: BorderRadius.circular(12),
     ),
-    focusedBorder: OutlineInputBorder(
-      borderSide: BorderSide(
-        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-        width: 2,
-      ),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    errorBorder: OutlineInputBorder(
-      borderSide: const BorderSide(color: Colors.red, width: 2),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    focusedErrorBorder: OutlineInputBorder(
-      borderSide: const BorderSide(color: Colors.red, width: 2),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    filled: true,
-    fillColor: t.containers,
-  );
-}
-
-InputDecoration platformInputDecoration(BuildContext context, {bool isError = false}) {
-  final t = FlutterFlowTheme.of(context);
-  return InputDecoration(
-    isDense: true,
-    contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
-    enabledBorder: OutlineInputBorder(
+    disabledBorder: OutlineInputBorder(
       borderSide: BorderSide(color: t.secondary, width: 2),
       borderRadius: BorderRadius.circular(12),
     ),
@@ -79,7 +55,40 @@ InputDecoration platformInputDecoration(BuildContext context, {bool isError = fa
       borderRadius: BorderRadius.circular(12),
     ),
     filled: true,
-    fillColor: t.containers,
+    fillColor: t.primaryBackground,
+  );
+}
+
+InputDecoration platformInputDecoration(BuildContext context, {bool isError = false}) {
+  final t = FlutterFlowTheme.of(context);
+  return InputDecoration(
+    isDense: true,
+    contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: t.secondary, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    disabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: t.secondary, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        width: 2,
+      ),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    filled: true,
+    fillColor: t.primaryBackground,
   );
 }
 
@@ -94,6 +103,9 @@ class InfluencerProfileFormWidget extends StatefulWidget {
   // Routes for Edit mode
   static const String routeNameEdit = 'influencer-profile-edit';
   static const String routePathEdit = '/$routeNameEdit';
+  // Routes for Setup mode
+  static const String routeNameSetup = 'influencer-profile-setup';
+  static const String routePathSetup = '/$routeNameSetup';
 
   @override
   State<InfluencerProfileFormWidget> createState() => _InfluencerProfileFormWidgetState();
@@ -117,9 +129,9 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
   bool mediaLicenseFormatError = false;
   bool mediaLicenseFetchingError = false;
   bool mediaLicenseFetched = false;
-
   bool isMediaLicenseVerified = false;
   bool mediaLicenseIsExpiringSoon = false;
+  bool mediaLicenseDuplicateError = false;
   bool _showLicenseErrors = false;
 
 
@@ -260,14 +272,18 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       }
     }
     _socialsRequireError = !hasCompletePair;
+
+    final license = _model.mediaLicenseTextController?.text.trim() ?? '';
+    mediaLicenseRequiredError = license.isEmpty;
+    mediaLicenseFormatError = license.isNotEmpty && !RegExp(r'^[0-9]{6}$').hasMatch(license);
+
   }
 
   bool get _isFormValid {
     final name = _model.influncerNameTextController?.text.trim() ?? '';
     final phone = _model.phoneNumberTextController?.text.trim() ?? '';
-    final email = _useCustomEmail
-        ? _customEmailController.text.trim()
-        : _userEmail;
+    final email = _useCustomEmail? _customEmailController.text.trim() : _userEmail;
+    final license = _model.mediaLicenseTextController?.text.trim() ?? '';
 
     if (name.isEmpty) return false;
     if (_selectedInfluencerContentType == null) return false;
@@ -291,6 +307,14 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       }
     }
     if (!hasCompletePair) return false;
+
+    if (isSetupMode) {
+      if (license.isEmpty) return false;
+      if (!RegExp(r'^[0-9]{6}$').hasMatch(license)) return false;
+      if (!mediaLicenseFetched) return false;
+      if (mediaLicenseFetchingError) return false;
+      if (!isMediaLicenseVerified) return false;
+    }
 
     return true;
   }
@@ -634,9 +658,16 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         _initialSnapshot = _currentSnapshot();
         dirty = false;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isSetupMode ? 'تم الحفظ بنجاح' : 'تم التحديث بنجاح')),
-        );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isSetupMode ? 'تم الحفظ بنجاح' : 'تم التحديث بنجاح',
+            style: const TextStyle(color: Colors.white), // text color
+          ),
+          backgroundColor: Colors.green, // <<--- make it green
+          duration: const Duration(seconds: 2),
+        ),
+      );
 
         if (isSetupMode) {
           if (mounted) {
@@ -700,7 +731,16 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       appBar: FeqAppBar(
         title: isSetupMode ? 'إنشاء الملف الشخصي' : 'تعديل الملف الشخصي',
         showBack: true,
-        backRoute: InfluncerProfileWidget.routeName,
+        backRoute: isSetupMode
+            ? UserSignupPage.routeName // for setup mode
+            : InfluncerProfileWidget.routeName, // for edit mode
+
+        // 🔹 Only delete account in setup mode, and only on this page
+        onBackTapExtra: isSetupMode
+            ? () async {
+                await _DeleteAccount();   // your existing method
+              }
+            : null,      
       ),
       body: SafeArea(
         top: true,
@@ -1134,25 +1174,13 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                             Column(
                                               crossAxisAlignment: CrossAxisAlignment.end,
                                               children: [
-                                                FeqLabeled('البريد الإلكتروني', required: false),
-                                                Padding(
-                                                  padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 0),
-                                                  child: Container(
-                                                      width: double.infinity,
-                                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                      decoration: BoxDecoration(
-                                                        color: t.containers,
-                                                        border: Border.all(color: t.secondary, width: 2),
-                                                        borderRadius: BorderRadius.circular(12),
-                                                      ),
-                                                      child: Text(
-                                                        _userEmail,
-                                                        textDirection: TextDirection.rtl,
-                                                        style: FlutterFlowTheme.of(context)
-                                                            .bodyMedium
-                                                            .override(fontFamily: 'Inter', color: FlutterFlowTheme.of(context).primaryText),
-                                                      )
-                                                  ),
+                                                FeqLabeledTextField(
+                                                  label: 'البريد الإلكتروني',
+                                                  style: TextStyle(color: t.tertiaryText),
+                                                  required: false,
+                                                  initialValue: _userEmail,
+                                                  enabled: false,
+                                                  decoration: inputDecoration(context),
                                                 ),
                                               ],
                                             )
@@ -1332,122 +1360,118 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                       ),
                                     
                                     if(isSetupMode)...[ 
-                                      FeqLabeled(
-                                        'رقم الرخصة الإعلامية (موثوق)',
+                                      Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                                         child: Row(
+                                          textDirection: TextDirection.rtl,
+                                          crossAxisAlignment: CrossAxisAlignment.end,
                                           children: [
                                             Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  // ===== TextField =====
-                                                  TextFormField(
-                                                    controller: _model.mediaLicenseTextController,
-                                                    focusNode: _model.mediaLicenseFocusNode,
-                                                    keyboardType: TextInputType.number,
-                                                    textInputAction: TextInputAction.done,
-                                                    decoration: inputDecoration(
-                                                      context,
-                                                      isError: _showLicenseErrors &&
-                                                          (mediaLicenseRequiredError ||
-                                                          mediaLicenseFormatError ||
-                                                          mediaLicenseFetchingError),
-                                                    ),
-                                                    style: t.bodyLarge.copyWith(color: t.primaryText),
-                                                    textAlign: TextAlign.start,
-                                                  ),
-
-                                                  // ===== Error: Required =====
-                                                  if (_showLicenseErrors && mediaLicenseRequiredError)
-                                                    const Padding(
-                                                      padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
-                                                      child: Text(
-                                                        'يرجى إدخال رقم الرخصة.',
-                                                        style: TextStyle(color: Colors.red, fontSize: 12),
-                                                      ),
-                                                    ),
-
-                                                  // ===== Error: Wrong Format =====
-                                                  if (_showLicenseErrors && mediaLicenseFormatError)
-                                                    const Padding(
-                                                      padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
-                                                      child: Text(
-                                                        'رقم الرخصة يجب أن يكون 6 أرقام صحيحة.',
-                                                        style: TextStyle(color: Colors.red, fontSize: 12),
-                                                      ),
-                                                    ),
-
-                                                  // ===== Error: Invalid / Not Found =====
-                                                  if (_showLicenseErrors && mediaLicenseFetchingError)
-                                                    const Padding(
-                                                      padding: EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
-                                                      child: Text(
-                                                        'رقم الرخصة غير صحيح أو غير موجود.',
-                                                        style: TextStyle(color: Colors.red, fontSize: 12),
-                                                      ),
-                                                    ),
-                                                ],
+                                              child: FeqLabeledTextField(
+                                                label: 'رقم الرخصة الإعلامية (موثوق)',
+                                                controller: _model.mediaLicenseTextController,
+                                                focusNode: _model.mediaLicenseFocusNode,
+                                                keyboardType: TextInputType.number,
+                                                decoration: inputDecoration(
+                                                  context,
+                                                  isError: _showLicenseErrors &&
+                                                      (mediaLicenseRequiredError ||
+                                                      mediaLicenseFormatError ||
+                                                      mediaLicenseFetchingError),
+                                                ).copyWith(hintText: 'xxxxxx'),
                                               ),
                                             ),
 
-                                            const SizedBox(width: 12),
-
-                                            // ===== Verify Button =====
-                                            ElevatedButton(
-                                              onPressed: _fetchLicenseData,
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: t.secondaryButtonsOnLight,
-                                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12),
+                                            const SizedBox(width: 10),
+                                            
+                                            Padding(
+                                              padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 0, 7),
+                                              child: ElevatedButton(
+                                                onPressed: _fetchLicenseData,
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: t.secondaryButtonsOnLight,
+                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'تحقق',
+                                                  style: TextStyle(color: t.primaryText, fontSize: 14),
                                                 ),
                                               ),
-                                              child: Text(
-                                                'تحقق',
-                                                style: TextStyle(color: t.primaryText, fontSize: 14),
-                                              ),
-                                            ),
+                                            ),  
                                           ],
                                         ),
                                       ),
+
+                                      // ===== Error: Required =====
+                                      if (_showLicenseErrors && mediaLicenseRequiredError)
+                                        const Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                          child: Text(
+                                            'يرجى إدخال رقم الرخصة.',
+                                            style: TextStyle(color: Colors.red, fontSize: 12),
+                                          ),
+                                        ),
+
+                                      // ===== Error: Wrong Format =====
+                                      if (_showLicenseErrors && mediaLicenseFormatError)
+                                        const Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                          child: Text(
+                                            'رقم الرخصة يجب أن يكون 6 أرقام صحيحة.',
+                                            style: TextStyle(color: Colors.red, fontSize: 12),
+                                          ),
+                                        ),
+
+                                      // ===== Error: Duplicate in Firestore =====
+                                      if (_showLicenseErrors && mediaLicenseDuplicateError)
+                                        const Padding(
+                                          padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                          child: Text(
+                                            'رقم الرخصة مستخدم مسبقًا.',
+                                            style: TextStyle(color: Colors.red, fontSize: 12),
+                                          ),
+                                        ),
+
+                                      // ===== Error: Invalid / Not Found =====
+                                      if (_showLicenseErrors && mediaLicenseFetchingError)
+                                        const Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                          child: Text(
+                                            'رقم الرخصة غير صحيح أو غير موجود.',
+                                            style: TextStyle(color: Colors.red, fontSize: 12),
+                                          ),
+                                        ),                                                                          
 
                                       // ===== SHOW Fetched License Data =====
                                       if (mediaLicenseFetched) ...[
                                         const SizedBox(height: 12),
 
                                         // License Status
-                                        FeqLabeled(
-                                          'حالة الرخصة',
-                                          required: false,
-                                          child: TextFormField(
-                                            initialValue: mediaLicenseStatus ?? '',
+                                        Padding(
+                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),                                          
+                                          child: FeqLabeledTextField(
+                                            label: 'حالة الرخصة',
+                                            required: false,                                            
                                             enabled: false,
-                                            decoration: inputDecoration(context).copyWith(
-                                              disabledBorder: OutlineInputBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                                borderSide: BorderSide(color: t.secondary),
-                                              ),
-                                            ),
-                                            style: t.bodyLarge.copyWith(color: t.tertiaryText),
-                                            textAlign: TextAlign.start,
+                                            style: TextStyle(color: t.tertiaryText),
+                                            initialValue: mediaLicenseStatus ?? '',
+                                            decoration: inputDecoration(context),
                                           ),
                                         ),
 
                                         // License Expiry Date
-                                        FeqLabeled(
-                                          'تاريخ انتهاء الرخصة',
-                                          required: false,
-                                          child: TextFormField(
-                                            initialValue: expDateFormatted ?? '',
+                                        Padding(
+                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),                                          
+                                          child: FeqLabeledTextField(
+                                            label: 'تاريخ انتهاء الرخصة',
+                                            required: false,                                            
                                             enabled: false,
-                                            decoration: inputDecoration(context).copyWith(
-                                              disabledBorder: OutlineInputBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                                borderSide: BorderSide(color: t.secondary),
-                                              ),
-                                            ),
-                                            style: t.bodyLarge.copyWith(color: t.tertiaryText),
-                                            textAlign: TextAlign.start,
+                                            style: TextStyle(color: t.tertiaryText),
+                                            initialValue: expDateFormatted ?? '',
+                                            decoration: inputDecoration(context),
                                           ),
                                         ),
                                       ],
@@ -1460,28 +1484,23 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                         children: [
                                           Padding(
                                             padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
-                                            child: AnimatedBuilder(
-                                              animation: _shakeCtrl,
-                                              builder: (context, child) =>
-                                                  Transform.translate(offset: Offset(_shakeOffset(), 0), child: child),
-                                              child: FFButtonWidget(
-                                                onPressed: _isFormValid ? () => _saveAll() : null,
-                                                text: 'تحديث',
-                                                options: FFButtonOptions(
-                                                  width: 430,
-                                                  height: 40,
-                                                  color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                  textStyle: t.titleMedium.override(
-                                                    fontFamily: 'Inter',
-                                                    color: t.containers,
-                                                  ),
-                                                  elevation: 2,
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  disabledColor: Colors.grey,
-                                                  disabledTextColor: Colors.white70,
+                                            child: FFButtonWidget(
+                                              onPressed: _isFormValid ? () => _saveAll() : null,
+                                              text: 'تحديث',
+                                              options: FFButtonOptions(
+                                                width: 400,
+                                                height: 40,
+                                                color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                textStyle: t.titleMedium.override(
+                                                  fontFamily: 'Inter',
+                                                  color: t.containers,
                                                 ),
+                                                elevation: 2,
+                                                borderRadius: BorderRadius.circular(12),
+                                                disabledColor: Colors.grey,
+                                                disabledTextColor: Colors.white70,
                                               ),
-                                            ),
+                                            ),                
                                           ),
                                         ],
                                       )
@@ -1489,15 +1508,11 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                       Center(
                                         child: Padding(
                                           padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
-                                          child: AnimatedBuilder(
-                                            animation: _shakeCtrl,
-                                            builder: (context, child) =>
-                                                Transform.translate(offset: Offset(_shakeOffset(), 0), child: child),
                                             child: FFButtonWidget(
                                               onPressed: _isFormValid ? () => _saveAll() : null,
                                               text: 'إنشاء',
                                               options: FFButtonOptions(
-                                                width: 430,
+                                                width: 400,
                                                 height: 40,
                                                 color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                                                 textStyle: t.titleMedium.override(
@@ -1510,7 +1525,6 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
                                                 disabledTextColor: Colors.white70,
                                               ),
                                             ),
-                                          ),
                                         ),
                                       )
                                   ],
@@ -1535,6 +1549,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       mediaLicenseFormatError = false;
       mediaLicenseFetchingError = false;
       mediaLicenseFetched = false;
+      mediaLicenseDuplicateError = false;
     });
     
     final num = _model.mediaLicenseTextController?.text.trim() ?? '';
@@ -1547,6 +1562,24 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
 
     if (!RegExp(r'^[0-9]{6}$').hasMatch(num)) {
       mediaLicenseFormatError = true;
+      setState(() {});
+      return;
+    }
+
+    try {
+      final dupSnap = await firebaseFirestore
+          .collection('users')
+          .where('media_license_number', isEqualTo: num)
+          .limit(1)
+          .get();
+
+      if (dupSnap.docs.isNotEmpty) {
+        mediaLicenseDuplicateError  = true; 
+        setState(() {});
+        return;
+      }
+    } catch (e) {
+      mediaLicenseFetchingError = true;
       setState(() {});
       return;
     }
@@ -1614,6 +1647,28 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
     } catch (e) {
       mediaLicenseFetchingError = true;
       setState(() {});
+    }
+  }
+
+  Future<void> _DeleteAccount() async {
+    try {
+      final auth = firebaseAuth;
+      final user = auth.currentUser;
+
+      if (user == null) return;
+
+      // Delete Firestore user record
+      try {
+        await firebaseFirestore.collection('users').doc(user.uid).delete();
+      } catch (_) {
+        // ignore errors (user doc may not exist yet)
+      }
+
+      // Delete auth account
+      await user.delete();
+
+    } catch (e) {
+      // ignore all errors silently
     }
   }
 

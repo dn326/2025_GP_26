@@ -1,10 +1,46 @@
+import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
-import '../../../core/widgets/password_field_with_validation.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
+import '../../../core/widgets/password_field_with_validation.dart';
+
+InputDecoration inputDecoration(BuildContext context,
+    {bool isError = false, String? errorText}) {
+  final t = FlutterFlowTheme.of(context);
+
+  return InputDecoration(
+    isDense: true,
+    contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
+    errorText: errorText,
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: t.secondary, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: isError
+            ? Colors.red
+            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        width: 2,
+      ),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    errorBorder: const OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+    ),
+    focusedErrorBorder: const OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.red, width: 2),
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+    ),
+    filled: true,
+    fillColor: t.backgroundElan,
+  );
+}
 
 class AccountChangePasswordPage extends StatefulWidget {
   const AccountChangePasswordPage({super.key});
@@ -24,21 +60,13 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
   final _newCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
 
-  final _currentNode = FocusNode();
-  final _newNode = FocusNode();
-  final _confirmNode = FocusNode();
-
-  bool _obscureCur = true;
+  bool _obscureCurrent = true;
   bool _isLoading = false;
-
-  // Keys to access password validation state
-  final _newPasswordKey = GlobalKey<PasswordFieldWithValidationState>();
-  final _confirmPasswordKey = GlobalKey<PasswordFieldWithValidationState>();
+  bool _showError = false;
 
   @override
   void initState() {
     super.initState();
-    // Update button state on text change
     _currentCtrl.addListener(() => setState(() {}));
     _newCtrl.addListener(() => setState(() {}));
     _confirmCtrl.addListener(() => setState(() {}));
@@ -49,40 +77,41 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
     _currentCtrl.dispose();
     _newCtrl.dispose();
     _confirmCtrl.dispose();
-    _currentNode.dispose();
-    _newNode.dispose();
-    _confirmNode.dispose();
     super.dispose();
   }
 
-  bool get _isFormOK {
-    return _currentCtrl.text.isNotEmpty &&
-        _newCtrl.text.isNotEmpty &&
-        _confirmCtrl.text.isNotEmpty &&
-        _newCtrl.isPasswordValid && // Use extension method
-        _newCtrl.text == _confirmCtrl.text;
-  }
+  bool get isFilled =>
+      _currentCtrl.text.isNotEmpty &&
+      _newCtrl.text.isNotEmpty &&
+      _confirmCtrl.text.isNotEmpty;
 
-  Future<void> _save() async {
-    if (!_isFormOK) {
+  bool get isValid =>
+      isFilled &&
+      _newCtrl.isPasswordValid &&
+      _newCtrl.text.trim() == _confirmCtrl.text.trim();
+
+  Future<void> _savePassword() async {
+    final t = FlutterFlowTheme.of(context);
+
+    if (!isValid) {
+      setState(() => _showError = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('⚠️ يرجى التأكد من صحة البيانات المدخلة'),
-          backgroundColor: FlutterFlowTheme.of(context).errorColor,
+          content: const Text('يرجى التأكد من صحة البيانات'),
+          backgroundColor: t.error,
         ),
       );
       return;
     }
 
     setState(() => _isLoading = true);
-    final theme = FlutterFlowTheme.of(context);
-    final user = firebaseAuth.currentUser;
 
+    final user = firebaseAuth.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('❌ لا يوجد مستخدم مسجل دخول حالياً.'),
-          backgroundColor: theme.errorColor,
+          content: const Text('لا يوجد مستخدم مسجّل دخول حالياً'),
+          backgroundColor: t.error,
         ),
       );
       setState(() => _isLoading = false);
@@ -90,274 +119,196 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
     }
 
     try {
-      if (_newCtrl.text.trim() != _confirmCtrl.text.trim()) {
-        throw Exception('كلمتا المرور غير متطابقتين.');
-      }
-
-      // Validate new password strength
-      if (!_newCtrl.isPasswordValid) {
-        throw Exception('كلمة المرور الجديدة لا تلبي متطلبات الأمان');
-      }
-
-      // Re-authenticate first
-      final cred = EmailAuthProvider.credential(
-        email: user.email!,
-        password: _currentCtrl.text.trim(),
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(
+          email: user.email!,
+          password: _currentCtrl.text.trim(),
+        ),
       );
-      await user.reauthenticateWithCredential(cred);
 
       await user.updatePassword(_newCtrl.text.trim());
 
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('✅ تم تغيير كلمة المرور بنجاح'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: theme.success,
+          content: const Text('تم تغيير كلمة المرور بنجاح'),
+          backgroundColor: t.success,
         ),
       );
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) Navigator.pop(context);
+
+      Navigator.pop(context);
+
     } on FirebaseAuthException catch (e) {
-      String message = 'حدث خطأ';
-      if (e.code == 'requires-recent-login') {
-        message = '⚠️ يجب تسجيل الدخول مجددًا لتغيير كلمة المرور.';
-      } else if (e.code == 'wrong-password') {
-        message = '❌ كلمة المرور الحالية غير صحيحة';
-      } else if (e.message != null) {
-        message = e.message!;
-      }
+      String msg = 'حدث خطأ';
+
+      if (e.code == 'wrong-password') msg = 'كلمة المرور الحالية غير صحيحة';
+      if (e.code == 'requires-recent-login') msg = 'يجب تسجيل الدخول مجددًا';
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: theme.errorColor),
+        SnackBar(content: Text(msg), backgroundColor: t.error),
       );
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ $e'), backgroundColor: theme.errorColor),
+        SnackBar(
+          content: Text('حدث خطأ غير متوقع: $e'),
+          backgroundColor: t.error,
+        ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
+    final t = FlutterFlowTheme.of(context);
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: theme.backgroundElan,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          backgroundColor: theme.containers,
-          elevation: 0,
-          centerTitle: true,
-          leading: Padding(
-            padding: const EdgeInsetsDirectional.only(start: 12),
-            child: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: theme.primaryText,
-                size: 18,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          title: Text('تغيير كلمة المرور', style: theme.headlineSmall),
-        ),
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: t.primaryBackground,
+      appBar: FeqAppBar(
+        title: 'تغيير كلمة المرور',
+        showBack: true,
+        backRoute: null,
+      ),
+
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
             child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               decoration: BoxDecoration(
-                color: theme.containers,
+                color: t.containers,
+                boxShadow: const [
+                  BoxShadow(
+                    blurRadius: 4,
+                    color: Color(0x33000000),
+                    offset: Offset(0, 2),
+                  ),
+                ],
                 borderRadius: BorderRadius.circular(16),
               ),
+              padding: const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 20),
+
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Current Password (no validation rules)
-                    const FeqLabeled('كلمة المرور الحالية'),
-                    _SimplePasswordBox(
-                      controller: _currentCtrl,
-                      focusNode: _currentNode,
-                      hint: '••••••••',
-                      obscure: _obscureCur,
-                      onToggleObscure: () =>
-                          setState(() => _obscureCur = !_obscureCur),
+
+                    // ==== CURRENT PASSWORD ====
+                    FeqLabeled('كلمة المرور الحالية'),
+
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                      child: TextFormField(
+                        controller: _currentCtrl,
+                        obscureText: _obscureCurrent,
+                        decoration: inputDecoration(
+                          context,
+                          isError:
+                              _showError && _currentCtrl.text.trim().isEmpty,
+                          errorText: _showError &&
+                                  _currentCtrl.text.trim().isEmpty
+                              ? 'كلمة المرور مطلوبة'
+                              : null,
+                        ).copyWith(
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscureCurrent
+                                ? Icons.visibility_off
+                                : Icons.visibility),
+                            onPressed: () =>
+                                setState(() => _obscureCurrent = !_obscureCurrent),
+                          ),
+                        ),
+                      ),
                     ),
+
                     const SizedBox(height: 16),
 
-                    // New Password (with validation rules)
-                    PasswordFieldWithValidation(
-                      key: _newPasswordKey,
-                      controller: _newCtrl,
-                      focusNode: _newNode,
-                      label: 'كلمة المرور الجديدة',
-                      hint: '••••••••',
-                      showValidationRules: true,
-                      labelStyle: theme.bodyLarge,
-                      labelPadding: const EdgeInsetsDirectional.only(
-                        end: 6,
-                        bottom: 6,
-                      ),
-                      childPadding: EdgeInsets.zero,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        filled: true,
-                        fillColor: theme.secondaryBackground,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: theme.primary.withValues(alpha: 0.25),
-                            width: 1,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: theme.errorColor,
-                            width: 1,
-                          ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: theme.errorColor,
-                            width: 1,
-                          ),
-                        ),
+                    // ==== NEW PASSWORD ====
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                      child: PasswordFieldWithValidation(
+                        controller: _newCtrl,
+                        showValidationRules: true,
+                        decoration: inputDecoration(
+                          context,
+                          isError: _showError && !_newCtrl.isPasswordValid,
+                          errorText: _showError && !_newCtrl.isPasswordValid
+                              ? 'كلمة المرور لا تلبي المتطلبات'
+                              : null,
+                        ), label: 'كلمة المرور الجديدة',
                       ),
                     ),
+
                     const SizedBox(height: 16),
 
-                    // Confirm Password (with validation rules)
-                    PasswordFieldWithValidation(
-                      key: _confirmPasswordKey,
-                      controller: _confirmCtrl,
-                      focusNode: _confirmNode,
-                      label: 'تأكيد كلمة المرور الجديدة',
-                      hint: '••••••••',
-                      showValidationRules: true,
-                      labelStyle: theme.bodyLarge,
-                      labelPadding: const EdgeInsetsDirectional.only(
-                        end: 6,
-                        bottom: 6,
-                      ),
-                      childPadding: EdgeInsets.zero,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _isFormOK ? _save() : null,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        filled: true,
-                        fillColor: theme.secondaryBackground,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: theme.primary.withValues(alpha: 0.25),
-                            width: 1,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: theme.errorColor,
-                            width: 1,
-                          ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: theme.errorColor,
-                            width: 1,
-                          ),
-                        ),
+                    // ==== CONFIRM PASSWORD ====
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                      child: PasswordFieldWithValidation(
+                        controller: _confirmCtrl,
+                        showValidationRules: false,
+                        decoration: inputDecoration(
+                          context,
+                          isError: _showError &&
+                              _confirmCtrl.text.isNotEmpty &&
+                              _confirmCtrl.text != _newCtrl.text,
+                          errorText: _showError &&
+                                  _confirmCtrl.text.isNotEmpty &&
+                                  _confirmCtrl.text != _newCtrl.text
+                              ? 'كلمتا المرور غير متطابقتين'
+                              : null,
+                        ), label: 'تأكيد كلمة المرور الجديدة',
                       ),
                     ),
 
-                    // Password mismatch warning
-                    if (_newCtrl.text.isNotEmpty &&
-                        _confirmCtrl.text.isNotEmpty &&
+                    // MISMATCH ERROR
+                    if (_confirmCtrl.text.isNotEmpty &&
+                        _newCtrl.text.isNotEmpty &&
                         _newCtrl.text != _confirmCtrl.text)
                       Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              'كلمتا المرور غير متطابقتين',
-                              style: TextStyle(
-                                color: theme.errorColor,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.close,
-                              size: 14,
-                              color: theme.errorColor,
-                            ),
-                          ],
+                        padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 0),
+                        child: Text(
+                          'كلمتا المرور غير متطابقتين',
+                          style: TextStyle(
+                            color: t.error,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.right,
                         ),
                       ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 40),
 
-                    // Save button
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _isFormOK && !_isLoading ? _save : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isFormOK
-                              ? theme.primary
-                              : theme.primary.withValues(alpha: 0.25),
-                          disabledBackgroundColor: theme.primary.withValues(
-                            alpha: 0.25,
-                          ),
-                          shape: RoundedRectangleBorder(
+                    // ==== SAVE BUTTON ====
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 24),
+                        child: FFButtonWidget(
+                          onPressed: (_isLoading || !isValid)
+                              ? null
+                              : _savePassword,
+                          text: _isLoading ? 'جاري الحفظ...' : 'حفظ',
+                          options: FFButtonOptions(
+                            width: 430,
+                            height: 40,
+                            color: (!isValid || _isLoading)
+                                ? Colors.grey.shade400
+                                : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                            textStyle: t.titleMedium.override(
+                              fontFamily: 'Inter',
+                              color: t.containers,
+                            ),
+                            elevation: 2,
                             borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _isLoading
-                            ? const CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        )
-                            : Text(
-                          'حفظ',
-                          style: theme.titleSmall.copyWith(
-                            color: _isFormOK
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.5),
-                            fontSize: 16,
+                            disabledColor: Colors.grey.shade400,
                           ),
                         ),
                       ),
                     ),
+
                   ],
                 ),
               ),
@@ -365,68 +316,6 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
           ),
         ),
       ),
-    );
-  }
-}
-
-// Simple password box without validation rules (for current password)
-class _SimplePasswordBox extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode? focusNode;
-  final bool obscure;
-  final VoidCallback onToggleObscure;
-  final String? hint;
-
-  const _SimplePasswordBox({
-    required this.controller,
-    this.focusNode,
-    required this.obscure,
-    required this.onToggleObscure,
-    this.hint,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    return TextFormField(
-      controller: controller,
-      focusNode: focusNode,
-      obscureText: obscure,
-      obscuringCharacter: '•',
-      enableSuggestions: false,
-      autocorrect: false,
-      keyboardType: TextInputType.visiblePassword,
-      decoration: InputDecoration(
-        isDense: true,
-        hintText: hint,
-        filled: true,
-        fillColor: theme.secondaryBackground,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 12,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: theme.primary.withValues(alpha: 0.25),
-            width: 1,
-          ),
-        ),
-        suffixIcon: IconButton(
-          onPressed: onToggleObscure,
-          icon: Icon(
-            obscure ? Icons.visibility_off : Icons.visibility,
-            color: theme.secondaryText.withValues(alpha: 0.8),
-          ),
-        ),
-      ),
-      style: theme.bodyMedium.copyWith(color: theme.primaryText),
-      cursorColor: theme.primaryText,
-      textInputAction: TextInputAction.next,
     );
   }
 }
