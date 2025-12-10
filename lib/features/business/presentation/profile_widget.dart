@@ -173,7 +173,24 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           useCustomEmail: useCustomEmail,
         );
 
-        _campaignList = campaignList;
+_campaignList = campaignList;
+
+// ✨ Hide expired or invisible campaigns ONLY for visitors
+if (widget.uid != null) {
+  _campaignList = _campaignList.where((c) {
+    final isVisible = c['visible'] as bool? ?? true;
+
+    final endDate = c['end_date'] is Timestamp
+        ? (c['end_date'] as Timestamp).toDate()
+        : c['end_date'] as DateTime?;
+
+    final isExpired = endDate != null && endDate.isBefore(DateTime.now());
+
+    // Show only campaigns that are visible AND not expired
+    return isVisible && !isExpired;
+  }).toList();
+}
+
         _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
 
         _isLoading = false;
