@@ -186,7 +186,7 @@ class _CampaignScreenState extends State<CampaignScreen> with SingleTickerProvid
           'influencer_content_type_name': _selectedInfluencerContentType!.nameAr,
           'start_date': Timestamp.fromDate(_model.datePicked2!),
           'end_date': Timestamp.fromDate(_model.datePicked1!),
-          'active': _model.isActive,
+         // 'active': _model.isActive,
           'visible': _model.isVisible,
         });
 
@@ -206,7 +206,7 @@ class _CampaignScreenState extends State<CampaignScreen> with SingleTickerProvid
           'start_date': Timestamp.fromDate(_model.datePicked2!),
           'end_date': Timestamp.fromDate(_model.datePicked1!),
           'date_added': Timestamp.fromDate(DateTime.now()),
-          'active': _model.isActive,
+          //'active': _model.isActive,
           'visible': _model.isVisible,
         });
 
@@ -268,7 +268,7 @@ class _CampaignScreenState extends State<CampaignScreen> with SingleTickerProvid
       _model.budgetMaxTextController!.text = (maxBudget);
       */
 
-      _model.isActive = m['active'] ?? true;
+      //_model.isActive = m['active'] ?? true;
       _model.isVisible = m['visible'] ?? true;
 
       // Load platform
@@ -971,14 +971,14 @@ class _CampaignScreenState extends State<CampaignScreen> with SingleTickerProvid
                                             Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Switch(
+                                                /*Switch(
                                                   value: _model.isActive,
                                                   onChanged: (val) {
                                                     setState(() => _model.isActive = val);
                                                   },
                                                   activeThumbColor: t.primary,
-                                                ),
-                                                Text(
+                                                ),*/
+                                                /*Text(
                                                   'نشط',
                                                   style: GoogleFonts.inter(
                                                     textStyle: t.bodyMedium.copyWith(
@@ -986,7 +986,7 @@ class _CampaignScreenState extends State<CampaignScreen> with SingleTickerProvid
                                                       fontSize: 14,
                                                     ),
                                                   ),
-                                                ),
+                                                ),*/
                                               ],
                                             ),
                                           ],

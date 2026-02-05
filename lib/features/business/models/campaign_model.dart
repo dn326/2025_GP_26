@@ -24,7 +24,7 @@ class CampaignModel extends FlutterFlowModel {
   DateTime? datePicked1;
   DateTime? datePicked2;
 
-  bool isActive = true;
+  //bool isActive = true;
   bool isVisible = true;
 
   @override
