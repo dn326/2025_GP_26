@@ -42,6 +42,7 @@ class BusinessProfileScreen extends StatefulWidget {
 
 class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   final FeqFirebaseServiceUtils _firebaseService = FeqFirebaseServiceUtils();
+  final SubscriptionService _subscriptionService = SubscriptionService();
   BusinessProfileDataModel? _profileData;
   List<Map<String, dynamic>> _campaignList = [];
 
@@ -152,7 +153,10 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           widget.campaignId,
         );
       } else {
-        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, null);
+        campaignList = await _firebaseService.fetchBusinessCampaignList(
+          widget.uid,
+          null,
+        );
       }
 
       if (!mounted) return;
@@ -173,23 +177,24 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           useCustomEmail: useCustomEmail,
         );
 
-_campaignList = campaignList;
+        _campaignList = campaignList;
 
-// ✨ Hide expired or invisible campaigns ONLY for visitors
-if (widget.uid != null) {
-  _campaignList = _campaignList.where((c) {
-    final isVisible = c['visible'] as bool? ?? true;
+        // ✨ Hide expired or invisible campaigns ONLY for visitors
+        if (widget.uid != null) {
+          _campaignList = _campaignList.where((c) {
+            final isVisible = c['visible'] as bool? ?? true;
 
-    final endDate = c['end_date'] is Timestamp
-        ? (c['end_date'] as Timestamp).toDate()
-        : c['end_date'] as DateTime?;
+            final endDate = c['end_date'] is Timestamp
+                ? (c['end_date'] as Timestamp).toDate()
+                : c['end_date'] as DateTime?;
 
-    final isExpired = endDate != null && endDate.isBefore(DateTime.now());
+            final isExpired =
+                endDate != null && endDate.isBefore(DateTime.now());
 
-    // Show only campaigns that are visible AND not expired
-    return isVisible && !isExpired;
-  }).toList();
-}
+            // Show only campaigns that are visible AND not expired
+            return isVisible && !isExpired;
+          }).toList();
+        }
 
         _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
 
@@ -221,6 +226,57 @@ if (widget.uid != null) {
       return tsOrDate.toString();
     }
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+
+  List<Widget> _buildCampaignPlatforms(Map<String, dynamic> e) {
+    final platformNames = (e['platform_names'] as List?) ?? [];
+
+    if (platformNames.isEmpty) {
+      return [
+        Text(
+          'لم يتم تحديد منصات',
+          style: TextStyle(
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
+          ),
+          textAlign: TextAlign.end,
+        ),
+      ];
+    }
+
+    return platformNames.map((platformNameStr) {
+      final platformObj = _socialPlatforms.firstWhere(
+            (p) => p.nameAr == platformNameStr.toString(),
+        orElse: () => FeqDropDownList(
+          id: 0,
+          nameEn: platformNameStr.toString(),
+          nameAr: platformNameStr.toString(),
+          domain: '',
+        ),
+      );
+
+      final socialIcon = _getSocialIconByPlatformId(platformObj.id);
+      final socialColor = _getSocialColorByPlatformId(platformObj.id);
+
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            platformObj.nameAr,
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Icon(
+            socialIcon,
+            color: socialColor,
+            size: 18,
+          ),
+        ],
+      );
+    }).toList();
   }
 
   IconData _getSocialIcon(String platformNameEn) {
@@ -294,7 +350,8 @@ if (widget.uid != null) {
   }
 
   Widget _buildSocialLinks() {
-    if (_profileData?.socialMedia == null || _profileData!.socialMedia!.isEmpty) {
+    if (_profileData?.socialMedia == null ||
+        _profileData!.socialMedia!.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -318,8 +375,12 @@ if (widget.uid != null) {
               (p) =>
                   p.nameEn.toLowerCase() == platformId.toLowerCase() ||
                   p.nameAr.toLowerCase() == platformId.toLowerCase(),
-              orElse: () =>
-                  FeqDropDownList(id: 0, nameEn: platformId, nameAr: platformId, domain: ''),
+              orElse: () => FeqDropDownList(
+                id: 0,
+                nameEn: platformId,
+                nameAr: platformId,
+                domain: '',
+              ),
             );
 
             final domain = platform.domain ?? '';
@@ -335,7 +396,10 @@ if (widget.uid != null) {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () async {
-                  await launchUrl(Uri.parse(socialUrl), mode: LaunchMode.externalApplication);
+                  await launchUrl(
+                    Uri.parse(socialUrl),
+                    mode: LaunchMode.externalApplication,
+                  );
                 },
                 borderRadius: BorderRadius.circular(8),
                 child: Row(
@@ -350,7 +414,10 @@ if (widget.uid != null) {
                           Text(
                             platform.nameAr,
                             textAlign: TextAlign.right,
-                            style: t.labelSmall.copyWith(color: t.secondaryText, fontSize: 10),
+                            style: t.labelSmall.copyWith(
+                              color: t.secondaryText,
+                              fontSize: 10,
+                            ),
                           ),
                           Text(
                             '@$username',
@@ -382,7 +449,10 @@ if (widget.uid != null) {
           .divide(
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Divider(height: 1, color: t.alternate.withValues(alpha: 0.5)),
+              child: Divider(
+                height: 1,
+                color: t.alternate.withValues(alpha: 0.5),
+              ),
             ),
           ),
     );
@@ -405,7 +475,10 @@ if (widget.uid != null) {
             Align(alignment: Alignment.topRight, child: _buildSocialLinks()),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
+              child: Divider(
+                height: 1,
+                color: theme.alternate.withValues(alpha: 0.5),
+              ),
             ),
           ],
 
@@ -415,7 +488,9 @@ if (widget.uid != null) {
               theme,
               Icons.phone_rounded,
               _profileData!.phoneNumber!,
-              label: _profileData!.phoneOwner == 'assistant' ? 'منسق أعمالي' : 'رقم الجوال',
+              label: _profileData!.phoneOwner == 'assistant'
+                  ? 'منسق أعمالي'
+                  : 'رقم الجوال',
             ),
 
           // Email
@@ -423,13 +498,18 @@ if (widget.uid != null) {
             if ((_profileData?.phoneNumber ?? '').isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
+                child: Divider(
+                  height: 1,
+                  color: theme.alternate.withValues(alpha: 0.5),
+                ),
               ),
             _buildInfoRow(
               theme,
               Icons.email_rounded,
               _profileData!.contactEmail!,
-              label: _profileData!.useCustomEmail && _profileData!.emailOwner == 'assistant'
+              label:
+                  _profileData!.useCustomEmail &&
+                      _profileData!.emailOwner == 'assistant'
                   ? 'منسق أعمالي'
                   : 'البريد الإلكتروني',
             ),
@@ -439,9 +519,17 @@ if (widget.uid != null) {
           if ((_profileData?.website ?? '').isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
+              child: Divider(
+                height: 1,
+                color: theme.alternate.withValues(alpha: 0.5),
+              ),
             ),
-            _buildInfoRow(theme, Icons.language_rounded, _profileData!.website!, isLink: true),
+            _buildInfoRow(
+              theme,
+              Icons.language_rounded,
+              _profileData!.website!,
+              isLink: true,
+            ),
           ],
         ],
       ),
@@ -465,12 +553,18 @@ if (widget.uid != null) {
               if (label != null)
                 Text(
                   label,
-                  style: theme.labelSmall.copyWith(color: theme.secondaryText, fontSize: 10),
+                  style: theme.labelSmall.copyWith(
+                    color: theme.secondaryText,
+                    fontSize: 10,
+                  ),
                 ),
               InkWell(
                 onTap: isLink
                     ? () async {
-                        await launchUrl(Uri.parse(text), mode: LaunchMode.externalApplication);
+                        await launchUrl(
+                          Uri.parse(text),
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     : null,
                 child: Text(
@@ -489,7 +583,10 @@ if (widget.uid != null) {
         const SizedBox(width: 16),
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: theme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: theme.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
           child: Icon(icon, size: 20, color: theme.primary),
         ),
       ],
@@ -557,7 +654,10 @@ if (widget.uid != null) {
                                         topRight: Radius.circular(24),
                                       ),
                                       gradient: LinearGradient(
-                                        colors: [theme.primary, theme.primary.withValues(alpha: 0.7)],
+                                        colors: [
+                                          theme.primary,
+                                          theme.primary.withValues(alpha: 0.7),
+                                        ],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                       ),
@@ -572,7 +672,9 @@ if (widget.uid != null) {
                                             height: 100,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.white.withValues(alpha: 0.1),
+                                              color: Colors.white.withValues(
+                                                alpha: 0.1,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -584,7 +686,9 @@ if (widget.uid != null) {
                                             height: 80,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.white.withValues(alpha: 0.1),
+                                              color: Colors.white.withValues(
+                                                alpha: 0.1,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -601,14 +705,17 @@ if (widget.uid != null) {
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.1),
+                                            color: Colors.black.withValues(
+                                              alpha: 0.1,
+                                            ),
                                             blurRadius: 8,
                                             offset: const Offset(0, 4),
                                           ),
                                         ],
                                       ),
                                       child: FeqImagePickerWidget(
-                                        initialImageUrl: _profileData?.profileImageUrl,
+                                        initialImageUrl:
+                                            _profileData?.profileImageUrl,
                                         isUploading: false,
                                         onTap: () {},
                                         size: 100,
@@ -636,7 +743,8 @@ if (widget.uid != null) {
                                     const SizedBox(height: 8),
 
                                     // Industry Tag
-                                    if (_profileData?.businessIndustryName != null)
+                                    if (_profileData?.businessIndustryName !=
+                                        null)
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 16,
@@ -660,7 +768,10 @@ if (widget.uid != null) {
                                       GestureDetector(
                                         onTap: () {
                                           if (_subscriptionStatus == 'free') {
-                                            Navigator.pushNamed(context, PaymentPage.routeName);
+                                            Navigator.pushNamed(
+                                              context,
+                                              PaymentPage.routeName,
+                                            );
                                           } else {
                                             Navigator.pushNamed(
                                               context,
@@ -676,7 +787,8 @@ if (widget.uid != null) {
 
                                     if (widget.campaignId == null) ...[
                                       // Description
-                                      if ((_profileData?.description ?? '').isNotEmpty) ...[
+                                      if ((_profileData?.description ?? '')
+                                          .isNotEmpty) ...[
                                         const SizedBox(height: 8),
                                         Align(
                                           alignment: Alignment.bottomRight,
@@ -691,29 +803,38 @@ if (widget.uid != null) {
                                         ),
                                         const SizedBox(height: 24),
                                       ],
-                                      
+
                                       // Contact Info
                                       _buildContactSection(context),
 
                                       const SizedBox(height: 32),
-  
+
                                       if (widget.uid == null)
                                         FFButtonWidget(
                                           onPressed: () => context.pushNamed(
-                                            BusinessProfileFormWidget.routeNameEdit,
+                                            BusinessProfileFormWidget
+                                                .routeNameEdit,
                                           ),
                                           text: 'تعديل الملف التعريفي',
-                                          icon: const Icon(Icons.edit_outlined, size: 20),
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            size: 20,
+                                          ),
                                           options: FFButtonOptions(
                                             width: double.infinity,
                                             height: 44,
                                             color: theme.primary,
-                                            textStyle: theme.titleSmall.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: GoogleFonts.interTight().fontFamily,
+                                            textStyle: theme.titleSmall
+                                                .copyWith(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontFamily:
+                                                      GoogleFonts.interTight()
+                                                          .fontFamily,
+                                                ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
                                             ),
-                                            borderRadius: BorderRadius.circular(12),
                                           ),
                                         ),
                                     ],
@@ -747,14 +868,16 @@ if (widget.uid != null) {
                             children: [
                               if (widget.campaignId == null)
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Container(),
                                     Text(
                                       'الحملات',
                                       textAlign: TextAlign.end,
                                       style: theme.headlineLarge.copyWith(
-                                        fontFamily: GoogleFonts.interTight().fontFamily,
+                                        fontFamily:
+                                            GoogleFonts.interTight().fontFamily,
                                         fontSize: 22,
                                       ),
                                     ),
@@ -762,7 +885,12 @@ if (widget.uid != null) {
                                 ),
                               if (_campaignList.isEmpty)
                                 Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
+                                  padding: const EdgeInsetsDirectional.fromSTEB(
+                                    16,
+                                    0,
+                                    16,
+                                    16,
+                                  ),
                                   child: Container(
                                     width: double.infinity,
                                     height: 50,
@@ -774,7 +902,8 @@ if (widget.uid != null) {
                                       child: Text(
                                         'لا توجد أي حملات حاليا',
                                         style: theme.labelSmall.override(
-                                          fontFamily: GoogleFonts.inter().fontFamily,
+                                          fontFamily:
+                                              GoogleFonts.inter().fontFamily,
                                           color: theme.subtextHints,
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
@@ -786,15 +915,35 @@ if (widget.uid != null) {
                               else
                                 Padding(
                                   padding: (widget.campaignId == null)
-                                      ? EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16)
-                                      : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                                      ? EdgeInsetsDirectional.fromSTEB(
+                                          16,
+                                          0,
+                                          0,
+                                          16,
+                                        )
+                                      : EdgeInsetsDirectional.fromSTEB(
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                        ),
                                   child: Column(
                                     children: _campaignList
                                         .map(
                                           (e) => Padding(
                                             padding: (widget.campaignId == null)
-                                                ? EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12)
-                                                : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                                                ? EdgeInsetsDirectional.fromSTEB(
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    12,
+                                                  )
+                                                : EdgeInsetsDirectional.fromSTEB(
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                  ),
                                             child: (widget.campaignId != null)
                                                 ? _tileCampaignSpecial(e)
                                                 : _tileCampaign(e),
@@ -824,12 +973,15 @@ if (widget.uid != null) {
 
     try {
       // Fetch subscription data from Firebase and save to local storage
-      final subscriptionModel = await SubscriptionService().refreshAndSaveSubscription();
+      final subscriptionModel = await SubscriptionService()
+          .refreshAndSaveSubscription();
 
       if (mounted) {
         setState(() {
           _subscriptionData = subscriptionModel;
-          _subscriptionStatus = subscriptionModel == null ? 'free' : subscriptionModel.tier;
+          _subscriptionStatus = subscriptionModel == null
+              ? 'free'
+              : subscriptionModel.tier;
           _isLoadingSubscription = false;
         });
       }
@@ -843,7 +995,9 @@ if (widget.uid != null) {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('فشل في تحميل بيانات الاشتراك. يرجى التحقق من اتصال الإنترنت.'),
+            content: Text(
+              'فشل في تحميل بيانات الاشتراك. يرجى التحقق من اتصال الإنترنت.',
+            ),
           ),
         );
       }
@@ -863,30 +1017,38 @@ if (widget.uid != null) {
   Widget _tileCampaignSpecial(Map<String, dynamic> e) {
     final theme = FlutterFlowTheme.of(context);
 
-    final labelStyle = theme.bodyMedium.copyWith(color: theme.primaryText, fontWeight: FontWeight.w600);
+    final labelStyle = theme.bodyMedium.copyWith(
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+    );
     final valueStyle = theme.bodyMedium.copyWith(color: theme.secondaryText);
 
     final title = e['title'] as String? ?? '';
     final description = e['description'] as String? ?? '';
-    final platformId = e['platform_id'] as int? ?? 0;
-    final platformName = e['platform_name'] as String? ?? '';
-    final influencerContentTypeName = e['influencer_content_type_name'] as String? ?? '';
+    final influencerContentTypeName =
+        e['influencer_content_type_name'] as String? ?? '';
     final s = _fmtDate(e['start_date']);
     final en = _fmtDate(e['end_date']);
-    final endDate = e['end_date'] is Timestamp
+
+    // ✅ Compute endDate and isExpired locally
+    final DateTime? endDate = e['end_date'] is Timestamp
         ? (e['end_date'] as Timestamp).toDate()
         : e['end_date'] as DateTime?;
-    final isExpiringSoon = e['end_date'] != null
-        ? CampaignExpiryHelper.isExpiringSoon(endDate)
-        : false;
+    final bool isExpired = endDate != null && endDate.isBefore(DateTime.now());
 
-    final socialIcon = _getSocialIconByPlatformId(platformId);
-    final socialColor = _getSocialColorByPlatformId(platformId);
+    final bool isExpiringSoon =
+    endDate != null ? CampaignExpiryHelper.isExpiringSoon(endDate) : false;
 
     return Container(
       decoration: BoxDecoration(
         color: theme.containers,
-        boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 3, offset: Offset(0, 2))],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
+          ),
+        ],
         borderRadius: BorderRadius.circular(16),
       ),
       child: Material(
@@ -903,57 +1065,56 @@ if (widget.uid != null) {
                     if (isExpiringSoon) ...[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: [CampaignExpiryBadge(endDate: endDate, isCompact: true)],
+                        children: [
+                          CampaignExpiryBadge(
+                            endDate: endDate,
+                            isCompact: true,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                     ],
                     Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
-                    Text(
-                      title,
-                      style: valueStyle.copyWith(color: theme.primaryText),
-                      textAlign: TextAlign.end,
-                    ),
+                    Text(title,
+                        style:
+                        valueStyle.copyWith(color: theme.primaryText),
+                        textAlign: TextAlign.end),
                     const SizedBox(height: 8),
                     if (s.isNotEmpty || en.isNotEmpty) ...[
-                      Text('الفترة الزمنية', style: labelStyle, textAlign: TextAlign.end),
-                      Text(
-                        'من $s إلى $en',
-                        style: valueStyle.copyWith(color: theme.secondaryText),
-                        textAlign: TextAlign.end,
-                      ),
+                      Text('الفترة الزمنية',
+                          style: labelStyle, textAlign: TextAlign.end),
+                      Text('من $s إلى $en',
+                          style:
+                          valueStyle.copyWith(color: theme.secondaryText),
+                          textAlign: TextAlign.end),
                       const SizedBox(height: 8),
                     ],
-                    Text('تفاصيل الحملة', style: labelStyle, textAlign: TextAlign.end),
-                    Text(
-                      description,
-                      style: valueStyle.copyWith(color: theme.secondaryText),
-                      textAlign: TextAlign.end,
+                    Text('تفاصيل الحملة',
+                        style: labelStyle, textAlign: TextAlign.end),
+                    Text(description,
+                        style:
+                        valueStyle.copyWith(color: theme.secondaryText),
+                        textAlign: TextAlign.end),
+                    const SizedBox(height: 8),
+                    Text('المنصات',
+                        style: labelStyle, textAlign: TextAlign.end),
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: _buildCampaignPlatforms(e),
                     ),
                     const SizedBox(height: 8),
-                    Text('المنصة', style: labelStyle, textAlign: TextAlign.end),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          platformName,
-                          style: TextStyle(color: theme.primaryText, fontSize: 13, fontFamily: GoogleFonts.inter().fontFamily),
-                        ),
-                        const SizedBox(width: 6),
-                        FaIcon(socialIcon, color: socialColor, size: 18),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text('نوع المحتوى', style: labelStyle, textAlign: TextAlign.end),
-                    Text(
-                      influencerContentTypeName,
-                      style: valueStyle.copyWith(color: theme.secondaryText),
-                      textAlign: TextAlign.end,
-                    ),
+                    Text('نوع المحتوى',
+                        style: labelStyle, textAlign: TextAlign.end),
+                    Text(influencerContentTypeName,
+                        style:
+                        valueStyle.copyWith(color: theme.secondaryText),
+                        textAlign: TextAlign.end),
                     const SizedBox(height: 8),
                     FFButtonWidget(
                       onPressed: () {},
                       text: 'قدّم',
-                      // icon: const Icon(Icons.edit_outlined, size: 20),
                       options: FFButtonOptions(
                         width: double.infinity,
                         height: 44,
@@ -979,32 +1140,33 @@ if (widget.uid != null) {
   Widget _tileCampaign(Map<String, dynamic> e) {
     final t = FlutterFlowTheme.of(context);
 
-    final labelStyle = t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w600);
+    final labelStyle = t.bodyMedium.copyWith(
+      color: t.primaryText,
+      fontWeight: FontWeight.w600,
+    );
     final valueStyle = t.bodyMedium.copyWith(color: t.secondaryText);
 
     final title = e['title'] as String? ?? '';
     final description = e['description'] as String? ?? '';
-    final platformName = e['platform_name'] as String? ?? '';
-    final influencerContentTypeName = e['influencer_content_type_name'] as String? ?? '';
+    final influencerContentTypeName =
+        e['influencer_content_type_name'] as String? ?? '';
     final s = _fmtDate(e['start_date']);
     final en = _fmtDate(e['end_date']);
     final isVisible = e['visible'] as bool? ?? true;
-    final isExpired = e.isExpired; // Using extension
 
-    // Get end date for expiry badge
-    final endDate = e['end_date'] is Timestamp
+    // ✅ Compute endDate and isExpired locally
+    final DateTime? endDate = e['end_date'] is Timestamp
         ? (e['end_date'] as Timestamp).toDate()
         : e['end_date'] as DateTime?;
+    final bool isExpired = endDate != null && endDate.isBefore(DateTime.now());
 
     // Light red background if CAMPAIGN end date is in the past
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isExpired || endDate!.isBefore(DateTime.now())
-            ? Color(0xFFFEE2E2) // Light red for expired campaigns
-            : widget.campaignId == null
-            ? t.tertiary
-            : t.containers,
+        color: isExpired
+            ? const Color(0xFFFEE2E2) // Light red for expired campaigns
+            : (widget.campaignId == null ? t.tertiary : t.containers),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -1013,10 +1175,14 @@ if (widget.uid != null) {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             // Expiry badge at the top if needed
-            if (isExpired || e.isExpiringSoon) ...[
+            if (isExpired ||
+                (endDate != null &&
+                    CampaignExpiryHelper.isExpiringSoon(endDate))) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: [CampaignExpiryBadge(endDate: endDate, isCompact: true)],
+                children: [
+                  CampaignExpiryBadge(endDate: endDate, isCompact: true),
+                ],
               ),
               const SizedBox(height: 8),
             ],
@@ -1026,41 +1192,47 @@ if (widget.uid != null) {
               children: [
                 if (widget.uid == null)
                   SizedBox(
-                    width: 140,
+                    width: 170,
                     child: Align(
                       alignment: Alignment.topLeft,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Edit button disabled if expired
                           FlutterFlowIconButton(
                             borderRadius: 8,
                             buttonSize: 40,
                             icon: Icon(
                               Icons.edit_sharp,
                               color: isExpired
-                                  ? Color(0xFFDC2626).withValues(alpha: 0.5)
-                                  : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                  ? const Color(0xFFDC2626).withValues(alpha: 0.5)
+                                  : t
+                                  .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                               size: 20,
                             ),
                             onPressed: isExpired
                                 ? null
                                 : () async {
-                                    await Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            CampaignScreen(campaignId: e['id'] as String),
-                                      ),
-                                    );
-                                    await loadAll();
-                                  },
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => CampaignScreen(
+                                    campaignId: e['id'] as String,
+                                  ),
+                                ),
+                              );
+                              await loadAll();
+                            },
                           ),
                           const SizedBox(width: 8),
+
+                          // Delete
                           FlutterFlowIconButton(
                             borderRadius: 8,
                             buttonSize: 40,
                             icon: Icon(
-                              Icons.minimize_outlined,
-                              color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                              Icons.delete_outline,
+                              color: t
+                                  .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                               size: 20,
                             ),
                             onPressed: () async {
@@ -1097,84 +1269,158 @@ if (widget.uid != null) {
                                   await loadAll();
                                 } catch (err) {
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(SnackBar(content: Text('تعذّر الحذف: $err')));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('تعذّر الحذف: $err'),
+                                    ),
+                                  );
                                 }
                               }
                             },
                           ),
                           const SizedBox(width: 8),
+
+                          // Visibility indicator
                           Tooltip(
                             message: isVisible ? 'ظاهر' : 'مخفي',
                             child: Icon(
                               isVisible ? Icons.visibility : Icons.visibility_off,
-                              color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                              color: t
+                                  .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                               size: 20,
                             ),
                           ),
+
+                          // ✅ Clone icon shows ONLY when expired
+                          if (isExpired) ...[
+                            const SizedBox(width: 8),
+                            FlutterFlowIconButton(
+                              borderRadius: 8,
+                              buttonSize: 40,
+                              icon: Icon(
+                                Icons.content_copy,
+                                color: t
+                                    .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                size: 20,
+                              ),
+                              onPressed: () async {
+                                // Check subscription
+                                final canCreate =
+                                await _subscriptionService.canCreateCampaign();
+
+                                if (!canCreate) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'لم تعد لديك حملات متاحة، يرجى الترقية للخطة المتميزة',
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                // Clone campaign
+                                final campaignId = e['id'] as String?;
+                                if (campaignId == null || campaignId.isEmpty) {
+                                  return;
+                                }
+
+                                if (!mounted) return;
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => CampaignScreen(
+                                      campaignId: campaignId,
+                                      isClone: true,
+                                    ),
+                                  ),
+                                );
+                                await loadAll();
+                              },
+                            ),
+                          ],
                         ],
                       ),
                     ),
                   ),
                 const SizedBox(width: 16),
+
+                // Right side (details)
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
+                      Text(
+                        'عنوان الحملة',
+                        style: labelStyle,
+                        textAlign: TextAlign.end,
+                      ),
                       Text(
                         title,
                         style: valueStyle.copyWith(
                           color: isExpired
-                              ? Color(0xFFDC2626).withValues(alpha: 0.6)
+                              ? const Color(0xFFDC2626).withValues(alpha: 0.6)
                               : t.primaryText,
-                          decoration: isExpired ? TextDecoration.lineThrough : null,
+                          decoration:
+                          isExpired ? TextDecoration.lineThrough : null,
                         ),
                         textAlign: TextAlign.end,
                       ),
                       const SizedBox(height: 8),
                       if (s.isNotEmpty || en.isNotEmpty) ...[
-                        Text('الفترة الزمنية', style: labelStyle, textAlign: TextAlign.end),
+                        Text(
+                          'الفترة الزمنية',
+                          style: labelStyle,
+                          textAlign: TextAlign.end,
+                        ),
                         Text(
                           'من $s إلى $en',
                           style: valueStyle.copyWith(
                             color: isExpired
-                                ? Color(0xFFDC2626).withValues(alpha: 0.6)
+                                ? const Color(0xFFDC2626).withValues(alpha: 0.6)
                                 : t.secondaryText,
                           ),
                           textAlign: TextAlign.end,
                         ),
                         const SizedBox(height: 8),
                       ],
-                      Text('تفاصيل الحملة', style: labelStyle, textAlign: TextAlign.end),
+                      Text(
+                        'تفاصيل الحملة',
+                        style: labelStyle,
+                        textAlign: TextAlign.end,
+                      ),
                       Text(
                         description,
                         style: valueStyle.copyWith(
                           color: isExpired
-                              ? Color(0xFFDC2626).withValues(alpha: 0.6)
+                              ? const Color(0xFFDC2626).withValues(alpha: 0.6)
                               : t.secondaryText,
                         ),
                         textAlign: TextAlign.end,
                       ),
                       const SizedBox(height: 8),
-                      Text('المنصة', style: labelStyle, textAlign: TextAlign.end),
                       Text(
-                        platformName,
-                        style: valueStyle.copyWith(
-                          color: isExpired
-                              ? Color(0xFFDC2626).withValues(alpha: 0.6)
-                              : t.secondaryText,
-                        ),
+                        'المنصات',
+                        style: labelStyle,
                         textAlign: TextAlign.end,
                       ),
+                      Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 12,
+                        runSpacing: 4,
+                        children: _buildCampaignPlatforms(e),
+                      ),
                       const SizedBox(height: 8),
-                      Text('نوع المحتوى', style: labelStyle, textAlign: TextAlign.end),
+                      Text(
+                        'نوع المحتوى',
+                        style: labelStyle,
+                        textAlign: TextAlign.end,
+                      ),
                       Text(
                         influencerContentTypeName,
                         style: valueStyle.copyWith(
                           color: isExpired
-                              ? Color(0xFFDC2626).withValues(alpha: 0.6)
+                              ? const Color(0xFFDC2626).withValues(alpha: 0.6)
                               : t.secondaryText,
                         ),
                         textAlign: TextAlign.end,
