@@ -31,7 +31,7 @@ class FeqProfileListItem {
 
 class FeqProfilesListWidget extends StatefulWidget {
   final String targetUserType; // "influencer" or "business"
-  final String titleSortField; // "name" 
+  final String titleSortField; // "name"
   final Widget Function(BuildContext context, String uid) detailPageBuilder;
   final bool showSearch;
   final bool showSorting;
@@ -67,6 +67,11 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
 
   final List<FeqDropDownList> _platforms = FeqDropDownListLoader.instance.socialPlatforms;
 
+  // Filter states
+  List<int> _selectedContentTypes = [];
+  List<int> _selectedPlatforms = [];
+  List<int> _selectedIndustries = [];
+
   @override
   void initState() {
     super.initState();
@@ -98,7 +103,9 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
       _isLoading = true;
       _initialLoadComplete = false;
     });
+
     await _loadBatch();
+
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -119,7 +126,7 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
     try {
       Query query = FirebaseFirestore.instance.collection('profiles');
 
-      // Apply sorting
+      // 1. Basic sorting by Title/Name
       if (_sortType == FeqSortType.titleAsc) {
         query = query.orderBy(widget.titleSortField);
       } else {
@@ -131,6 +138,9 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
         //   query = query.orderBy('updated_at', descending: descending);
         // }
         // For influencers, we'll sort in memory after fetching
+
+        // Default order
+        // query = query.orderBy('profile_id');
       }
 
       if (_lastDocument != null) {
@@ -203,8 +213,17 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
 
           // Fetch content type from influencer_profile subcollection
           final influencerSnap = await doc.reference.collection('influencer_profile').limit(1).get();
+
+          int? contentTypeId;
           if (influencerSnap.docs.isNotEmpty) {
             content2 = influencerSnap.docs.first.get('content_type')?.toString();
+            contentTypeId = influencerSnap.docs.first.get('content_type_id') as int?;
+          }
+
+          if (_selectedContentTypes.isNotEmpty) {
+            if (contentTypeId == null || !_selectedContentTypes.contains(contentTypeId)) {
+              continue;
+            }
           }
 
           // Fetch social accounts
@@ -220,11 +239,26 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
               })
               .where((e) => e['username']!.isNotEmpty)
               .toList();
+
+          if (_selectedPlatforms.isNotEmpty) {
+            final hasPlatform = socials.any((s) {
+              final platformId = int.tryParse(s['platform'] ?? '');
+              return platformId != null && _selectedPlatforms.contains(platformId);
+            });
+            if (!hasPlatform) continue;
+          }
         } else {
           // Handle business data
           title = (data['name'] ?? '').toString().trim();
           if (title.isEmpty) continue;
           content2 = (data['business_industry_name'] ?? '').toString();
+
+          if (_selectedIndustries.isNotEmpty) {
+            final industryId = data['business_industry_id'] as int?;
+            if (industryId == null || !_selectedIndustries.contains(industryId)) {
+              continue;
+            }
+          }
         }
 
         _allItems.add(
@@ -412,24 +446,34 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
             padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 8),
             child: Directionality(
               textDirection: TextDirection.rtl,
-              child: TextField(
-                onChanged: (v) {
-                  _debounceTimer?.cancel();
-                  _debounceTimer = Timer(const Duration(milliseconds: 600), () {
-                    setState(() => _searchText = v.trim());
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'بحث...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: theme.containers,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.filter_list, color: theme.primaryText),
+                    onPressed: _showFilterSheet,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (v) {
+                        _debounceTimer?.cancel();
+                        _debounceTimer = Timer(const Duration(milliseconds: 600), () {
+                          setState(() => _searchText = v.trim());
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'بحث...',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: theme.containers,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -539,8 +583,7 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
                                       crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         const SizedBox(height: 4),
-                                        if (item.content1 == null || item.content1!.isEmpty)
-                                          const SizedBox(height: 16),
+                                        if (item.content1 == null || item.content1!.isEmpty) const SizedBox(height: 16),
                                         // Title line with verification icon
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
@@ -559,8 +602,7 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
                                             ),
                                           ],
                                         ),
-                                        if (item.content1 == null || item.content1!.isEmpty)
-                                          const SizedBox(height: 4),
+                                        if (item.content1 == null || item.content1!.isEmpty) const SizedBox(height: 4),
                                         // Content line 1
                                         if (item.content1 != null && item.content1!.isNotEmpty)
                                           Padding(
@@ -626,6 +668,204 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
                 ),
         ),
       ],
+    );
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        if (widget.targetUserType == 'influencer') {
+          return _buildInfluencerFilter();
+        } else {
+          return _buildBusinessFilter();
+        }
+      },
+    );
+  }
+
+  Widget _buildInfluencerFilter() {
+    final t = FlutterFlowTheme.of(context);
+    final contentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
+    final platforms = FeqDropDownListLoader.instance.socialPlatforms;
+    final tempContentTypes = List<int>.from(_selectedContentTypes);
+    final tempPlatforms = List<int>.from(_selectedPlatforms);
+
+    return StatefulBuilder(
+      builder: (context, setModalState) {
+        return Container(
+          decoration: BoxDecoration(
+            color: t.secondaryBackground,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        tempContentTypes.clear();
+                        tempPlatforms.clear();
+                        setModalState(() {});
+                      },
+                      child: Text('مسح الكل', style: TextStyle(color: t.error)),
+                    ),
+                    Text('تصفية المؤثرين', style: t.headlineSmall),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text('حسب نوع المحتوى', style: t.bodyLarge),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: contentTypes.map((ct) {
+                    final isSelected = tempContentTypes.contains(ct.id);
+                    return FilterChip(
+                      label: Text(ct.nameAr),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setModalState(() {
+                          if (selected) {
+                            tempContentTypes.add(ct.id);
+                          } else {
+                            tempContentTypes.remove(ct.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const Divider(height: 30),
+                Text('حسب منصات التواصل', style: t.bodyLarge),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: platforms.map((p) {
+                    final isSelected = tempPlatforms.contains(p.id);
+                    return FilterChip(
+                      label: Text(p.nameAr),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setModalState(() {
+                          if (selected) {
+                            tempPlatforms.add(p.id);
+                          } else {
+                            tempPlatforms.remove(p.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedContentTypes = tempContentTypes;
+                      _selectedPlatforms = tempPlatforms;
+                    });
+                    Navigator.pop(context);
+                    _loadInitial();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: t.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text('تطبيق التصفية', style: TextStyle(color: t.containers)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBusinessFilter() {
+    final t = FlutterFlowTheme.of(context);
+    final industries = FeqDropDownListLoader.instance.businessIndustries;
+    final tempIndustries = List<int>.from(_selectedIndustries);
+
+    return StatefulBuilder(
+      builder: (context, setModalState) {
+        return Container(
+          decoration: BoxDecoration(
+            color: t.secondaryBackground,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        tempIndustries.clear();
+                        setModalState(() {});
+                      },
+                      child: Text('مسح الكل', style: TextStyle(color: t.error)),
+                    ),
+                    Text('تصفية جهات الأعمال', style: t.headlineSmall),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text('حسب مجال العمل', style: t.bodyLarge),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: industries.map((ind) {
+                    final isSelected = tempIndustries.contains(ind.id);
+                    return FilterChip(
+                      label: Text(ind.nameAr),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setModalState(() {
+                          if (selected) {
+                            tempIndustries.add(ind.id);
+                          } else {
+                            tempIndustries.remove(ind.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedIndustries = tempIndustries;
+                    });
+                    Navigator.pop(context);
+                    _loadInitial();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: t.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text('تطبيق التصفية', style: TextStyle(color: t.containers)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
