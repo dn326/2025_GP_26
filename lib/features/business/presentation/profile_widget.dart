@@ -228,19 +228,20 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       builder: (context) => _buildCampaignFilterSheet(),
     );
   }
+Widget _buildCampaignFilterSheet() {
+  final t = FlutterFlowTheme.of(context);
+  final contentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
+  final platforms = FeqDropDownListLoader.instance.socialPlatforms;
 
-  Widget _buildCampaignFilterSheet() {
-    final t = FlutterFlowTheme.of(context);
-    final contentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
-    final platforms = FeqDropDownListLoader.instance.socialPlatforms;
+  String tempCampaignStatus = _selectedCampaignStatus;
+  final tempContentTypes = List<int>.from(_selectedCampaignContentTypes);
+  final tempPlatforms = List<int>.from(_selectedCampaignPlatforms);
 
-    String tempCampaignStatus = _selectedCampaignStatus;
-    final tempContentTypes = List<int>.from(_selectedCampaignContentTypes);
-    final tempPlatforms = List<int>.from(_selectedCampaignPlatforms);
-
-    return StatefulBuilder(
-      builder: (context, setModalState) {
-        return Container(
+  return StatefulBuilder(
+    builder: (context, setModalState) {
+      return Directionality(
+        textDirection: TextDirection.rtl,
+        child: Container(
           decoration: BoxDecoration(
             color: t.secondaryBackground,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -254,6 +255,8 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                    Text('تصفية الحملات', style: t.headlineSmall),
                     TextButton(
                       onPressed: () {
                         tempCampaignStatus = 'all';
@@ -263,12 +266,13 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                       },
                       child: Text('مسح الكل', style: TextStyle(color: t.error)),
                     ),
-                    Text('تصفية الحملات', style: t.headlineSmall),
-                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                   ],
                 ),
                 const SizedBox(height: 20),
-                Text('حسب حالة الحملة', style: t.bodyLarge),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text('حسب حالة الحملة', style: t.bodyLarge),
+                ),
                 const SizedBox(height: 10),
                 RadioListTile<String>(
                   title: const Text('عرض جميع الحملات'),
@@ -307,10 +311,11 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
               ],
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   List<Map<String, dynamic>> get _filteredCampaignList {
     var filtered = _campaignList.toList();
