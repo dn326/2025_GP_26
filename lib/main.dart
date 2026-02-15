@@ -157,47 +157,45 @@ class AuthWrapper extends StatelessWidget {
 
   /// تحقق من حالة الجلسة: Firebase + SharedPreferences
   Future<Map<String, dynamic>> _checkUserSession() async {
+    final prefs = await SharedPreferences.getInstance();
     final user = firebaseAuth.currentUser;
     if (user == null) {
       return {'isLoggedIn': false};
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    final userType = prefs.getString('user_type');
-
-    // تأكد من أن البيانات محفوظة (اختياري: إعادة جلب من Firestore إذا فشل)
-    if (userType == null || userType.isEmpty) {
-      // اختياري: جلب من Firestore كـ fallback
-      try {
-        final doc = await firebaseFirestore
-            .collection('users')
-            .doc(user.uid)
-            .get();
-        if (doc.exists) {
-          final data = doc.data()!;
-          await prefs.setString('user_type', data['user_type'] ?? 'business');
-          await prefs.setString('email', data['email'] ?? '');
-          await prefs.setString('account_status', data['account_status'] ?? '');
+    } else {
+      // Update the UserType if the user is already logged in
+      final uid = firebaseAuth.currentUser?.uid;
+      if (uid != null) {
+        try {
+          final usersSnap = await firebaseFirestore.collection('users').where('user_id', isEqualTo: uid).limit(1).get();
+          if (usersSnap.docs.isNotEmpty) {
+            final userDoc = usersSnap.docs.first;
+            await prefs.setString('user_type', userDoc['user_type'] ?? 'business');
+            await prefs.setString('email', userDoc['email'] ?? '');
+            await prefs.setString('account_status', userDoc['account_status'] ?? '');
+            return {
+              'isLoggedIn': true,
+              'user_id': user.uid,
+              'user_type': prefs.getString('user_type') ?? 'business',
+            };
+          } else {
+            return {'isLoggedIn': false};
+          }
+        } on FirebaseException catch (e) {
+          return {
+            'isLoggedIn': false,
+            'error': e.code, // e.g., "unavailable"
+            'message': e.message, // Firebase message
+          };
+        } catch (e) {
+          return {
+            'isLoggedIn': false,
+            'error': 'unknown',
+            'message': e.toString(),
+          };
         }
-      } on FirebaseException catch (e) {
-        return {
-          'isLoggedIn': false,
-          'error': e.code, // e.g., "unavailable"
-          'message': e.message, // Firebase message
-        };
-      } catch (e) {
-        return {
-          'isLoggedIn': false,
-          'error': 'unknown',
-          'message': e.toString(),
-        };
+      } else {
+        return {'isLoggedIn': false};
       }
     }
-
-    return {
-      'isLoggedIn': true,
-      'user_id': user.uid,
-      'user_type': prefs.getString('user_type') ?? 'business',
-    };
   }
 }

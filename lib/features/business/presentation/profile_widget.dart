@@ -45,6 +45,11 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   final SubscriptionService _subscriptionService = SubscriptionService();
   BusinessProfileDataModel? _profileData;
   List<Map<String, dynamic>> _campaignList = [];
+  final bool filterShowAdvanced = false;
+  String _selectedCampaignStatus = 'all';
+  List<int> _selectedCampaignContentTypes = [];
+  List<int> _selectedCampaignPlatforms = [];
+  String _campaignSearchText = '';
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   late String userType = "influencer";
@@ -59,6 +64,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   SubscriptionModel? _subscriptionData;
   bool _isLoadingSubscription = false;
   String _subscriptionStatus = 'free';
+
 
   @override
   void initState() {
@@ -84,11 +90,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       if (uid == null) throw Exception('No logged-in user');
 
       // --- Get user record ---
-      final usersSnap = await firebaseFirestore
-          .collection('users')
-          .where('user_id', isEqualTo: uid)
-          .limit(1)
-          .get();
+      final usersSnap = await firebaseFirestore.collection('users').where('user_id', isEqualTo: uid).limit(1).get();
 
       if (usersSnap.docs.isEmpty) throw Exception('User not found');
 
@@ -140,23 +142,14 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
       final socials = (prof['social_media'] as List?) ?? [];
       final List<Map<String, String>> socialList = socials.map((e) {
-        return {
-          'platform': e['platform']?.toString() ?? '',
-          'username': e['username']?.toString() ?? '',
-        };
+        return {'platform': e['platform']?.toString() ?? '', 'username': e['username']?.toString() ?? ''};
       }).toList();
 
       List<Map<String, dynamic>> campaignList = [];
       if (widget.campaignId != null) {
-        campaignList = await _firebaseService.fetchBusinessCampaignList(
-          widget.uid,
-          widget.campaignId,
-        );
+        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, widget.campaignId);
       } else {
-        campaignList = await _firebaseService.fetchBusinessCampaignList(
-          widget.uid,
-          null,
-        );
+        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, null);
       }
 
       if (!mounted) return;
@@ -188,8 +181,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                 ? (c['end_date'] as Timestamp).toDate()
                 : c['end_date'] as DateTime?;
 
-            final isExpired =
-                endDate != null && endDate.isBefore(DateTime.now());
+            final isExpired = endDate != null && endDate.isBefore(DateTime.now());
 
             // Show only campaigns that are visible AND not expired
             return isVisible && !isExpired;
@@ -228,6 +220,125 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
   }
 
+  void _showCampaignFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildCampaignFilterSheet(),
+    );
+  }
+
+  Widget _buildCampaignFilterSheet() {
+    final t = FlutterFlowTheme.of(context);
+    final contentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
+    final platforms = FeqDropDownListLoader.instance.socialPlatforms;
+
+    String tempCampaignStatus = _selectedCampaignStatus;
+    final tempContentTypes = List<int>.from(_selectedCampaignContentTypes);
+    final tempPlatforms = List<int>.from(_selectedCampaignPlatforms);
+
+    return StatefulBuilder(
+      builder: (context, setModalState) {
+        return Container(
+          decoration: BoxDecoration(
+            color: t.secondaryBackground,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        tempCampaignStatus = 'all';
+                        tempContentTypes.clear();
+                        tempPlatforms.clear();
+                        setModalState(() {});
+                      },
+                      child: Text('مسح الكل', style: TextStyle(color: t.error)),
+                    ),
+                    Text('تصفية الحملات', style: t.headlineSmall),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text('حسب حالة الحملة', style: t.bodyLarge),
+                const SizedBox(height: 10),
+                RadioListTile<String>(
+                  title: const Text('عرض جميع الحملات'),
+                  value: 'all',
+                  groupValue: tempCampaignStatus,
+                  onChanged: (value) => setModalState(() => tempCampaignStatus = value!),
+                ),
+                RadioListTile<String>(
+                  title: const Text('عرض الحملات النشطة فقط'),
+                  value: 'active',
+                  groupValue: tempCampaignStatus,
+                  onChanged: (value) => setModalState(() => tempCampaignStatus = value!),
+                ),
+                RadioListTile<String>(
+                  title: const Text('عرض الحملات المنتهية'),
+                  value: 'inactive',
+                  groupValue: tempCampaignStatus,
+                  onChanged: (value) => setModalState(() => tempCampaignStatus = value!),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedCampaignStatus = tempCampaignStatus;
+                      _selectedCampaignContentTypes = tempContentTypes;
+                      _selectedCampaignPlatforms = tempPlatforms;
+                    });
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: t.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text('تطبيق التصفية', style: TextStyle(color: t.containers)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<Map<String, dynamic>> get _filteredCampaignList {
+    var filtered = _campaignList.toList();
+
+    if (_campaignSearchText.isNotEmpty) {
+      final lower = _campaignSearchText.toLowerCase();
+      filtered = filtered.where((c) {
+        final title = (c['title'] as String? ?? '').toLowerCase();
+        return title.contains(lower);
+      }).toList();
+    }
+
+    if (_selectedCampaignStatus != 'all') {
+      filtered = filtered.where((c) {
+        final endDate = c['end_date'];
+        if (endDate == null) return true;
+        final DateTime dateEnd = endDate is Timestamp ? endDate.toDate() : endDate as DateTime;
+        if (_selectedCampaignStatus == 'active') {
+          return !dateEnd.isBefore(DateTime.now());
+        } else {
+          return dateEnd.isBefore(DateTime.now());
+        }
+      }).toList();
+    }
+
+    return filtered;
+  }
+
   List<Widget> _buildCampaignPlatforms(Map<String, dynamic> e) {
     final platformNames = (e['platform_names'] as List?) ?? [];
 
@@ -235,10 +346,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       return [
         Text(
           'لم يتم تحديد منصات',
-          style: TextStyle(
-            color: Colors.grey,
-            fontStyle: FontStyle.italic,
-          ),
+          style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
           textAlign: TextAlign.end,
         ),
       ];
@@ -246,13 +354,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
     return platformNames.map((platformNameStr) {
       final platformObj = _socialPlatforms.firstWhere(
-            (p) => p.nameAr == platformNameStr.toString(),
-        orElse: () => FeqDropDownList(
-          id: 0,
-          nameEn: platformNameStr.toString(),
-          nameAr: platformNameStr.toString(),
-          domain: '',
-        ),
+        (p) => p.nameAr == platformNameStr.toString(),
+        orElse: () =>
+            FeqDropDownList(id: 0, nameEn: platformNameStr.toString(), nameAr: platformNameStr.toString(), domain: ''),
       );
 
       final socialIcon = _getSocialIconByPlatformId(platformObj.id);
@@ -261,19 +365,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            platformObj.nameAr,
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 13,
-            ),
-          ),
+          Text(platformObj.nameAr, style: TextStyle(color: Colors.black87, fontSize: 13)),
           const SizedBox(width: 6),
-          Icon(
-            socialIcon,
-            color: socialColor,
-            size: 18,
-          ),
+          Icon(socialIcon, color: socialColor, size: 18),
         ],
       );
     }).toList();
@@ -298,7 +392,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     return FontAwesomeIcons.link;
   }
 
-  Color _getSocialColor(String platformNameEn) {
+  /*Color _getSocialColor(String platformNameEn) {
     final name = platformNameEn.toLowerCase();
     if (name == 'instagram') return const Color(0xFFE4405F);
     if (name == 'youtube') return const Color(0xFFFF0000);
@@ -315,7 +409,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     if (name == 'threads') return const Color(0xFF000000);
     if (name == 'bluesky') return const Color(0xFF1185FE);
     return Colors.grey;
-  }
+  }*/
 
   IconData _getSocialIconByPlatformId(int platformId) {
     if (platformId == 1) return FontAwesomeIcons.instagram;
@@ -350,8 +444,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   }
 
   Widget _buildSocialLinks() {
-    if (_profileData?.socialMedia == null ||
-        _profileData!.socialMedia!.isEmpty) {
+    if (_profileData?.socialMedia == null || _profileData!.socialMedia!.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -375,12 +468,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
               (p) =>
                   p.nameEn.toLowerCase() == platformId.toLowerCase() ||
                   p.nameAr.toLowerCase() == platformId.toLowerCase(),
-              orElse: () => FeqDropDownList(
-                id: 0,
-                nameEn: platformId,
-                nameAr: platformId,
-                domain: '',
-              ),
+              orElse: () => FeqDropDownList(id: 0, nameEn: platformId, nameAr: platformId, domain: ''),
             );
 
             final domain = platform.domain ?? '';
@@ -390,16 +478,13 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
             final socialUrl = 'https://$domain/$username';
             final socialIcon = _getSocialIcon(nameEn);
-            final socialColor = _getSocialColor(nameEn);
+            // final socialColor = _getSocialColor(nameEn);
 
             return Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () async {
-                  await launchUrl(
-                    Uri.parse(socialUrl),
-                    mode: LaunchMode.externalApplication,
-                  );
+                  await launchUrl(Uri.parse(socialUrl), mode: LaunchMode.externalApplication);
                 },
                 borderRadius: BorderRadius.circular(8),
                 child: Row(
@@ -414,18 +499,12 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                           Text(
                             platform.nameAr,
                             textAlign: TextAlign.right,
-                            style: t.labelSmall.copyWith(
-                              color: t.secondaryText,
-                              fontSize: 10,
-                            ),
+                            style: t.labelSmall.copyWith(color: t.secondaryText, fontSize: 10),
                           ),
                           Text(
                             '@$username',
                             textAlign: TextAlign.right,
-                            style: t.bodyMedium.copyWith(
-                              color: t.primaryText,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w500),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -434,10 +513,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                     SizedBox(width: 16),
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: t.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: BoxDecoration(color: t.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
                       child: Icon(socialIcon, size: 20, color: t.primary),
                     ),
                   ],
@@ -449,10 +525,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           .divide(
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Divider(
-                height: 1,
-                color: t.alternate.withValues(alpha: 0.5),
-              ),
+              child: Divider(height: 1, color: t.alternate.withValues(alpha: 0.5)),
             ),
           ),
     );
@@ -475,10 +548,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
             Align(alignment: Alignment.topRight, child: _buildSocialLinks()),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Divider(
-                height: 1,
-                color: theme.alternate.withValues(alpha: 0.5),
-              ),
+              child: Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
             ),
           ],
 
@@ -488,9 +558,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
               theme,
               Icons.phone_rounded,
               _profileData!.phoneNumber!,
-              label: _profileData!.phoneOwner == 'assistant'
-                  ? 'منسق أعمالي'
-                  : 'رقم الجوال',
+              label: _profileData!.phoneOwner == 'assistant' ? 'منسق أعمالي' : 'رقم الجوال',
             ),
 
           // Email
@@ -498,18 +566,13 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
             if ((_profileData?.phoneNumber ?? '').isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Divider(
-                  height: 1,
-                  color: theme.alternate.withValues(alpha: 0.5),
-                ),
+                child: Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
               ),
             _buildInfoRow(
               theme,
               Icons.email_rounded,
               _profileData!.contactEmail!,
-              label:
-                  _profileData!.useCustomEmail &&
-                      _profileData!.emailOwner == 'assistant'
+              label: _profileData!.useCustomEmail && _profileData!.emailOwner == 'assistant'
                   ? 'منسق أعمالي'
                   : 'البريد الإلكتروني',
             ),
@@ -519,30 +582,16 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           if ((_profileData?.website ?? '').isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Divider(
-                height: 1,
-                color: theme.alternate.withValues(alpha: 0.5),
-              ),
+              child: Divider(height: 1, color: theme.alternate.withValues(alpha: 0.5)),
             ),
-            _buildInfoRow(
-              theme,
-              Icons.language_rounded,
-              _profileData!.website!,
-              isLink: true,
-            ),
+            _buildInfoRow(theme, Icons.language_rounded, _profileData!.website!, isLink: true),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(
-    FlutterFlowTheme theme,
-    IconData icon,
-    String text, {
-    String? label,
-    bool isLink = false,
-  }) {
+  Widget _buildInfoRow(FlutterFlowTheme theme, IconData icon, String text, {String? label, bool isLink = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -551,20 +600,11 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (label != null)
-                Text(
-                  label,
-                  style: theme.labelSmall.copyWith(
-                    color: theme.secondaryText,
-                    fontSize: 10,
-                  ),
-                ),
+                Text(label, style: theme.labelSmall.copyWith(color: theme.secondaryText, fontSize: 10)),
               InkWell(
                 onTap: isLink
                     ? () async {
-                        await launchUrl(
-                          Uri.parse(text),
-                          mode: LaunchMode.externalApplication,
-                        );
+                        await launchUrl(Uri.parse(text), mode: LaunchMode.externalApplication);
                       }
                     : null,
                 child: Text(
@@ -583,10 +623,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
         const SizedBox(width: 16),
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: theme.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: theme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
           child: Icon(icon, size: 20, color: theme.primary),
         ),
       ],
@@ -654,10 +691,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                         topRight: Radius.circular(24),
                                       ),
                                       gradient: LinearGradient(
-                                        colors: [
-                                          theme.primary,
-                                          theme.primary.withValues(alpha: 0.7),
-                                        ],
+                                        colors: [theme.primary, theme.primary.withValues(alpha: 0.7)],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                       ),
@@ -672,9 +706,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                             height: 100,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.white.withValues(
-                                                alpha: 0.1,
-                                              ),
+                                              color: Colors.white.withValues(alpha: 0.1),
                                             ),
                                           ),
                                         ),
@@ -686,9 +718,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                             height: 80,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.white.withValues(
-                                                alpha: 0.1,
-                                              ),
+                                              color: Colors.white.withValues(alpha: 0.1),
                                             ),
                                           ),
                                         ),
@@ -705,17 +735,14 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.1,
-                                            ),
+                                            color: Colors.black.withValues(alpha: 0.1),
                                             blurRadius: 8,
                                             offset: const Offset(0, 4),
                                           ),
                                         ],
                                       ),
                                       child: FeqImagePickerWidget(
-                                        initialImageUrl:
-                                            _profileData?.profileImageUrl,
+                                        initialImageUrl: _profileData?.profileImageUrl,
                                         isUploading: false,
                                         onTap: () {},
                                         size: 100,
@@ -729,27 +756,17 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
                               // Content
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24.0,
-                                  vertical: 8.0,
-                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                                 child: Column(
                                   children: [
                                     // Name
-                                    FeqVerifiedNameWidget(
-                                      name: _profileData!.name,
-                                      isVerified: _isVerified,
-                                    ),
+                                    FeqVerifiedNameWidget(name: _profileData!.name, isVerified: _isVerified),
                                     const SizedBox(height: 8),
 
                                     // Industry Tag
-                                    if (_profileData?.businessIndustryName !=
-                                        null)
+                                    if (_profileData?.businessIndustryName != null)
                                       Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 6,
-                                        ),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
 
                                         child: Text(
                                           _profileData!.businessIndustryName,
@@ -768,10 +785,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                       GestureDetector(
                                         onTap: () {
                                           if (_subscriptionStatus == 'free') {
-                                            Navigator.pushNamed(
-                                              context,
-                                              PaymentPage.routeName,
-                                            );
+                                            Navigator.pushNamed(context, PaymentPage.routeName);
                                           } else {
                                             Navigator.pushNamed(
                                               context,
@@ -787,18 +801,14 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
                                     if (widget.campaignId == null) ...[
                                       // Description
-                                      if ((_profileData?.description ?? '')
-                                          .isNotEmpty) ...[
+                                      if ((_profileData?.description ?? '').isNotEmpty) ...[
                                         const SizedBox(height: 8),
                                         Align(
                                           alignment: Alignment.bottomRight,
                                           child: Text(
                                             _profileData!.description!,
                                             textAlign: TextAlign.right,
-                                            style: theme.bodyMedium.copyWith(
-                                              height: 1.6,
-                                              color: theme.secondaryText,
-                                            ),
+                                            style: theme.bodyMedium.copyWith(height: 1.6, color: theme.secondaryText),
                                           ),
                                         ),
                                         const SizedBox(height: 24),
@@ -811,30 +821,19 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
                                       if (widget.uid == null)
                                         FFButtonWidget(
-                                          onPressed: () => context.pushNamed(
-                                            BusinessProfileFormWidget
-                                                .routeNameEdit,
-                                          ),
+                                          onPressed: () => context.pushNamed(BusinessProfileFormWidget.routeNameEdit),
                                           text: 'تعديل الملف التعريفي',
-                                          icon: const Icon(
-                                            Icons.edit_outlined,
-                                            size: 20,
-                                          ),
+                                          icon: const Icon(Icons.edit_outlined, size: 20),
                                           options: FFButtonOptions(
                                             width: double.infinity,
                                             height: 44,
                                             color: theme.primary,
-                                            textStyle: theme.titleSmall
-                                                .copyWith(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontFamily:
-                                                      GoogleFonts.interTight()
-                                                          .fontFamily,
-                                                ),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
+                                            textStyle: theme.titleSmall.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: GoogleFonts.interTight().fontFamily,
                                             ),
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
                                         ),
                                     ],
@@ -849,48 +848,63 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
                         Container(
                           width: double.infinity,
-                          padding: (widget.campaignId == null)
-                              ? EdgeInsets.all(16)
-                              : EdgeInsets.all(0),
+                          padding: (widget.campaignId == null) ? EdgeInsets.all(16) : EdgeInsets.all(0),
                           decoration: BoxDecoration(
                             color: theme.containers,
                             boxShadow: const [
-                              BoxShadow(
-                                blurRadius: 3,
-                                color: Color(0x33000000),
-                                offset: Offset(0, -1),
-                              ),
+                              BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, -1)),
                             ],
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              if (widget.campaignId == null)
+                              if (widget.campaignId == null) ...[
                                 Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Container(),
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.filter_list, color: theme.primaryText),
+                                          onPressed: _showCampaignFilterSheet,
+                                        ),
+                                      ],
+                                    ),
                                     Text(
                                       'الحملات',
                                       textAlign: TextAlign.end,
                                       style: theme.headlineLarge.copyWith(
-                                        fontFamily:
-                                            GoogleFonts.interTight().fontFamily,
+                                        fontFamily: GoogleFonts.interTight().fontFamily,
                                         fontSize: 22,
                                       ),
                                     ),
                                   ],
                                 ),
-                              if (_campaignList.isEmpty)
                                 Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(
-                                    16,
-                                    0,
-                                    16,
-                                    16,
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: Directionality(
+                                    textDirection: TextDirection.rtl,
+                                    child: TextField(
+                                      onChanged: (v) => setState(() => _campaignSearchText = v.trim()),
+                                      decoration: InputDecoration(
+                                        hintText: 'بحث في الحملات...',
+                                        prefixIcon: const Icon(Icons.search),
+                                        filled: true,
+                                        fillColor: theme.tertiary,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      ),
+                                    ),
                                   ),
+                                ),
+                              ],
+                              if (_filteredCampaignList.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
                                   child: Container(
                                     width: double.infinity,
                                     height: 50,
@@ -902,8 +916,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                       child: Text(
                                         'لا توجد أي حملات حاليا',
                                         style: theme.labelSmall.override(
-                                          fontFamily:
-                                              GoogleFonts.inter().fontFamily,
+                                          fontFamily: GoogleFonts.inter().fontFamily,
                                           color: theme.subtextHints,
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
@@ -915,40 +928,20 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                               else
                                 Padding(
                                   padding: (widget.campaignId == null)
-                                      ? EdgeInsetsDirectional.fromSTEB(
-                                          16,
-                                          0,
-                                          0,
-                                          16,
-                                        )
-                                      : EdgeInsetsDirectional.fromSTEB(
-                                          0,
-                                          0,
-                                          0,
-                                          0,
-                                        ),
+                                      ? EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16)
+                                      : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
                                   child: Column(
-                                    children: _campaignList
+                                    children: _filteredCampaignList
                                         .map(
                                           (e) => Padding(
-                                            padding: (widget.campaignId == null)
-                                                ? EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    12,
-                                                  )
-                                                : EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                  ),
-                                            child: (widget.campaignId != null)
-                                                ? _tileCampaignSpecial(e)
-                                                : _tileCampaign(e),
-                                          ),
-                                        )
+                                        padding: (widget.campaignId == null)
+                                            ? EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12)
+                                            : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                                        child: (widget.campaignId != null)
+                                            ? _tileCampaignSpecial(e)
+                                            : _tileCampaign(e),
+                                      ),
+                                    )
                                         .toList(),
                                   ),
                                 ),
@@ -973,15 +966,12 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
     try {
       // Fetch subscription data from Firebase and save to local storage
-      final subscriptionModel = await SubscriptionService()
-          .refreshAndSaveSubscription();
+      final subscriptionModel = await SubscriptionService().refreshAndSaveSubscription();
 
       if (mounted) {
         setState(() {
           _subscriptionData = subscriptionModel;
-          _subscriptionStatus = subscriptionModel == null
-              ? 'free'
-              : subscriptionModel.tier;
+          _subscriptionStatus = subscriptionModel == null ? 'free' : subscriptionModel.tier;
           _isLoadingSubscription = false;
         });
       }
@@ -993,13 +983,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           _subscriptionStatus = 'free';
           _isLoadingSubscription = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'فشل في تحميل بيانات الاشتراك. يرجى التحقق من اتصال الإنترنت.',
-            ),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('فشل في تحميل بيانات الاشتراك. يرجى التحقق من اتصال الإنترنت.')));
       }
     }
   }
@@ -1017,16 +1003,12 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   Widget _tileCampaignSpecial(Map<String, dynamic> e) {
     final theme = FlutterFlowTheme.of(context);
 
-    final labelStyle = theme.bodyMedium.copyWith(
-      color: theme.primaryText,
-      fontWeight: FontWeight.w600,
-    );
+    final labelStyle = theme.bodyMedium.copyWith(color: theme.primaryText, fontWeight: FontWeight.w600);
     final valueStyle = theme.bodyMedium.copyWith(color: theme.secondaryText);
 
     final title = e['title'] as String? ?? '';
     final description = e['description'] as String? ?? '';
-    final influencerContentTypeName =
-        e['influencer_content_type_name'] as String? ?? '';
+    final influencerContentTypeName = e['influencer_content_type_name'] as String? ?? '';
     final s = _fmtDate(e['start_date']);
     final en = _fmtDate(e['end_date']);
 
@@ -1034,21 +1016,14 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     final DateTime? endDate = e['end_date'] is Timestamp
         ? (e['end_date'] as Timestamp).toDate()
         : e['end_date'] as DateTime?;
-    final bool isExpired = endDate != null && endDate.isBefore(DateTime.now());
+    // final bool isExpired = endDate != null && endDate.isBefore(DateTime.now());
 
-    final bool isExpiringSoon =
-    endDate != null ? CampaignExpiryHelper.isExpiringSoon(endDate) : false;
+    final bool isExpiringSoon = endDate != null ? CampaignExpiryHelper.isExpiringSoon(endDate) : false;
 
     return Container(
       decoration: BoxDecoration(
         color: theme.containers,
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 3, offset: Offset(0, 2))],
         borderRadius: BorderRadius.circular(16),
       ),
       child: Material(
@@ -1065,39 +1040,34 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                     if (isExpiringSoon) ...[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          CampaignExpiryBadge(
-                            endDate: endDate,
-                            isCompact: true,
-                          ),
-                        ],
+                        children: [CampaignExpiryBadge(endDate: endDate, isCompact: true)],
                       ),
                       const SizedBox(height: 8),
                     ],
                     Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
-                    Text(title,
-                        style:
-                        valueStyle.copyWith(color: theme.primaryText),
-                        textAlign: TextAlign.end),
+                    Text(
+                      title,
+                      style: valueStyle.copyWith(color: theme.primaryText),
+                      textAlign: TextAlign.end,
+                    ),
                     const SizedBox(height: 8),
                     if (s.isNotEmpty || en.isNotEmpty) ...[
-                      Text('الفترة الزمنية',
-                          style: labelStyle, textAlign: TextAlign.end),
-                      Text('من $s إلى $en',
-                          style:
-                          valueStyle.copyWith(color: theme.secondaryText),
-                          textAlign: TextAlign.end),
+                      Text('الفترة الزمنية', style: labelStyle, textAlign: TextAlign.end),
+                      Text(
+                        'من $s إلى $en',
+                        style: valueStyle.copyWith(color: theme.secondaryText),
+                        textAlign: TextAlign.end,
+                      ),
                       const SizedBox(height: 8),
                     ],
-                    Text('تفاصيل الحملة',
-                        style: labelStyle, textAlign: TextAlign.end),
-                    Text(description,
-                        style:
-                        valueStyle.copyWith(color: theme.secondaryText),
-                        textAlign: TextAlign.end),
+                    Text('تفاصيل الحملة', style: labelStyle, textAlign: TextAlign.end),
+                    Text(
+                      description,
+                      style: valueStyle.copyWith(color: theme.secondaryText),
+                      textAlign: TextAlign.end,
+                    ),
                     const SizedBox(height: 8),
-                    Text('المنصات',
-                        style: labelStyle, textAlign: TextAlign.end),
+                    Text('المنصات', style: labelStyle, textAlign: TextAlign.end),
                     Wrap(
                       alignment: WrapAlignment.end,
                       spacing: 12,
@@ -1105,12 +1075,12 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                       children: _buildCampaignPlatforms(e),
                     ),
                     const SizedBox(height: 8),
-                    Text('نوع المحتوى',
-                        style: labelStyle, textAlign: TextAlign.end),
-                    Text(influencerContentTypeName,
-                        style:
-                        valueStyle.copyWith(color: theme.secondaryText),
-                        textAlign: TextAlign.end),
+                    Text('نوع المحتوى', style: labelStyle, textAlign: TextAlign.end),
+                    Text(
+                      influencerContentTypeName,
+                      style: valueStyle.copyWith(color: theme.secondaryText),
+                      textAlign: TextAlign.end,
+                    ),
                     const SizedBox(height: 8),
                     FFButtonWidget(
                       onPressed: () {},
@@ -1140,16 +1110,12 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   Widget _tileCampaign(Map<String, dynamic> e) {
     final t = FlutterFlowTheme.of(context);
 
-    final labelStyle = t.bodyMedium.copyWith(
-      color: t.primaryText,
-      fontWeight: FontWeight.w600,
-    );
+    final labelStyle = t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w600);
     final valueStyle = t.bodyMedium.copyWith(color: t.secondaryText);
 
     final title = e['title'] as String? ?? '';
     final description = e['description'] as String? ?? '';
-    final influencerContentTypeName =
-        e['influencer_content_type_name'] as String? ?? '';
+    final influencerContentTypeName = e['influencer_content_type_name'] as String? ?? '';
     final s = _fmtDate(e['start_date']);
     final en = _fmtDate(e['end_date']);
     final isVisible = e['visible'] as bool? ?? true;
@@ -1175,14 +1141,10 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             // Expiry badge at the top if needed
-            if (isExpired ||
-                (endDate != null &&
-                    CampaignExpiryHelper.isExpiringSoon(endDate))) ...[
+            if (isExpired || (endDate != null && CampaignExpiryHelper.isExpiringSoon(endDate))) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  CampaignExpiryBadge(endDate: endDate, isCompact: true),
-                ],
+                children: [CampaignExpiryBadge(endDate: endDate, isCompact: true)],
               ),
               const SizedBox(height: 8),
             ],
@@ -1206,22 +1168,17 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                               Icons.edit_sharp,
                               color: isExpired
                                   ? const Color(0xFFDC2626).withValues(alpha: 0.5)
-                                  : t
-                                  .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                  : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                               size: 20,
                             ),
                             onPressed: isExpired
                                 ? null
                                 : () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => CampaignScreen(
-                                    campaignId: e['id'] as String,
-                                  ),
-                                ),
-                              );
-                              await loadAll();
-                            },
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => CampaignScreen(campaignId: e['id'] as String)),
+                                    );
+                                    await loadAll();
+                                  },
                           ),
                           const SizedBox(width: 8),
 
@@ -1231,8 +1188,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                             buttonSize: 40,
                             icon: Icon(
                               Icons.delete_outline,
-                              color: t
-                                  .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                              color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                               size: 20,
                             ),
                             onPressed: () async {
@@ -1251,29 +1207,21 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                       onPressed: () => Navigator.of(ctx).pop(false),
                                       child: const Text('إلغاء'),
                                     ),
-                                    TextButton(
-                                      onPressed: () => Navigator.of(ctx).pop(true),
-                                      child: const Text('حذف'),
-                                    ),
+                                    TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('حذف')),
                                   ],
                                 ),
                               );
 
                               if (confirm == true) {
                                 try {
-                                  await firebaseFirestore
-                                      .collection('campaigns')
-                                      .doc(expId)
-                                      .delete();
+                                  await firebaseFirestore.collection('campaigns').doc(expId).delete();
                                   if (!mounted) return;
                                   await loadAll();
                                 } catch (err) {
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('تعذّر الحذف: $err'),
-                                    ),
-                                  );
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(SnackBar(content: Text('تعذّر الحذف: $err')));
                                 }
                               }
                             },
@@ -1285,8 +1233,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                             message: isVisible ? 'ظاهر' : 'مخفي',
                             child: Icon(
                               isVisible ? Icons.visibility : Icons.visibility_off,
-                              color: t
-                                  .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                              color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                               size: 20,
                             ),
                           ),
@@ -1299,22 +1246,18 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                               buttonSize: 40,
                               icon: Icon(
                                 Icons.content_copy,
-                                color: t
-                                    .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                                 size: 20,
                               ),
                               onPressed: () async {
                                 // Check subscription
-                                final canCreate =
-                                await _subscriptionService.canCreateCampaign();
+                                final canCreate = await _subscriptionService.canCreateCampaign();
 
                                 if (!canCreate) {
                                   if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text(
-                                        'لم تعد لديك حملات متاحة، يرجى الترقية للخطة المتميزة',
-                                      ),
+                                      content: Text('لم تعد لديك حملات متاحة، يرجى الترقية للخطة المتميزة'),
                                     ),
                                   );
                                   return;
@@ -1329,10 +1272,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                 if (!mounted) return;
                                 await Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (_) => CampaignScreen(
-                                      campaignId: campaignId,
-                                      isClone: true,
-                                    ),
+                                    builder: (_) => CampaignScreen(campaignId: campaignId, isClone: true),
                                   ),
                                 );
                                 await loadAll();
@@ -1350,60 +1290,37 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        'عنوان الحملة',
-                        style: labelStyle,
-                        textAlign: TextAlign.end,
-                      ),
+                      Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
                       Text(
                         title,
                         style: valueStyle.copyWith(
-                          color: isExpired
-                              ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                              : t.primaryText,
-                          decoration:
-                          isExpired ? TextDecoration.lineThrough : null,
+                          color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.primaryText,
+                          decoration: isExpired ? TextDecoration.lineThrough : null,
                         ),
                         textAlign: TextAlign.end,
                       ),
                       const SizedBox(height: 8),
                       if (s.isNotEmpty || en.isNotEmpty) ...[
-                        Text(
-                          'الفترة الزمنية',
-                          style: labelStyle,
-                          textAlign: TextAlign.end,
-                        ),
+                        Text('الفترة الزمنية', style: labelStyle, textAlign: TextAlign.end),
                         Text(
                           'من $s إلى $en',
                           style: valueStyle.copyWith(
-                            color: isExpired
-                                ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                                : t.secondaryText,
+                            color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
                           ),
                           textAlign: TextAlign.end,
                         ),
                         const SizedBox(height: 8),
                       ],
-                      Text(
-                        'تفاصيل الحملة',
-                        style: labelStyle,
-                        textAlign: TextAlign.end,
-                      ),
+                      Text('تفاصيل الحملة', style: labelStyle, textAlign: TextAlign.end),
                       Text(
                         description,
                         style: valueStyle.copyWith(
-                          color: isExpired
-                              ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                              : t.secondaryText,
+                          color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
                         ),
                         textAlign: TextAlign.end,
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'المنصات',
-                        style: labelStyle,
-                        textAlign: TextAlign.end,
-                      ),
+                      Text('المنصات', style: labelStyle, textAlign: TextAlign.end),
                       Wrap(
                         alignment: WrapAlignment.end,
                         spacing: 12,
@@ -1411,17 +1328,11 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                         children: _buildCampaignPlatforms(e),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'نوع المحتوى',
-                        style: labelStyle,
-                        textAlign: TextAlign.end,
-                      ),
+                      Text('نوع المحتوى', style: labelStyle, textAlign: TextAlign.end),
                       Text(
                         influencerContentTypeName,
                         style: valueStyle.copyWith(
-                          color: isExpired
-                              ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                              : t.secondaryText,
+                          color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
                         ),
                         textAlign: TextAlign.end,
                       ),
@@ -1455,10 +1366,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: badgeConfig.backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(color: badgeConfig.backgroundColor, borderRadius: BorderRadius.circular(16)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1466,11 +1374,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
           const SizedBox(width: 8),
           Text(
             badgeConfig.label,
-            style: GoogleFonts.inter(
-              color: badgeConfig.textColor,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+            style: GoogleFonts.inter(color: badgeConfig.textColor, fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ],
       ),

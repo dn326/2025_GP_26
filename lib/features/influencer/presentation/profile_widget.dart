@@ -648,7 +648,7 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
                       borderRadius: 8,
                       buttonSize: 40,
                       icon: Icon(
-                        Icons.minimize_outlined,
+                        Icons.delete_outline,
                         color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                         size: 20,
                       ),

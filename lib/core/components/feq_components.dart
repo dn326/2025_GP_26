@@ -180,7 +180,7 @@ class FeqTextFieldBox extends StatelessWidget {
                     : null,
                 suffixIcon: suffixIcon,
               ),
-          style: style ?? theme.bodyMedium.override( fontFamily: 'Inter', color: theme.primaryText),
+          style: style ?? theme.bodyMedium.override(fontFamily: 'Inter', color: theme.primaryText),
           cursorColor: theme.primaryText,
           validator: validator,
           inputFormatters: inputFormatters,
@@ -218,7 +218,6 @@ class FeqLabeledTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextStyle? style;
 
-
   const FeqLabeledTextField({
     super.key,
     required this.label,
@@ -244,9 +243,9 @@ class FeqLabeledTextField extends StatelessWidget {
     this.decoration,
     this.onTap,
     this.required = true,
-    this.textDirection = TextDirection.rtl, 
+    this.textDirection = TextDirection.rtl,
     this.style,
-});
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -323,8 +322,7 @@ class FeqSearchableDropdown<T> extends StatefulWidget {
   });
 
   @override
-  State<FeqSearchableDropdown<T>> createState() =>
-      _FeqSearchableDropdownState<T>();
+  State<FeqSearchableDropdown<T>> createState() => _FeqSearchableDropdownState<T>();
 }
 
 class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
@@ -347,9 +345,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
   void _filter() {
     final query = _controller.text.trim().toLowerCase();
     setState(() {
-      _filtered = widget.items
-          .where((e) => _getText(e).toLowerCase().contains(query))
-          .toList();
+      _filtered = widget.items.where((e) => _getText(e).toLowerCase().contains(query)).toList();
     });
   }
 
@@ -376,8 +372,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
       textDirection: widget.textDirection,
       child: TextField(
         controller: _controller,
-        textAlign:
-        widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
+        textAlign: widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
         readOnly: true,
         decoration: _inputDecoration(context, isError: widget.isError).copyWith(
           hintText: widget.hint,
@@ -405,8 +400,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (_) => Directionality(
         textDirection: widget.textDirection,
         child: DraggableScrollableSheet(
@@ -419,19 +413,11 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
                 padding: const EdgeInsets.all(16),
                 child: TextField(
                   controller: _controller,
-                  textAlign: widget.textDirection == TextDirection.rtl
-                      ? TextAlign.start
-                      : TextAlign.end,
+                  textAlign: widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
                   decoration: InputDecoration(
-                    hintText: widget.textDirection == TextDirection.rtl
-                        ? 'إبحث...'
-                        : 'Search...',
-                    prefixIcon: widget.textDirection == TextDirection.rtl
-                        ? null
-                        : const Icon(Icons.search),
-                    suffixIcon: widget.textDirection == TextDirection.rtl
-                        ? const Icon(Icons.search)
-                        : null,
+                    hintText: widget.textDirection == TextDirection.rtl ? 'إبحث...' : 'Search...',
+                    prefixIcon: widget.textDirection == TextDirection.rtl ? null : const Icon(Icons.search),
+                    suffixIcon: widget.textDirection == TextDirection.rtl ? const Icon(Icons.search) : null,
                   ),
                   onChanged: (_) => _filter(),
                 ),
@@ -445,9 +431,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
                     return ListTile(
                       title: Text(
                         _getText(item),
-                        textAlign: widget.textDirection == TextDirection.rtl
-                            ? TextAlign.start
-                            : TextAlign.end,
+                        textAlign: widget.textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.end,
                       ),
                       onTap: () {
                         widget.onChanged(item);
@@ -479,12 +463,9 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
         borderRadius: BorderRadius.circular(12),
         borderSide: isError ? errorSide : normalSide,
       ),
-      disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), borderSide: normalSide),
-      errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), borderSide: errorSide),
-      focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), borderSide: errorSide),
+      disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: normalSide),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: errorSide),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: errorSide),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: isError ? errorSide : focusSide,
@@ -536,6 +517,7 @@ class FeqVerifiedNameWidget extends StatelessWidget {
 
 class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final String userType;
   final bool showBack;
   final bool showLeading;
   final bool showNotification;
@@ -547,6 +529,7 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
   const FeqAppBar({
     super.key,
     required this.title,
+    this.userType = '',
     this.showBack = false,
     this.showLeading = false,
     this.showNotification = false,
@@ -563,13 +546,7 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
       preferredSize: const Size.fromHeight(56.0),
       child: Container(
         decoration: const BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 4,
-              color: Color(0x33000000),
-              offset: Offset(0, 2),
-            ),
-          ],
+          boxShadow: [BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2))],
         ),
         child: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
@@ -583,20 +560,13 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
               ? Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 16, 0),
                   child: GestureDetector(
-                    onTap: () => Navigator.pushNamed(
-                      context,
-                      AccountSettingsPage.routeName,
-                    ),
-                    child: FaIcon(
-                      FontAwesomeIcons.bahai,
-                      color: FlutterFlowTheme.of(context).primaryText,
-                      size: 28,
-                    ),
+                    onTap: () => Navigator.pushNamed(context, AccountSettingsPage.routeName),
+                    child: FaIcon(FontAwesomeIcons.bahai, color: FlutterFlowTheme.of(context).primaryText, size: 28),
                   ),
                 )
               : (showBack || showNotification
-                ? const SizedBox(width: 60)  // add space ONLY when actions exist
-                : null), // no space at all if absolutely nothing is shown
+                    ? const SizedBox(width: 60) // add space ONLY when actions exist
+                    : null), // no space at all if absolutely nothing is shown
 
           actions: [
             if (showBack)
@@ -610,25 +580,17 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
                     }
                     Navigator.of(context).pop();
                   },
-                  child: FaIcon(
-                    Icons.arrow_forward_ios,
-                    color: FlutterFlowTheme.of(context).primaryText,
-                    size: 24,
-                  ),
+                  child: FaIcon(Icons.arrow_forward_ios, color: FlutterFlowTheme.of(context).primaryText, size: 24),
                 ),
               ),
             if (showNotification)
               Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
-                  child: GestureDetector(
-                    onTap: () =>  Navigator.pushNamed(context, NotificationListPage.routeName),
-                    child: FaIcon(
-                      Icons.notifications_none,
-                      color: FlutterFlowTheme.of(context).primaryText,
-                      size: 30,
-                    ),
-                  ),
-              )
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
+                child: GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, NotificationListPage.routeName),
+                  child: FaIcon(Icons.notifications_none, color: FlutterFlowTheme.of(context).primaryText, size: 30),
+                ),
+              ),
           ],
 
           title: SafeArea(
@@ -641,9 +603,7 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
                     child: Text(
                       title,
                       textAlign: TextAlign.center,
-                      style: FlutterFlowTheme.of(context)
-                          .headlineSmall
-                          .copyWith(fontWeight: FontWeight.w600),
+                      style: FlutterFlowTheme.of(context).headlineSmall.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
