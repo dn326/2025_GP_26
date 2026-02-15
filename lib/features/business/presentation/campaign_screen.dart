@@ -192,7 +192,6 @@ class _CampaignScreenState extends State<CampaignScreen> with SingleTickerProvid
           'influencer_content_type_name': _selectedInfluencerContentType!.nameAr,
           'start_date': Timestamp.fromDate(_model.datePicked2!),
           'end_date': Timestamp.fromDate(_model.datePicked1!),
-          // 'active': _model.isActive,
           'visible': _model.isVisible,
         });
 
@@ -214,7 +213,6 @@ class _CampaignScreenState extends State<CampaignScreen> with SingleTickerProvid
           'start_date': Timestamp.fromDate(_model.datePicked2!),
           'end_date': Timestamp.fromDate(_model.datePicked1!),
           'date_added': Timestamp.fromDate(DateTime.now()),
-          //'active': _model.isActive,
           'visible': _model.isVisible,
         });
 
@@ -269,7 +267,6 @@ class _CampaignScreenState extends State<CampaignScreen> with SingleTickerProvid
       _model.campaignTitleTextController!.text = (m['title'] ?? '').toString();
       _model.detailsTextController!.text = (m['description'] ?? '').toString();
 
-      //_model.isActive = m['active'] ?? true;
       _model.isVisible = m['visible'] ?? true;
 
       final s = m['start_date'];

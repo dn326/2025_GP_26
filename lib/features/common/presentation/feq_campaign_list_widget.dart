@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../../core/components/feq_components.dart';
+import '../../../core/services/dropdown_list_loader.dart';
 import '../../../core/services/firebase_service_utils.dart';
 import '../../../core/utils/campaign_expiry_helper.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
@@ -18,12 +20,10 @@ class FeqCampaignListItem {
   final String description;
   final int influencerContentTypeId;
   final String influencerContentTypeName;
-  final int platformId;
-  final String platformName;
+  final List<dynamic> platformNames;
   final DateTime? dateStart;
   final DateTime? dateEnd;
   final Timestamp dateAdded;
-  final bool active;
   final bool visible;
 
   FeqCampaignListItem({
@@ -35,12 +35,10 @@ class FeqCampaignListItem {
     required this.description,
     required this.influencerContentTypeId,
     required this.influencerContentTypeName,
-    required this.platformId,
-    required this.platformName,
+    required this.platformNames,
     this.dateStart,
     this.dateEnd,
     required this.dateAdded,
-    required this.active,
     required this.visible,
   });
 }
@@ -85,6 +83,10 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
   final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
   bool _initialLoadComplete = false;
+  late List<FeqDropDownList> _socialPlatforms;
+
+  List<int> _selectedContentTypes = [];
+  List<int> _selectedPlatforms = [];
 
   @override
   void initState() {
@@ -101,8 +103,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
   }
 
   void _scrollListener() {
-    if (_scrollController.offset >=
-        _scrollController.position.maxScrollExtent - 400 &&
+    if (_scrollController.offset >= _scrollController.position.maxScrollExtent - 400 &&
         !_isLoadingMore &&
         _hasMore &&
         widget.paginated) {
@@ -117,6 +118,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
       _hasMore = true;
       _isLoading = true;
       _initialLoadComplete = false;
+      _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
     });
     await _loadBatch();
     if (mounted) {
@@ -171,16 +173,34 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
         final data = doc.data() as Map<String, dynamic>;
 
         try {
-          final bool active = data['active'] as bool? ?? false;
           final bool visible = data['visible'] as bool? ?? false;
           final Timestamp? tsStart = data['start_date'] as Timestamp?;
           final Timestamp? tsEnd = data['end_date'] as Timestamp?;
           final DateTime? dateEnd = tsEnd?.toDate();
           final String businessId = data['business_id'] as String? ?? '';
+          final int contentTypeId = data['influencer_content_type_id'] as int? ?? 0;
+          final platformNames = (data['platform_names'] as List?) ?? [];
 
-          // FILTER: active, visible, not expired
-          if (!active || !visible) continue;
+          if (!visible) continue;
           if (dateEnd != null && dateEnd.isBefore(DateTime.now())) continue;
+
+          if (_selectedContentTypes.isNotEmpty && !_selectedContentTypes.contains(contentTypeId)) continue;
+          if (_selectedPlatforms.isNotEmpty &&
+              !platformNames.any((platformNameStr) {
+                final platformObj = _socialPlatforms.firstWhere(
+                      (p) => p.nameAr == platformNameStr.toString(),
+                  orElse: () => FeqDropDownList(
+                    id: 0,
+                    nameEn: platformNameStr.toString(),
+                    nameAr: platformNameStr.toString(),
+                    domain: '',
+                  ),
+                );
+
+                return _selectedPlatforms.contains(platformObj.id);
+              })) {
+            continue;
+          }
 
           BusinessProfileDataModel? businessData = await _firebaseService.fetchBusinessProfileData(businessId);
           if (businessData == null || businessData.name.isEmpty) {
@@ -203,16 +223,12 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
               businessImageUrl: profileImage,
               title: data['title'] as String? ?? '',
               description: data['description'] as String? ?? '',
-              influencerContentTypeId:
-              data['influencer_content_type_id'] as int? ?? 0,
-              influencerContentTypeName:
-              data['influencer_content_type_name'] as String? ?? '',
-              platformId: data['platform_id'] as int? ?? 0,
-              platformName: data['platform_name'] as String? ?? '',
+              influencerContentTypeId: contentTypeId,
+              influencerContentTypeName: data['influencer_content_type_name'] as String? ?? '',
+              platformNames: (data['platform_names'] as List?) ?? [],
               dateStart: tsStart?.toDate(),
               dateEnd: dateEnd,
               dateAdded: data['date_added'],
-              active: active,
               visible: visible,
             ),
           );
@@ -226,7 +242,6 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
       if (snapshot.docs.isNotEmpty) _lastDocument = snapshot.docs.last;
       if (snapshot.size < fetchLimit) _hasMore = false;
 
-      // Auto-load more if few results
       if (addedCount < 10 && _hasMore && mounted) {
         await _loadBatch();
       } else {
@@ -246,14 +261,11 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
     final filtered = _allItems.where((item) {
       if (item.title.toLowerCase().contains(lower)) return true;
       if (item.description.toLowerCase().contains(lower)) return true;
-      if (item.influencerContentTypeName.toLowerCase().contains(lower)) {
-        return true;
-      }
+      if (item.influencerContentTypeName.toLowerCase().contains(lower)) return true;
       if (item.businessNameAr.toLowerCase().contains(lower)) return true;
       return false;
     }).toList();
 
-    // Prioritize title matches
     filtered.sort((a, b) {
       bool aTitle = a.title.toLowerCase().contains(lower);
       bool bTitle = b.title.toLowerCase().contains(lower);
@@ -320,7 +332,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
       'title': item.title,
       'description': item.description,
       'influencer_content_type_name': item.influencerContentTypeName,
-      'platform_name': item.platformName,
+      'platform_names': item.platformNames,
       'start_date': item.dateStart,
       'end_date': item.dateEnd,
       'date_added': item.dateAdded,
@@ -332,36 +344,24 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
     final t = FlutterFlowTheme.of(context);
     final e = _itemToMap(item);
 
-    final labelStyle =
-    t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w600);
+    final labelStyle = t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w600);
     final valueStyle = t.bodyMedium.copyWith(color: t.secondaryText);
 
     final title = e['title'] as String? ?? '';
     final description = e['description'] as String? ?? '';
     final platformName = e['platform_name'] as String? ?? '';
-    final influencerContentTypeName =
-        e['influencer_content_type_name'] as String? ?? '';
+    final influencerContentTypeName = e['influencer_content_type_name'] as String? ?? '';
     final s = _fmtDate(e['start_date']);
     final en = _fmtDate(e['end_date']);
-    final isExpired = e['end_date'] != null
-        ? CampaignExpiryHelper.isCampaignExpired(e['end_date'])
-        : false;
-    final isExpiringSoon = e['end_date'] != null
-        ? CampaignExpiryHelper.isExpiringSoon(e['end_date'])
-        : false;
+    final isExpired = e['end_date'] != null ? CampaignExpiryHelper.isCampaignExpired(e['end_date']) : false;
+    final isExpiringSoon = e['end_date'] != null ? CampaignExpiryHelper.isExpiringSoon(e['end_date']) : false;
 
     final endDate = e['end_date'] as DateTime?;
 
     return Container(
       decoration: BoxDecoration(
         color: t.containers,
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 3, offset: Offset(0, 2))],
         borderRadius: BorderRadius.circular(16),
       ),
       child: Material(
@@ -378,28 +378,15 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                     if (isExpired || isExpiringSoon) ...[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          CampaignExpiryBadge(
-                            endDate: endDate,
-                            isCompact: true,
-                          ),
-                        ],
+                        children: [CampaignExpiryBadge(endDate: endDate, isCompact: true)],
                       ),
                       const SizedBox(height: 8),
                     ],
-                    // Business name as link
                     if (item.businessNameAr.isNotEmpty) ...[
                       Text('الجهة المعلنة', style: labelStyle, textAlign: TextAlign.end),
                       InkWell(
                         onTap: () => _navigateToCampaignDetail(item),
-                        child: Text(
-                          item.businessNameAr,
-                          style: valueStyle.copyWith(
-                            // color: Colors.blue,
-                            // decoration: TextDecoration.underline,
-                          ),
-                          textAlign: TextAlign.end,
-                        ),
+                        child: Text(item.businessNameAr, style: valueStyle, textAlign: TextAlign.end),
                       ),
                       const SizedBox(height: 8),
                     ],
@@ -407,9 +394,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                     Text(
                       title,
                       style: valueStyle.copyWith(
-                        color: isExpired
-                            ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                            : t.primaryText,
+                        color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.primaryText,
                         decoration: isExpired ? TextDecoration.lineThrough : null,
                       ),
                       textAlign: TextAlign.end,
@@ -420,9 +405,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                       Text(
                         'من $s إلى $en',
                         style: valueStyle.copyWith(
-                          color: isExpired
-                              ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                              : t.secondaryText,
+                          color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
                         ),
                         textAlign: TextAlign.end,
                       ),
@@ -432,9 +415,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                     Text(
                       description,
                       style: valueStyle.copyWith(
-                        color: isExpired
-                            ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                            : t.secondaryText,
+                        color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
                       ),
                       textAlign: TextAlign.end,
                     ),
@@ -443,9 +424,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                     Text(
                       platformName,
                       style: valueStyle.copyWith(
-                        color: isExpired
-                            ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                            : t.secondaryText,
+                        color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
                       ),
                       textAlign: TextAlign.end,
                     ),
@@ -454,9 +433,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                     Text(
                       influencerContentTypeName,
                       style: valueStyle.copyWith(
-                        color: isExpired
-                            ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                            : t.secondaryText,
+                        color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.secondaryText,
                       ),
                       textAlign: TextAlign.end,
                     ),
@@ -483,35 +460,25 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
   Widget _tileCompact(FeqCampaignListItem item) {
     final t = FlutterFlowTheme.of(context);
 
-    final labelStyle =
-    t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w600);
+    final labelStyle = t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w600);
     final valueStyle = t.bodyMedium.copyWith(color: t.secondaryText);
 
     return Container(
       decoration: BoxDecoration(
         color: t.containers,
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 3, offset: Offset(0, 2))],
         borderRadius: BorderRadius.circular(16),
       ),
       child: Material(
         color: Colors.transparent,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          child:
-          Expanded(
-            child: Column(
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // IMAGE – FIXED ON THE LEFT
                     if (widget.showImage)
                       Padding(
                         padding: const EdgeInsetsDirectional.only(end: 0, start: 0),
@@ -522,17 +489,11 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                           onImagePicked: (url, file, bytes) {},
                         ),
                       ),
-
-                    // TEXT – ALWAYS UNDER IMAGE HEIGHT
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            'عنوان الحملة',
-                            style: labelStyle,
-                            textAlign: TextAlign.end,
-                          ),
+                          Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
                           const SizedBox(height: 4),
                           Text(
                             item.title,
@@ -549,64 +510,54 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                   ],
                 ),
                 const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // LEFT SIDE
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      IntrinsicWidth(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            /*Text(
-                              'الجهة المعلنة',
-                              style: labelStyle,
-                              textAlign: TextAlign.center,
-                            ),*/
-                            Text(
-                              item.businessNameAr,
-                              style: t.bodyMedium.copyWith(
-                                color: t.primaryText,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          IntrinsicWidth(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  item.businessNameAr,
+                                  style: t.bodyMedium.copyWith(
+                                    color: t.primaryText,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                              textAlign: TextAlign.center,
+                              ],
                             ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-
-                // RIGHT SIDE
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // const SizedBox(height: 16),
-                      InkWell(
-                        onTap: () => _navigateToCampaignDetail(item),
-                        child: Text(
-                          'عرض تفاصيل الحملة',
-                          style: valueStyle.copyWith(
-                            color: t.primaryText,
-                            decoration: TextDecoration.underline,
-                          ),
-                          textAlign: TextAlign.end,
-                        ),
+                          )
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          InkWell(
+                            onTap: () => _navigateToCampaignDetail(item),
+                            child: Text(
+                              'عرض تفاصيل الحملة',
+                              style: valueStyle.copyWith(
+                                color: t.primaryText,
+                                decoration: TextDecoration.underline,
+                              ),
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            ],
-            ),
-          ),
         ),
       ),
     );
@@ -641,6 +592,120 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
     );
   }
 
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildFilterSheet(),
+    );
+  }
+
+  Widget _buildFilterSheet() {
+    final t = FlutterFlowTheme.of(context);
+    final contentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
+    final platforms = FeqDropDownListLoader.instance.socialPlatforms;
+    final tempContentTypes = List<int>.from(_selectedContentTypes);
+    final tempPlatforms = List<int>.from(_selectedPlatforms);
+
+    return StatefulBuilder(
+      builder: (context, setModalState) {
+        return Container(
+          decoration: BoxDecoration(
+            color: t.secondaryBackground,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        tempContentTypes.clear();
+                        tempPlatforms.clear();
+                        setModalState(() {});
+                      },
+                      child: Text('مسح الكل', style: TextStyle(color: t.error)),
+                    ),
+                    Text('تصفية الحملات', style: t.headlineSmall),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text('حسب نوع المحتوى', style: t.bodyLarge),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: contentTypes.map((ct) {
+                    final isSelected = tempContentTypes.contains(ct.id);
+                    return FilterChip(
+                      label: Text(ct.nameAr),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setModalState(() {
+                          if (selected) {
+                            tempContentTypes.add(ct.id);
+                          } else {
+                            tempContentTypes.remove(ct.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const Divider(height: 30),
+                Text('حسب منصات التواصل', style: t.bodyLarge),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: platforms.map((p) {
+                    final isSelected = tempPlatforms.contains(p.id);
+                    return FilterChip(
+                      label: Text(p.nameAr),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setModalState(() {
+                          if (selected) {
+                            tempPlatforms.add(p.id);
+                          } else {
+                            tempPlatforms.remove(p.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedContentTypes = tempContentTypes;
+                      _selectedPlatforms = tempPlatforms;
+                    });
+                    Navigator.pop(context);
+                    _loadInitial();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: t.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text('تطبيق التصفية', style: TextStyle(color: t.containers)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
@@ -652,28 +717,34 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
             padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 8),
             child: Directionality(
               textDirection: TextDirection.rtl,
-              child: TextField(
-                readOnly: true,
-                onChanged: (v) {
-                  _debounceTimer?.cancel();
-                  _debounceTimer = Timer(const Duration(milliseconds: 600), () {
-                    setState(() => _searchText = v.trim());
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'بحث...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: theme.containers,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.filter_list, color: theme.primaryText),
+                    onPressed: _showFilterSheet,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                  Expanded(
+                    child: TextField(
+                      onChanged: (v) {
+                        _debounceTimer?.cancel();
+                        _debounceTimer = Timer(const Duration(milliseconds: 600), () {
+                          setState(() => _searchText = v.trim());
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'بحث...',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: theme.containers,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -688,33 +759,15 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                   items: [
                     PopupMenuItem(
                       value: FeqSortType.dateDesc,
-                      child: Row(
-                        children: const [
-                          Text('الأحدث أولاً'),
-                          SizedBox(width: 8),
-                          Icon(Icons.arrow_downward),
-                        ],
-                      ),
+                      child: Row(children: const [Text('الأحدث أولاً'), SizedBox(width: 8), Icon(Icons.arrow_downward)]),
                     ),
                     PopupMenuItem(
                       value: FeqSortType.dateAsc,
-                      child: Row(
-                        children: const [
-                          Text('الأقدم أولاً'),
-                          SizedBox(width: 8),
-                          Icon(Icons.arrow_upward),
-                        ],
-                      ),
+                      child: Row(children: const [Text('الأقدم أولاً'), SizedBox(width: 8), Icon(Icons.arrow_upward)]),
                     ),
                     PopupMenuItem(
                       value: FeqSortType.titleAsc,
-                      child: Row(
-                        children: const [
-                          Text('الاسم أبجديًا'),
-                          SizedBox(width: 8),
-                          Icon(Icons.sort_by_alpha),
-                        ],
-                      ),
+                      child: Row(children: const [Text('الاسم أبجديًا'), SizedBox(width: 8), Icon(Icons.sort_by_alpha)]),
                     ),
                   ],
                 ).then((value) {
@@ -779,9 +832,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                   if (currentIndex == index) {
                     return Padding(
                       padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
-                      child: widget.detailed
-                          ? _tileCampaign(item)
-                          : _tileCompact(item),
+                      child: widget.detailed ? _tileCampaign(item) : _tileCompact(item),
                     );
                   }
                   currentIndex++;
@@ -812,9 +863,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
               final item = _displayItems[index];
               return Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
-                child: widget.detailed
-                    ? _tileCampaign(item)
-                    : _tileCompact(item),
+                child: widget.detailed ? _tileCampaign(item) : _tileCompact(item),
               );
             },
           ),

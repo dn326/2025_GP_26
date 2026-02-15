@@ -17,7 +17,7 @@ class MainNavbarWidget extends StatefulWidget {
     this.onTap,
   });
 
-  final int initialIndex; // 0: profile, 1: checklist, 2: search, 3: bell, 4: home
+  final int initialIndex; // 0: profile, 1: handshake, 2: add/search, 3: home
   final String userType;
   final void Function(int)? onTap;
 
@@ -42,8 +42,8 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
   @override
   Widget build(BuildContext context) {
     final t = FlutterFlowTheme.of(context);
-    final activeColor = t.primary; // اللون الأزرق (الأساسي)
-    const inactiveColor = Colors.grey; // الرمادي
+    final activeColor = t.primary;
+    const inactiveColor = Colors.grey;
 
     Color iconColor(int i) => _currentIndex == i ? activeColor : inactiveColor;
 
@@ -70,70 +70,51 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
               onPressed: () => _handleTap(0),
             ),
 
-            // 1) Checklist
+            // 1) Add Campaign / Search
             FlutterFlowIconButton(
               borderRadius: 8,
               buttonSize: 40,
               icon: Icon(
                 widget.userType == "influencer"
-                    ? Icons.content_paste_rounded
-                    : Icons.search_rounded,
+                    ? Icons.search_rounded
+                    : Icons.add_circle_rounded,
                 size: 24,
                 color: iconColor(1),
               ),
-              onPressed: () => _handleTap(1),
-            ),
-
-            FlutterFlowIconButton(
-              borderRadius: 8,
-              buttonSize: 40,
-              icon: Icon(
-                widget.userType == "influencer" ? Icons.search_rounded : Icons.add_circle_rounded,
-                size: 24,
-                color: iconColor(2),
-              ),
               onPressed: () async {
                 if (widget.userType == "influencer") {
-                  _handleTap(2);
+                  _handleTap(1);
                 } else {
                   // Business user - check campaign creation status
                   final subscriptionService = SubscriptionService();
 
                   try {
-                    // Check campaign creation status using the new method
                     final status = await subscriptionService.checkCampaignCreationStatus();
 
                     if (!mounted) return;
 
-                    // Handle based on status result
                     if (status.isAllowed) {
                       final nav = Navigator.of(context);
                       final result = await nav.push(
                         MaterialPageRoute(builder: (_) => const CampaignScreen()),
                       );
 
-                      // Only increment if campaign was successfully created (not edited)
                       if (result == true) {
                         await subscriptionService.incrementCampaignsUsed();
-                        // Refresh subscription data after incrementing
                         await subscriptionService.refreshAndSaveSubscription();
                       }
 
-                      // After campaign is created/edited, simulate tap on profile (index 0)
                       widget.onTap?.call(0);
                     } else if (status.needsSubscription) {
-                      // Free user - show subscription required dialog
                       if (!mounted) return;
                       final shouldNavigate = await showSubscriptionRequiredDialog(context);
 
-                      // Navigate to payment page if user confirmed
                       if (shouldNavigate == true && mounted) {
-                        await Navigator.of(
-                          context,
-                        ).push(MaterialPageRoute(builder: (_) => const PaymentPage()));
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const PaymentPage()),
+                        );
                       }
                     } else if (status.needsUpgrade) {
-                      // Basic user at limit - show upgrade required dialog
                       if (!mounted) return;
                       final shouldNavigate = await showUpgradeRequiredDialog(
                         context,
@@ -141,20 +122,14 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
                         status.campaignLimit ?? 15,
                       );
 
-                      // Navigate to payment page if user confirmed
                       if (shouldNavigate == true && mounted) {
-                        await Navigator.of(
-                          context,
-                        ).push(MaterialPageRoute(builder: (_) => const PaymentPage()));
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const PaymentPage()),
+                        );
                       }
                     }
                   } catch (e, stackTrace) {
-                    // Error handling - show error dialog
-                    log(
-                      'Error during subscription validation: $e',
-                      error: e,
-                      stackTrace: stackTrace,
-                    );
+                    log('Error during subscription validation: $e', error: e, stackTrace: stackTrace);
 
                     if (!mounted) return;
                     await showSubscriptionErrorDialog(
@@ -166,20 +141,20 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
               },
             ),
 
-            // 3) Notifications
+            // 2) Handshake - Applications & Offers
             FlutterFlowIconButton(
               borderRadius: 8,
               buttonSize: 40,
-              icon: Icon(Icons.notifications_sharp, size: 24, color: iconColor(3)),
-              onPressed: () => _handleTap(3),
+              icon: Icon(Icons.handshake, size: 24, color: iconColor(2)),
+              onPressed: () => _handleTap(2),
             ),
 
-            // 4) Home
+            // 3) Home
             FlutterFlowIconButton(
               borderRadius: 8,
               buttonSize: 40,
-              icon: Icon(Icons.home_filled, size: 26, color: iconColor(4)),
-              onPressed: () => _handleTap(4),
+              icon: Icon(Icons.home_filled, size: 26, color: iconColor(3)),
+              onPressed: () => _handleTap(3),
             ),
           ],
         ),

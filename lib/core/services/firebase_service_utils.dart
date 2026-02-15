@@ -215,7 +215,6 @@ class FeqFirebaseServiceUtils {
           'start_date': m['start_date'],
           'end_date': m['end_date'],
           'date_added': dateAdded,
-          'active': m['active'] ?? false,
           'visible': m['visible'] ?? false,
         };
       }).whereType<Map<String, dynamic>>().toList();

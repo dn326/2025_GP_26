@@ -1,11 +1,11 @@
 import 'package:elan_flutterproject/features/business/presentation/explore_widget.dart';
+import 'package:elan_flutterproject/features/common/presentation/applications_offers_page.dart';
 import 'package:elan_flutterproject/features/login_and_signup/user_login.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '/flutter_flow/main_navbar_widget.dart';
 import 'features/business/presentation/profile_widget.dart';
-import 'features/common/presentation/coming_soon_widget.dart';
 import 'features/influencer/presentation/campaign_list_widget.dart';
 import 'features/influencer/presentation/home_widget.dart';
 import 'features/influencer/presentation/profile_widget.dart';
@@ -42,16 +42,29 @@ class _MainScreenState extends State<MainScreen> {
     userType = prefs.getString('user_type') ?? '';
     if (!mounted) return;
     if (userType.isEmpty) {
-      Navigator.of(context).pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil(
+          UserLoginPage.routeName, (route) => false);
     } else {
-      // Build pages only once here with the GlobalKey
+      // Build pages with new structure:
+      // 0: Profile, 1: Handshake (Apps/Offers), 2: Search/Add, 3: Home
       _pages = [
-        userType == 'influencer' ? InfluncerProfileWidget():
-        BusinessProfileScreen(key: _businessProfileKey),
-        const ComingSoonWidget(),
-        userType == 'influencer' ? InfluencerHomeWidget() : ComingSoonWidget(),
-        const ComingSoonWidget(),
-        userType == 'influencer' ? CampaignListWidget() : BusinessExploreWidget()
+        // 0: Profile
+        userType == 'influencer'
+            ? const InfluncerProfileWidget()
+            : BusinessProfileScreen(key: _businessProfileKey),
+
+        // 1: Search campaigns (influencer) or handled in navbar (business)
+        userType == 'influencer'
+            ? const InfluencerHomeWidget()
+            : BusinessProfileScreen(key: _businessProfileKey), // Same as profile for business (add handled in navbar)
+
+        // 2: Applications & Offers (Handshake)
+        const ApplicationsOffersPage(),
+
+        // 3: Home/Explore
+        userType == 'influencer'
+            ? const CampaignListWidget()
+            : const BusinessExploreWidget(),
       ];
       setState(() {
         _isInitialized = true;
