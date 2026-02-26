@@ -67,6 +67,8 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   String _subscriptionStatus = 'free';
 
   final Set<String> _appliedCampaignIds = {};
+  // Campaigns where the business already sent this influencer an offer
+  final Set<String> _offeredCampaignIds = {};
 
   @override
   void initState() {
@@ -150,9 +152,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
       List<Map<String, dynamic>> campaignList = [];
       if (widget.campaignId != null) {
-        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, widget.campaignId, null);
+        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, widget.campaignId);
       } else {
-        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, null, null);
+        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, null);
       }
 
       if (!mounted) return;
@@ -1013,17 +1015,33 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
     if (myId == null) return;
 
     try {
-      final snap = await firebaseFirestore
+      // Load campaigns where influencer already applied
+      final appsSnap = await firebaseFirestore
           .collection('applications')
           .where('influencer_id', isEqualTo: myId)
           .get();
-
-      final ids = snap.docs
+      final appliedIds = appsSnap.docs
           .map((d) => (d.data()['campaign_id'] as String? ?? ''))
           .where((id) => id.isNotEmpty)
           .toSet();
 
-      if (mounted) setState(() => _appliedCampaignIds.addAll(ids));
+      // Load campaigns where the business already sent this influencer an offer
+      final offersSnap = await firebaseFirestore
+          .collection('offers')
+          .where('influencer_id', isEqualTo: myId)
+          .where('status', isEqualTo: 'pending')
+          .get();
+      final offeredIds = offersSnap.docs
+          .map((d) => (d.data()['campaign_id'] as String? ?? ''))
+          .where((id) => id.isNotEmpty)
+          .toSet();
+
+      if (mounted) {
+        setState(() {
+          _appliedCampaignIds.addAll(appliedIds);
+          _offeredCampaignIds.addAll(offeredIds);
+        });
+      }
     } catch (_) {}
   }
 
@@ -1130,29 +1148,6 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       final businessId = campaign['business_id'] as String? ?? '';
       final campaignTitle = campaign['title'] as String? ?? '';
 
-      // Fetch business name and image from profiles collection
-      String businessName = '';
-      String businessImageUrl = '';
-      if (businessId.isNotEmpty) {
-        try {
-          final bizSnap = await firebaseFirestore
-              .collection('profiles')
-              .where('profile_id', isEqualTo: businessId)
-              .limit(1)
-              .get();
-          if (bizSnap.docs.isNotEmpty) {
-            final bizData = bizSnap.docs.first.data();
-            businessName = (bizData['name'] as String? ?? '').trim();
-            final rawImg = bizData['profile_image'] as String? ?? '';
-            if (rawImg.isNotEmpty) {
-              businessImageUrl = rawImg.contains('?')
-                  ? '${rawImg.split('?').first}?alt=media'
-                  : '$rawImg?alt=media';
-            }
-          }
-        } catch (_) {}
-      }
-
       final docRef = firebaseFirestore.collection('applications').doc();
 
       await docRef.set({
@@ -1161,8 +1156,6 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
         'influencer_name': influencerName,
         'influencer_image_url': influencerImageUrl,
         'business_id': businessId,
-        'business_name': businessName,
-        'business_image_url': businessImageUrl,
         'campaign_id': campaignId,
         'campaign_title': campaignTitle,
         'status': 'pending',
@@ -1399,48 +1392,74 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                     const SizedBox(height: 12),
 
                     // ── Apply button ──────────────────────────────────────
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: alreadyApplied
-                      // Already applied state
-                          ? Container(
-                        key: const ValueKey('applied'),
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF16A34A).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.check_circle,
-                                color: Color(0xFF16A34A), size: 18),
-                            SizedBox(width: 8),
-                            Text(
-                              'تم التقديم بنجاح',
-                              style: TextStyle(
-                                color: Color(0xFF16A34A),
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
+                    Builder(builder: (_) {
+                      final hasOffer = _offeredCampaignIds.contains(campaignId);
+                      if (hasOffer) {
+                        // Business already sent an offer to this influencer
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1D4ED8).withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF1D4ED8).withValues(alpha: 0.35)),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.mark_email_read_rounded, color: Color(0xFF1D4ED8), size: 18),
+                              SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'تم إرسال عرض تعاون لك على هذه الحملة',
+                                  style: TextStyle(
+                                    color: Color(0xFF1D4ED8),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      )
-                      // Apply button
-                          : SizedBox(
-                        key: const ValueKey('apply'),
+                            ],
+                          ),
+                        );
+                      }
+                      if (alreadyApplied) {
+                        // Influencer already applied
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16A34A).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_circle, color: Color(0xFF16A34A), size: 18),
+                              SizedBox(width: 8),
+                              Text(
+                                'تم التقديم بنجاح',
+                                style: TextStyle(
+                                  color: Color(0xFF16A34A),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      // Default: apply button
+                      return SizedBox(
                         width: double.infinity,
                         height: 44,
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.send_rounded, size: 18),
                           label: const Text(
                             'قدّم على هذه الحملة',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: theme.primary,
@@ -1450,8 +1469,8 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                           ),
                           onPressed: () => _applyToCampaign(e),
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   ],
                 ),
               ),

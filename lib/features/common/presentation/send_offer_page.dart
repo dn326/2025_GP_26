@@ -711,18 +711,18 @@ class _SendOfferPageState extends State<SendOfferPage> {
             children: [
               Expanded(
                 child: _datePicker(
-                  label: 'تاريخ الانتهاء',
-                  value: _endDate,
-                  onTap: () => _pickDate(isStart: false),
+                  label: 'تاريخ البدء',
+                  value: _startDate,
+                  onTap: () => _pickDate(isStart: true),
                   t: t,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _datePicker(
-                  label: 'تاريخ البدء',
-                  value: _startDate,
-                  onTap: () => _pickDate(isStart: true),
+                  label: 'تاريخ الانتهاء',
+                  value: _endDate,
+                  onTap: () => _pickDate(isStart: false),
                   t: t,
                 ),
               ),
