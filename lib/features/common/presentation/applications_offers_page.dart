@@ -120,11 +120,59 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
     if (userTypeValue == 'business') {
       _loadBusinessCampaigns();
     }
-    // Fix 7: check for unread items on load so nav bar dot is immediate
+    // Check unread counts for ALL tabs immediately on load (tabs are lazy —
+    // we can't wait for each tab widget to build and call onHasNewItems)
+    _checkTabNotifications(userTypeValue);
+  }
+
+  /// Queries Firestore for unread items in both tabs so the red dots appear
+  /// immediately on page load, even before the user visits each tab.
+  Future<void> _checkTabNotifications(String userType) async {
     final uid = UserSession.getCurrentUserId();
-    if (uid != null && userTypeValue.isNotEmpty) {
-      ApplicationsOffersNotifier.checkOnStartup(uid, userTypeValue);
-    }
+    if (uid == null) return;
+    try {
+      if (userType == 'business') {
+        // Tab 0 – incoming applications not yet read by business
+        final appsSnap = await firebaseFirestore
+            .collection('applications')
+            .where('business_id', isEqualTo: uid)
+            .where('is_read_by_business', isEqualTo: false)
+            .where('status', isEqualTo: 'pending')
+            .limit(1)
+            .get();
+        if (mounted) _updateNewIndicators(0, appsSnap.docs.isNotEmpty);
+
+        // Tab 1 – sent offers that the influencer has responded to (not yet read by business)
+        final offersSnap = await firebaseFirestore
+            .collection('offers')
+            .where('business_id', isEqualTo: uid)
+            .where('is_read_by_business', isEqualTo: false)
+            .limit(1)
+            .get();
+        if (mounted) _updateNewIndicators(1, offersSnap.docs.isNotEmpty);
+      } else {
+        // Tab 0 – sent applications that got a response, not yet read by influencer
+        final appsSnap = await firebaseFirestore
+            .collection('applications')
+            .where('influencer_id', isEqualTo: uid)
+            .where('is_read_by_influencer', isEqualTo: false)
+            .limit(1)
+            .get();
+        if (mounted) _updateNewIndicators(0, appsSnap.docs.isNotEmpty);
+
+        // Tab 1 – incoming offers not yet read by influencer
+        final offersSnap = await firebaseFirestore
+            .collection('offers')
+            .where('influencer_id', isEqualTo: uid)
+            .where('is_read_by_influencer', isEqualTo: false)
+            .where('status', isEqualTo: 'pending')
+            .limit(1)
+            .get();
+        if (mounted) _updateNewIndicators(1, offersSnap.docs.isNotEmpty);
+      }
+      // Also update the global nav bar notifier
+      ApplicationsOffersNotifier.setHasNew(_tab0HasNew || _tab1HasNew);
+    } catch (_) {}
   }
 
   Future<void> _loadBusinessCampaigns() async {
