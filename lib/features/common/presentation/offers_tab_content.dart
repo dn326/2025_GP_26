@@ -1,126 +1,402 @@
-// lib/features/common/presentation/offers_tab_content.dart
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../../core/services/firebase_service.dart';
+import '../../../core/services/user_session.dart';
+import '../../../core/widgets/image_picker_widget.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
-import '../models/offer_model.dart';
+import 'offer_detail_page.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Model
+// ─────────────────────────────────────────────────────────────────────────────
+
+class OfferModel {
+  final String id;
+  final String businessId;
+  final String businessName;
+  final String businessImageUrl;
+  final String influencerId;
+  final String influencerName;
+  final String influencerImageUrl;
+  final String campaignId;
+  final String campaignTitle;
+  final String status; // pending | accepted | rejected
+  final Timestamp createdAt;
+  final double amount;
+  final List<String> platforms;
+  final List<String> contentTypes;
+  final bool isReadByInfluencer;
+
+  OfferModel({
+    required this.id,
+    required this.businessId,
+    required this.businessName,
+    required this.businessImageUrl,
+    required this.influencerId,
+    required this.influencerName,
+    required this.influencerImageUrl,
+    required this.campaignId,
+    required this.campaignTitle,
+    required this.status,
+    required this.createdAt,
+    required this.amount,
+    required this.platforms,
+    required this.contentTypes,
+    required this.isReadByInfluencer,
+  });
+
+  factory OfferModel.fromDoc(DocumentSnapshot doc) {
+    final d = doc.data() as Map<String, dynamic>;
+    return OfferModel(
+      id: doc.id,
+      businessId: d['business_id'] as String? ?? '',
+      businessName: d['business_name'] as String? ?? '',
+      businessImageUrl: d['business_image_url'] as String? ?? '',
+      influencerId: d['influencer_id'] as String? ?? '',
+      influencerName: d['influencer_name'] as String? ?? '',
+      influencerImageUrl: d['influencer_image_url'] as String? ?? '',
+      campaignId: d['campaign_id'] as String? ?? '',
+      campaignTitle: d['campaign_title'] as String? ?? '',
+      status: d['status'] as String? ?? 'pending',
+      createdAt: d['created_at'] as Timestamp? ?? Timestamp.now(),
+      amount: (d['amount'] as num?)?.toDouble() ?? 0,
+      platforms: List<String>.from((d['platforms'] as List?) ?? []),
+      contentTypes: List<String>.from((d['content_types'] as List?) ?? []),
+      isReadByInfluencer: d['is_read_by_influencer'] as bool? ?? false,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Widget
+// ─────────────────────────────────────────────────────────────────────────────
 
 class OffersTabContent extends StatefulWidget {
   final bool isBusinessView;
   final List<String> filterStatuses;
   final List<String> filterCampaigns;
+  final List<String> filterContentTypes;
+  final List<String> filterPlatforms;
+  final ValueChanged<bool>? onHasNewItems;
 
   const OffersTabContent({
     super.key,
     required this.isBusinessView,
     this.filterStatuses = const [],
     this.filterCampaigns = const [],
+    this.filterContentTypes = const [],
+    this.filterPlatforms = const [],
+    this.onHasNewItems,
   });
 
   @override
   State<OffersTabContent> createState() => _OffersTabContentState();
 }
 
-class _OffersTabContentState extends State<OffersTabContent> with AutomaticKeepAliveClientMixin {
-  List<OfferModel> _offers = [];
+class _OffersTabContentState extends State<OffersTabContent> {
+  StreamSubscription? _sub;
+  List<OfferModel> _items = [];
   bool _isLoading = true;
+  final String? _myId = UserSession.getCurrentUserId();
 
-  @override
-  bool get wantKeepAlive => true;
+  // Influencer view: blue dot for new unread offers
+  final Set<String> _animatingNew = {};
 
   @override
   void initState() {
     super.initState();
-    _loadOffers();
+    _subscribe();
   }
 
   @override
-  void didUpdateWidget(OffersTabContent oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.filterStatuses != widget.filterStatuses || oldWidget.filterCampaigns != widget.filterCampaigns) {
-      _loadOffers();
+  void didUpdateWidget(OffersTabContent old) {
+    super.didUpdateWidget(old);
+    if (old.filterStatuses != widget.filterStatuses ||
+        old.filterCampaigns != widget.filterCampaigns ||
+        old.filterContentTypes != widget.filterContentTypes ||
+        old.filterPlatforms != widget.filterPlatforms) {
+      _subscribe();
     }
   }
 
-  Future<void> _loadOffers() async {
-    setState(() => _isLoading = true);
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 
-    try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) return;
+  void _subscribe() {
+    _sub?.cancel();
+    if (_myId == null) return;
 
-      Query query = FirebaseFirestore.instance.collection('offers');
+    Query q = firebaseFirestore
+        .collection('offers')
+        .orderBy('created_at', descending: true);
 
-      if (widget.isBusinessView) {
-        query = query.where('business_id', isEqualTo: uid);
-      } else {
-        query = query.where('influencer_id', isEqualTo: uid);
-      }
+    if (widget.isBusinessView) {
+      q = q.where('business_id', isEqualTo: _myId);
+    } else {
+      q = q.where('influencer_id', isEqualTo: _myId);
+    }
 
-      final snapshot = await query.orderBy('created_at', descending: true).get();
-
-      List<OfferModel> offers = snapshot.docs.map((doc) => OfferModel.fromFirestore(doc)).toList();
+    _sub = q.snapshots().listen((snap) {
+      List<OfferModel> all =
+          snap.docs.map((d) => OfferModel.fromDoc(d)).toList();
 
       if (widget.filterStatuses.isNotEmpty) {
-        offers = offers.where((o) => widget.filterStatuses.contains(o.status)).toList();
+        all = all.where((o) => widget.filterStatuses.contains(o.status)).toList();
       }
       if (widget.filterCampaigns.isNotEmpty) {
-        offers = offers.where((o) => widget.filterCampaigns.contains(o.campaignId)).toList();
+        all = all.where((o) => widget.filterCampaigns.contains(o.campaignId)).toList();
+      }
+      if (widget.filterContentTypes.isNotEmpty) {
+        all = all.where((o) => o.contentTypes.any((ct) => widget.filterContentTypes.contains(ct))).toList();
+      }
+      if (widget.filterPlatforms.isNotEmpty) {
+        all = all.where((o) => o.platforms.any((p) => widget.filterPlatforms.contains(p))).toList();
       }
 
-      // TODO: REMOVE IN PRODUCTION
-      if (offers.isEmpty) {
-        offers = List.generate(
-          3,
-          (i) => OfferModel(
-            id: 'mock_$i',
-            campaignId: 'camp_$i',
-            campaignTitle: 'حملة ${i + 1}',
-            campaignDescription: 'وصف الحملة',
-            businessId: widget.isBusinessView ? uid : 'biz',
-            businessName: 'شركة ${i + 1}',
-            influencerId: widget.isBusinessView ? 'inf' : uid,
-            influencerName: 'مؤثر ${i + 1}',
-            influencerImageUrl: '',
-            contentTypes: ['منشور صورة'],
-            platforms: ['Instagram'],
-            startDate: DateTime.now(),
-            endDate: DateTime.now().add(Duration(days: 30)),
-            amount: 5000 + (i * 1000),
-            status: ['pending', 'accepted', 'rejected'][i],
-            createdAt: DateTime.now().subtract(Duration(days: i)),
-          ),
-        );
+      // Influencer view: track new unread offers + notify parent
+      if (!widget.isBusinessView) {
+        final hasUnread = all.any((o) => !o.isReadByInfluencer && o.status == 'pending');
+        widget.onHasNewItems?.call(hasUnread);
+
+        for (final o in all) {
+          if (!o.isReadByInfluencer && o.status == 'pending' && !_animatingNew.contains(o.id)) {
+            _animatingNew.add(o.id);
+            Future.delayed(const Duration(seconds: 2), () {
+              _markRead(o.id);
+              if (mounted) setState(() => _animatingNew.remove(o.id));
+            });
+          }
+        }
       }
 
-      setState(() {
-        _offers = offers;
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Error: $e');
-      setState(() {
-        _offers = [];
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _items = all;
+          _isLoading = false;
+        });
+      }
+    }, onError: (_) {
+      if (mounted) setState(() => _isLoading = false);
+    });
+  }
+
+  Future<void> _markRead(String docId) async {
+    try {
+      await firebaseFirestore
+          .collection('offers')
+          .doc(docId)
+          .update({'is_read_by_influencer': true});
+    } catch (_) {}
+  }
+
+  String _fmtDate(Timestamp ts) {
+    final dt = ts.toDate();
+    return '${dt.day} ${_monthAr(dt.month)} ${dt.year}';
+  }
+
+  String _monthAr(int m) {
+    const months = [
+      '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+    return months[m];
+  }
+
+  Widget _statusBadge(String status) {
+    Color bg;
+    String label;
+    switch (status) {
+      case 'accepted':
+        bg = const Color(0xFF16A34A);
+        label = 'مقبول';
+        break;
+      case 'rejected':
+        bg = const Color(0xFFDC2626);
+        label = 'مرفوض';
+        break;
+      default:
+        bg = const Color(0xFFF59E0B); // Orange for pending
+        label = 'قيد الانتظار';
     }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+      child: Text(label,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  Widget _offerCard(OfferModel offer) {
+    final t = FlutterFlowTheme.of(context);
+    final isNew = !widget.isBusinessView && _animatingNew.contains(offer.id);
+
+    // For business: show influencer info. For influencer: show business info.
+    final imageUrl = widget.isBusinessView ? offer.influencerImageUrl : offer.businessImageUrl;
+    final name = widget.isBusinessView ? offer.influencerName : offer.businessName;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      margin: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
+      decoration: BoxDecoration(
+        color: isNew ? const Color(0xFFEFF6FF) : t.containers,
+        borderRadius: BorderRadius.circular(16),
+        border: isNew ? Border.all(color: const Color(0xFF3B82F6), width: 1.5) : null,
+        boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 4, offset: Offset(0, 2))],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Row(
+              textDirection: TextDirection.rtl,
+              children: [
+                if (isNew)
+                  Container(
+                    width: 10,
+                    height: 10,
+                    margin: const EdgeInsetsDirectional.only(start: 8),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF3B82F6),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // For influencer: show business name above campaign
+                      if (!widget.isBusinessView)
+                        Text(
+                          name,
+                          style: t.bodySmall.copyWith(
+                              color: t.secondaryText, fontWeight: FontWeight.w500),
+                          textAlign: TextAlign.end,
+                        ),
+                      if (!widget.isBusinessView) const SizedBox(height: 2),
+                      Text(
+                        offer.campaignTitle,
+                        style: t.titleSmall.copyWith(fontWeight: FontWeight.w700),
+                        textAlign: TextAlign.end,
+                      ),
+                      // For business: show influencer name below campaign
+                      if (widget.isBusinessView)
+                        Text(
+                          name,
+                          style: t.bodyMedium.copyWith(color: t.secondaryText),
+                          textAlign: TextAlign.end,
+                        ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _statusBadge(offer.status),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _fmtDate(offer.createdAt),
+                        style: t.bodySmall.copyWith(color: t.secondaryText),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 16),
+                  child: FeqImagePickerWidget(
+                    initialImageUrl: imageUrl,
+                    isUploading: false,
+                    size: 100,
+                    onImagePicked: (url, file, bytes) {},
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IntrinsicWidth(
+                        child: Text(
+                          name,
+                          style: t.bodyMedium.copyWith(
+                            color: t.primaryText,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: ElevatedButton(
+                          onPressed: () => _openDetail(offer),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: t.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          ),
+                          child: const Text('عرض التفاصيل'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openDetail(OfferModel offer) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => OfferDetailPage(
+        offerId: offer.id,
+        isBusinessView: widget.isBusinessView,
+      ),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final t = FlutterFlowTheme.of(context);
 
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
-    if (_offers.isEmpty) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_items.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.mail_outline, size: 64, color: t.secondaryText),
+            Icon(Icons.send_outlined, size: 64, color: t.secondaryText),
             const SizedBox(height: 16),
             Text(
-              widget.isBusinessView ? 'لا توجد عروض' : 'لا توجد عروض',
+              widget.isBusinessView
+                  ? 'لم ترسل أي عروض بعد'
+                  : 'لا توجد عروض واردة بعد',
               style: t.bodyLarge.copyWith(color: t.secondaryText),
             ),
           ],
@@ -128,88 +404,10 @@ class _OffersTabContentState extends State<OffersTabContent> with AutomaticKeepA
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadOffers,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _offers.length,
-        itemBuilder: (context, index) {
-          final offer = _offers[index];
-          Color statusColor = offer.status == 'pending'
-              ? Colors.orange
-              : offer.status == 'accepted'
-              ? Colors.green
-              : Colors.red;
-          IconData statusIcon = offer.status == 'pending'
-              ? Icons.hourglass_empty
-              : offer.status == 'accepted'
-              ? Icons.check_circle
-              : Icons.cancel;
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: InkWell(
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(offer.campaignTitle))),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 25,
-                          backgroundColor: t.primary.withValues(alpha: 0.1),
-                          child: Icon(widget.isBusinessView ? Icons.person : Icons.business, color: t.primary),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.isBusinessView ? offer.influencerName : offer.businessName,
-                                style: t.bodyLarge.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              Text(offer.campaignTitle, style: t.bodyMedium.copyWith(color: t.secondaryText)),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: statusColor),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(statusIcon, size: 14, color: statusColor),
-                              const SizedBox(width: 4),
-                              Text(offer.statusArabic, style: TextStyle(color: statusColor, fontSize: 11)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(Icons.attach_money, size: 18, color: t.secondaryText),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${offer.amount.toStringAsFixed(0)} ريال',
-                          style: t.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: t.primary),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: _items.length,
+      itemBuilder: (_, i) => _offerCard(_items[i]),
     );
   }
 }

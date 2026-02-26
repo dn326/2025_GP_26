@@ -1,1 +1,24 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"elan-db-55c84","appId":"1:992326034981:android:073531df9896a61ad201cc","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"elan-db-55c84","configurations":{"android":"1:992326034981:android:073531df9896a61ad201cc"}}}}}}
+{
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "elan-db-55c84",
+          "appId": "1:992326034981:android:073531df9896a61ad201cc",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "elan-db-55c84",
+          "configurations": {
+            "android": "1:992326034981:android:073531df9896a61ad201cc"
+          }
+        }
+      }
+    }
+  }
+}

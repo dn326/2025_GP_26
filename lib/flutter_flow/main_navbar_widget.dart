@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../core/utils/subscriptions_dialoges.dart';
 import '../features/business/presentation/campaign_screen.dart';
+import '../features/common/presentation/applications_offers_page.dart';
+import '../core/services/user_session.dart';
 import '../features/payment/payment_page.dart';
 import '../core/services/subscription_service.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -32,6 +34,16 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _checkNotificationsOnStartup();
+  }
+
+  Future<void> _checkNotificationsOnStartup() async {
+    final uid = UserSession.getCurrentUserId();
+    if (uid == null) return;
+    final userType = (await UserSession.getUserType()) ?? '';
+    if (userType.isNotEmpty) {
+      await ApplicationsOffersNotifier.checkOnStartup(uid, userType);
+    }
   }
 
   void _handleTap(int index) {
@@ -141,12 +153,40 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
               },
             ),
 
-            // 2) Handshake - Applications & Offers
-            FlutterFlowIconButton(
-              borderRadius: 8,
-              buttonSize: 40,
-              icon: Icon(Icons.handshake, size: 24, color: iconColor(2)),
-              onPressed: () => _handleTap(2),
+            // 2) Handshake - Applications & Offers (with red dot when there are new items)
+            ValueListenableBuilder<bool>(
+              valueListenable: ApplicationsOffersNotifier.hasNew,
+              builder: (_, hasNew, __) {
+                return SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => _handleTap(2),
+                    child: Center(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Icon(Icons.handshake, size: 24, color: iconColor(2)),
+                          if (hasNew)
+                            Positioned(
+                              top: -3,
+                              right: -3,
+                              child: Container(
+                                width: 9,
+                                height: 9,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
 
             // 3) Home

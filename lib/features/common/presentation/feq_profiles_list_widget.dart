@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../core/components/feq_components.dart';
+import '../../../core/components/feq_filter_chip_group.dart';
 import '../../../core/services/dropdown_list_loader.dart';
 import '../../../core/widgets/image_picker_widget.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
@@ -37,6 +38,9 @@ class FeqProfilesListWidget extends StatefulWidget {
   final bool showSorting;
   final bool paginated;
   final int pageSize;
+  /// When provided and targetUserType == 'influencer', shows "إرسال عرض" button.
+  /// Callback receives (uid, name, imageUrl).
+  final void Function(String uid, String name, String imageUrl)? onSendOfferTap;
 
   const FeqProfilesListWidget({
     super.key,
@@ -47,6 +51,7 @@ class FeqProfilesListWidget extends StatefulWidget {
     this.showSorting = true,
     this.paginated = true,
     this.pageSize = 20,
+    this.onSendOfferTap,
   });
 
   @override
@@ -126,21 +131,8 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
     try {
       Query query = FirebaseFirestore.instance.collection('profiles');
 
-      // 1. Basic sorting by Title/Name
       if (_sortType == FeqSortType.titleAsc) {
         query = query.orderBy(widget.titleSortField);
-      } else {
-        // For influencers querying users collection, try to order by updated_at if available
-        // bool descending = _sortType == FeqSortType.dateDesc;
-        // Note: If updated_at doesn't exist in all documents, Firestore will skip those documents
-        // We handle missing updated_at in post-processing
-        // if (widget.targetUserType == 'business') {
-        //   query = query.orderBy('updated_at', descending: descending);
-        // }
-        // For influencers, we'll sort in memory after fetching
-
-        // Default order
-        // query = query.orderBy('profile_id');
       }
 
       if (_lastDocument != null) {
@@ -159,7 +151,6 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
       }
 
       int addedCount = 0;
-      // int skippedCount = 0;
       int maxItems = widget.paginated ? widget.pageSize * 2 : 10000;
 
       for (var doc in snapshot.docs) {
@@ -168,28 +159,17 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
         final data = doc.data() as Map<String, dynamic>;
         final profileId = data['profile_id'] as String?;
 
-        if (profileId == null || profileId.isEmpty) {
-          // skippedCount++;
-          continue;
-        }
+        if (profileId == null || profileId.isEmpty) continue;
 
-        // Fetch user data to verify status and type using profile_id
         final userSnap = await FirebaseFirestore.instance.collection('users').doc(profileId).get();
-        if (!userSnap.exists) {
-          // skippedCount++;
-          continue;
-        }
+        if (!userSnap.exists) continue;
 
         final userData = userSnap.data()!;
 
-        // Only show active or pending accounts matching target user type
         final accountStatus = userData['account_status'] as String?;
         final userType = userData['user_type'] as String?;
 
-        if ((accountStatus != 'active' && accountStatus != 'pending') || userType != widget.targetUserType) {
-          // skippedCount++;
-          continue;
-        }
+        if ((accountStatus != 'active' && accountStatus != 'pending') || userType != widget.targetUserType) continue;
 
         String title = '';
         String? content1;
@@ -198,7 +178,6 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
         String imageUrl = '';
         bool isVerified = userData['verified'] == true;
 
-        // Process profile image
         final rawImage = data['profile_image'];
         if (rawImage != null && rawImage.toString().isNotEmpty) {
           imageUrl = rawImage.toString().contains('?')
@@ -206,12 +185,10 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
               : '$rawImage?alt=media';
         }
 
-        // Handle influencer data
         if (widget.targetUserType == 'influencer') {
           title = (data['name'] ?? '').toString().trim();
           if (title.isEmpty) continue;
 
-          // Fetch content type from influencer_profile subcollection
           final influencerSnap = await doc.reference.collection('influencer_profile').limit(1).get();
 
           int? contentTypeId;
@@ -221,12 +198,9 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
           }
 
           if (_selectedContentTypes.isNotEmpty) {
-            if (contentTypeId == null || !_selectedContentTypes.contains(contentTypeId)) {
-              continue;
-            }
+            if (contentTypeId == null || !_selectedContentTypes.contains(contentTypeId)) continue;
           }
 
-          // Fetch social accounts
           final socialSnap = await FirebaseFirestore.instance
               .collection('social_account')
               .where('influencer_id', isEqualTo: profileId)
@@ -234,9 +208,9 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
 
           socials = socialSnap.docs
               .map((s) {
-                final m = s.data();
-                return {'platform': m['platform']?.toString() ?? '', 'username': m['username']?.toString() ?? ''};
-              })
+            final m = s.data();
+            return {'platform': m['platform']?.toString() ?? '', 'username': m['username']?.toString() ?? ''};
+          })
               .where((e) => e['username']!.isNotEmpty)
               .toList();
 
@@ -248,16 +222,13 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
             if (!hasPlatform) continue;
           }
         } else {
-          // Handle business data
           title = (data['name'] ?? '').toString().trim();
           if (title.isEmpty) continue;
           content2 = (data['business_industry_name'] ?? '').toString();
 
           if (_selectedIndustries.isNotEmpty) {
             final industryId = data['business_industry_id'] as int?;
-            if (industryId == null || !_selectedIndustries.contains(industryId)) {
-              continue;
-            }
+            if (industryId == null || !_selectedIndustries.contains(industryId)) continue;
           }
         }
 
@@ -284,7 +255,6 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
         _hasMore = false;
       }
 
-      // Auto-load more if we got too few results
       if (addedCount < 10 && _hasMore && mounted) {
         await _loadBatch();
       } else {
@@ -303,13 +273,9 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
     final lower = _searchText.toLowerCase();
 
     var filtered = _allItems.where((item) {
-      // Search in title (highest priority)
       if (item.title.toLowerCase().contains(lower)) return true;
-      // Search in content1
       if (item.content1?.toLowerCase().contains(lower) == true) return true;
-      // Search in content2
       if (item.content2?.toLowerCase().contains(lower) == true) return true;
-      // Search in social usernames (for influencers)
       if (widget.targetUserType == 'influencer') {
         for (var s in item.socials) {
           if (s['username']!.toLowerCase().contains(lower)) return true;
@@ -318,7 +284,6 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
       return false;
     }).toList();
 
-    // Prioritize title matches
     filtered.sort((a, b) {
       bool aTitle = a.title.toLowerCase().contains(lower);
       bool bTitle = b.title.toLowerCase().contains(lower);
@@ -539,133 +504,143 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
               ? const Center(child: CircularProgressIndicator())
               : _displayItems.isEmpty
               ? Center(
-                  child: Text(_searchText.isEmpty ? 'لا توجد بيانات' : 'لا توجد نتائج', style: theme.headlineSmall),
-                )
+            child: Text(_searchText.isEmpty ? 'لا توجد بيانات' : 'لا توجد نتائج', style: theme.headlineSmall),
+          )
               : ListView.builder(
-                  controller: _scrollController,
-                  itemCount: _displayItems.length + (_isLoadingMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    // Loading indicator at bottom
-                    if (index == _displayItems.length) {
-                      return const Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
+            controller: _scrollController,
+            itemCount: _displayItems.length + (_isLoadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _displayItems.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
 
-                    final item = _displayItems[index];
+              final item = _displayItems[index];
 
-                    return Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: theme.containers,
-                          boxShadow: const [BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () async {
-                              final needRefresh = await Navigator.of(
-                                context,
-                              ).push(MaterialPageRoute(builder: (_) => widget.detailPageBuilder(context, item.id)));
-                              if (needRefresh == true) _loadInitial();
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        const SizedBox(height: 4),
-                                        if (item.content1 == null || item.content1!.isEmpty) const SizedBox(height: 16),
-                                        // Title line with verification icon
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            if (item.isVerified)
-                                              const Padding(
-                                                padding: EdgeInsetsDirectional.only(end: 6),
-                                                child: Icon(Icons.verified, color: Colors.blue, size: 20),
-                                              ),
-                                            Flexible(
-                                              child: Text(
-                                                item.title,
-                                                style: theme.titleMedium.copyWith(fontWeight: FontWeight.w600),
-                                                textAlign: TextAlign.end,
-                                              ),
+              return Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.containers,
+                    boxShadow: const [BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))],
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        final needRefresh = await Navigator.of(
+                          context,
+                        ).push(MaterialPageRoute(builder: (_) => widget.detailPageBuilder(context, item.id)));
+                        if (needRefresh == true) _loadInitial();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      if (item.content1 == null || item.content1!.isEmpty) const SizedBox(height: 16),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          if (item.isVerified)
+                                            const Padding(
+                                              padding: EdgeInsetsDirectional.only(end: 6),
+                                              child: Icon(Icons.verified, color: Colors.blue, size: 20),
                                             ),
-                                          ],
-                                        ),
-                                        if (item.content1 == null || item.content1!.isEmpty) const SizedBox(height: 4),
-                                        // Content line 1
-                                        if (item.content1 != null && item.content1!.isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 6),
+                                          Flexible(
                                             child: Text(
-                                              item.content1!,
-                                              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+                                              item.title,
+                                              style: theme.titleMedium.copyWith(fontWeight: FontWeight.w600),
                                               textAlign: TextAlign.end,
                                             ),
                                           ),
-                                        // Content line 2
-                                        if (item.content2 != null && item.content2!.isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 6),
-                                            child: Text(
-                                              item.content2!,
-                                              style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-                                              textAlign: TextAlign.end,
-                                            ),
-                                          ),
-                                        // Social chips for influencers
-                                        if (widget.targetUserType == 'influencer' && item.socials.isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 10),
-                                            child: _buildSocialChips(item.socials),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Padding(
-                                    padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 8),
-                                    child: FeqImagePickerWidget(
-                                      initialImageUrl: item.imageUrl,
-                                      isUploading: false,
-                                      size: 100,
-                                      onImagePicked: (url, file, bytes) {},
-                                    ),
-                                  ),
-                                  /*ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      item.imageUrl,
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, second, third) => Container(
-                                        width: 80,
-                                        height: 80,
-                                        color: Colors.grey[300],
-                                        child: const Icon(Icons.person, size: 40, color: Colors.grey),
+                                        ],
                                       ),
-                                    ),
-                                  ),*/
-                                ],
-                              ),
+                                      if (item.content1 == null || item.content1!.isEmpty) const SizedBox(height: 4),
+                                      if (item.content1 != null && item.content1!.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 6),
+                                          child: Text(
+                                            item.content1!,
+                                            style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+                                            textAlign: TextAlign.end,
+                                          ),
+                                        ),
+                                      if (item.content2 != null && item.content2!.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 6),
+                                          child: Text(
+                                            item.content2!,
+                                            style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+                                            textAlign: TextAlign.end,
+                                          ),
+                                        ),
+                                      if (widget.targetUserType == 'influencer' && item.socials.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 10),
+                                          child: _buildSocialChips(item.socials),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Padding(
+                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 8),
+                                  child: FeqImagePickerWidget(
+                                    initialImageUrl: item.imageUrl,
+                                    isUploading: false,
+                                    size: 100,
+                                    onImagePicked: (url, file, bytes) {},
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                            // "إرسال عرض" button — visible only when business is browsing influencers
+                            if (widget.onSendOfferTap != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: Align(
+                                  alignment: AlignmentDirectional.centerEnd,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => widget.onSendOfferTap!(
+                                      item.id,
+                                      item.title,
+                                      item.imageUrl,
+                                    ),
+                                    icon: const Icon(Icons.send, size: 16),
+                                    label: const Text('إرسال عرض'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: FlutterFlowTheme.of(context).primary,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],  // end Column children
+                        ),   // end Column
+                      ),     // end Padding
+                    ),       // end Material
+                  ),         // end Container
+                ),           // end Padding (outer)
+              );
+            },
+          ),
         ),
       ],
     );
@@ -721,51 +696,41 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
                     IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Text('حسب نوع المحتوى', style: t.bodyLarge),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: contentTypes.map((ct) {
-                    final isSelected = tempContentTypes.contains(ct.id);
-                    return FilterChip(
-                      label: Text(ct.nameAr),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setModalState(() {
-                          if (selected) {
-                            tempContentTypes.add(ct.id);
-                          } else {
-                            tempContentTypes.remove(ct.id);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
+                const SizedBox(height: 12),
+                FeqFilterChipGroup<FeqDropDownList>(
+                  title: 'حسب نوع المحتوى',
+                  items: contentTypes,
+                  selectedItems: tempContentTypes.map((id) => contentTypes.firstWhere((ct) => ct.id == id)).toList(),
+                  labelBuilder: (ct) => ct.nameAr,
+                  initiallyExpanded: false,
+                  textDirection: TextDirection.rtl,
+                  onSelectionChanged: (ct, selected) {
+                    setModalState(() {
+                      if (selected) {
+                        tempContentTypes.add(ct.id);
+                      } else {
+                        tempContentTypes.remove(ct.id);
+                      }
+                    });
+                  },
                 ),
-                const Divider(height: 30),
-                Text('حسب منصات التواصل', style: t.bodyLarge),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: platforms.map((p) {
-                    final isSelected = tempPlatforms.contains(p.id);
-                    return FilterChip(
-                      label: Text(p.nameAr),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setModalState(() {
-                          if (selected) {
-                            tempPlatforms.add(p.id);
-                          } else {
-                            tempPlatforms.remove(p.id);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
+                const Divider(height: 24),
+                FeqFilterChipGroup<FeqDropDownList>(
+                  title: 'حسب منصات التواصل',
+                  items: platforms,
+                  selectedItems: tempPlatforms.map((id) => platforms.firstWhere((p) => p.id == id)).toList(),
+                  labelBuilder: (p) => p.nameAr,
+                  initiallyExpanded: false,
+                  textDirection: TextDirection.rtl,
+                  onSelectionChanged: (p, selected) {
+                    setModalState(() {
+                      if (selected) {
+                        tempPlatforms.add(p.id);
+                      } else {
+                        tempPlatforms.remove(p.id);
+                      }
+                    });
+                  },
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -823,28 +788,23 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
                     IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Text('حسب مجال العمل', style: t.bodyLarge),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: industries.map((ind) {
-                    final isSelected = tempIndustries.contains(ind.id);
-                    return FilterChip(
-                      label: Text(ind.nameAr),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setModalState(() {
-                          if (selected) {
-                            tempIndustries.add(ind.id);
-                          } else {
-                            tempIndustries.remove(ind.id);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
+                const SizedBox(height: 12),
+                FeqFilterChipGroup<FeqDropDownList>(
+                  title: 'حسب مجال العمل',
+                  items: industries,
+                  selectedItems: tempIndustries.map((id) => industries.firstWhere((ind) => ind.id == id)).toList(),
+                  labelBuilder: (ind) => ind.nameAr,
+                  initiallyExpanded: false,
+                  textDirection: TextDirection.rtl,
+                  onSelectionChanged: (ind, selected) {
+                    setModalState(() {
+                      if (selected) {
+                        tempIndustries.add(ind.id);
+                      } else {
+                        tempIndustries.remove(ind.id);
+                      }
+                    });
+                  },
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(

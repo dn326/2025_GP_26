@@ -184,6 +184,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
           content: const Text(
             'تم تسجيل الدخول بنجاح',
             style: TextStyle(color: Colors.white),
+            textAlign: TextAlign.end,
           ),
         ),
       );
