@@ -14,6 +14,7 @@ import 'package:elan_flutterproject/features/subscription/subscription_details_p
 import 'package:elan_flutterproject/features/subscription/subscription_plans_page.dart';
 import 'package:elan_flutterproject/core/services/subscription_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/services/dropdown_list_loader.dart';
@@ -46,6 +47,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'إعلان',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('ar'),
+        Locale('en'),
+      ],
+      locale: Locale('en'),
       // Use home instead of initialRoute to check auth state
       home: const AuthWrapper(),
       routes: {

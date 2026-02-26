@@ -186,7 +186,7 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchBusinessCampaignList([String? uid, String? campaignId]) async {
+  Future<List<Map<String, dynamic>>> fetchBusinessCampaignList([String? uid, String? campaignId, String? visible]) async {
     try {
       final userId = uid ?? currentUserId;
       Query query = firebaseFirestore.collection('campaigns');
@@ -194,6 +194,9 @@ class FeqFirebaseServiceUtils {
         query = query.where('campaign_id', isEqualTo: campaignId);
       } else {
         query = query.where('business_id', isEqualTo: userId);
+      }
+      if (visible != null && visible.isNotEmpty) {
+        query = query.where('visible', isEqualTo: bool.parse(visible));
       }
 
       final campaignSnap = await query.get();
@@ -203,6 +206,12 @@ class FeqFirebaseServiceUtils {
         if (m == null) return null;
 
         final dateAdded = m['date_added'] ?? m['start_date'];
+
+        final endDate = m['end_date'] is Timestamp
+            ? (m['end_date'] as Timestamp).toDate()
+            : m['end_date'] as DateTime?;
+
+        final isExpired = endDate != null && endDate.isBefore(DateTime.now());
 
         return {
           'id': d.id,
@@ -216,6 +225,7 @@ class FeqFirebaseServiceUtils {
           'end_date': m['end_date'],
           'date_added': dateAdded,
           'visible': m['visible'] ?? false,
+          'expired': isExpired
         };
       }).whereType<Map<String, dynamic>>().toList();
 
@@ -229,6 +239,13 @@ class FeqFirebaseServiceUtils {
       campaignList.sort((a, b) {
         final da = toDate(a['date_added'])?.millisecondsSinceEpoch ?? -1;
         final db = toDate(b['date_added'])?.millisecondsSinceEpoch ?? -1;
+        return db.compareTo(da);
+      });
+
+      // sort in memory using expired or fallback
+      campaignList.sort((a, b) {
+        final da = a['expired'] ? -1 : 1;
+        final db = b['expired'] ? -1 : 1;
         return db.compareTo(da);
       });
 

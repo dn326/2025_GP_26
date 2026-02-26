@@ -16,6 +16,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
+import '../../../core/services/user_session.dart';
 import '../../../core/utils/campaign_expiry_helper.dart';
 import '../../../core/utils/subscription_badge_config.dart';
 import '../../../core/widgets/image_picker_widget.dart';
@@ -65,11 +66,13 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   bool _isLoadingSubscription = false;
   String _subscriptionStatus = 'free';
 
+  final Set<String> _appliedCampaignIds = {};
 
   @override
   void initState() {
     super.initState();
     loadAll();
+    _loadMyApplications();
   }
 
   @override
@@ -147,9 +150,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
       List<Map<String, dynamic>> campaignList = [];
       if (widget.campaignId != null) {
-        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, widget.campaignId);
+        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, widget.campaignId, null);
       } else {
-        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, null);
+        campaignList = await _firebaseService.fetchBusinessCampaignList(widget.uid, null, null);
       }
 
       if (!mounted) return;
@@ -228,94 +231,94 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       builder: (context) => _buildCampaignFilterSheet(),
     );
   }
-Widget _buildCampaignFilterSheet() {
-  final t = FlutterFlowTheme.of(context);
-  final contentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
-  final platforms = FeqDropDownListLoader.instance.socialPlatforms;
+  Widget _buildCampaignFilterSheet() {
+    final t = FlutterFlowTheme.of(context);
+    final contentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
+    final platforms = FeqDropDownListLoader.instance.socialPlatforms;
 
-  String tempCampaignStatus = _selectedCampaignStatus;
-  final tempContentTypes = List<int>.from(_selectedCampaignContentTypes);
-  final tempPlatforms = List<int>.from(_selectedCampaignPlatforms);
+    String tempCampaignStatus = _selectedCampaignStatus;
+    final tempContentTypes = List<int>.from(_selectedCampaignContentTypes);
+    final tempPlatforms = List<int>.from(_selectedCampaignPlatforms);
 
-  return StatefulBuilder(
-    builder: (context, setModalState) {
-      return Directionality(
-        textDirection: TextDirection.rtl,
-        child: Container(
-          decoration: BoxDecoration(
-            color: t.secondaryBackground,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
-                    Text('تصفية الحملات', style: t.headlineSmall),
-                    TextButton(
-                      onPressed: () {
-                        tempCampaignStatus = 'all';
-                        tempContentTypes.clear();
-                        tempPlatforms.clear();
-                        setModalState(() {});
-                      },
-                      child: Text('مسح الكل', style: TextStyle(color: t.error)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text('حسب حالة الحملة', style: t.bodyLarge),
-                ),
-                const SizedBox(height: 10),
-                RadioListTile<String>(
-                  title: const Text('عرض جميع الحملات'),
-                  value: 'all',
-                  groupValue: tempCampaignStatus,
-                  onChanged: (value) => setModalState(() => tempCampaignStatus = value!),
-                ),
-                RadioListTile<String>(
-                  title: const Text('عرض الحملات النشطة فقط'),
-                  value: 'active',
-                  groupValue: tempCampaignStatus,
-                  onChanged: (value) => setModalState(() => tempCampaignStatus = value!),
-                ),
-                RadioListTile<String>(
-                  title: const Text('عرض الحملات المنتهية'),
-                  value: 'inactive',
-                  groupValue: tempCampaignStatus,
-                  onChanged: (value) => setModalState(() => tempCampaignStatus = value!),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedCampaignStatus = tempCampaignStatus;
-                      _selectedCampaignContentTypes = tempContentTypes;
-                      _selectedCampaignPlatforms = tempPlatforms;
-                    });
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: t.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+    return StatefulBuilder(
+      builder: (context, setModalState) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Container(
+            decoration: BoxDecoration(
+              color: t.secondaryBackground,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                      Text('تصفية الحملات', style: t.headlineSmall),
+                      TextButton(
+                        onPressed: () {
+                          tempCampaignStatus = 'all';
+                          tempContentTypes.clear();
+                          tempPlatforms.clear();
+                          setModalState(() {});
+                        },
+                        child: Text('مسح الكل', style: TextStyle(color: t.error)),
+                      ),
+                    ],
                   ),
-                  child: Text('تطبيق التصفية', style: TextStyle(color: t.containers)),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text('حسب حالة الحملة', style: t.bodyLarge),
+                  ),
+                  const SizedBox(height: 10),
+                  RadioListTile<String>(
+                    title: const Text('عرض جميع الحملات'),
+                    value: 'all',
+                    groupValue: tempCampaignStatus,
+                    onChanged: (value) => setModalState(() => tempCampaignStatus = value!),
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('عرض الحملات النشطة فقط'),
+                    value: 'active',
+                    groupValue: tempCampaignStatus,
+                    onChanged: (value) => setModalState(() => tempCampaignStatus = value!),
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('عرض الحملات المنتهية'),
+                    value: 'inactive',
+                    groupValue: tempCampaignStatus,
+                    onChanged: (value) => setModalState(() => tempCampaignStatus = value!),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedCampaignStatus = tempCampaignStatus;
+                        _selectedCampaignContentTypes = tempContentTypes;
+                        _selectedCampaignPlatforms = tempPlatforms;
+                      });
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: t.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text('تطبيق التصفية', style: TextStyle(color: t.containers)),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 
   List<Map<String, dynamic>> get _filteredCampaignList {
     var filtered = _campaignList.toList();
@@ -359,7 +362,7 @@ Widget _buildCampaignFilterSheet() {
 
     return platformNames.map((platformNameStr) {
       final platformObj = _socialPlatforms.firstWhere(
-        (p) => p.nameAr == platformNameStr.toString(),
+            (p) => p.nameAr == platformNameStr.toString(),
         orElse: () =>
             FeqDropDownList(id: 0, nameEn: platformNameStr.toString(), nameAr: platformNameStr.toString(), domain: ''),
       );
@@ -462,77 +465,77 @@ Widget _buildCampaignFilterSheet() {
       direction: Axis.horizontal,
       children: _profileData!.socialMedia!
           .map((s) {
-            final platformId = s['platform']?.toString() ?? '';
-            final username = s['username']?.toString() ?? '';
+        final platformId = s['platform']?.toString() ?? '';
+        final username = s['username']?.toString() ?? '';
 
-            if (platformId.isEmpty || username.isEmpty) {
-              return const SizedBox.shrink();
-            }
+        if (platformId.isEmpty || username.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-            final platform = _socialPlatforms.firstWhere(
+        final platform = _socialPlatforms.firstWhere(
               (p) =>
-                  p.nameEn.toLowerCase() == platformId.toLowerCase() ||
-                  p.nameAr.toLowerCase() == platformId.toLowerCase(),
-              orElse: () => FeqDropDownList(id: 0, nameEn: platformId, nameAr: platformId, domain: ''),
-            );
+          p.nameEn.toLowerCase() == platformId.toLowerCase() ||
+              p.nameAr.toLowerCase() == platformId.toLowerCase(),
+          orElse: () => FeqDropDownList(id: 0, nameEn: platformId, nameAr: platformId, domain: ''),
+        );
 
-            final domain = platform.domain ?? '';
-            final nameEn = platform.nameEn;
+        final domain = platform.domain ?? '';
+        final nameEn = platform.nameEn;
 
-            if (domain.isEmpty || nameEn.isEmpty) return const SizedBox();
+        if (domain.isEmpty || nameEn.isEmpty) return const SizedBox();
 
-            final socialUrl = 'https://$domain/$username';
-            final socialIcon = _getSocialIcon(nameEn);
-            // final socialColor = _getSocialColor(nameEn);
+        final socialUrl = 'https://$domain/$username';
+        final socialIcon = _getSocialIcon(nameEn);
+        // final socialColor = _getSocialColor(nameEn);
 
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () async {
-                  await launchUrl(Uri.parse(socialUrl), mode: LaunchMode.externalApplication);
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            platform.nameAr,
-                            textAlign: TextAlign.right,
-                            style: t.labelSmall.copyWith(color: t.secondaryText, fontSize: 10),
-                          ),
-                          Text(
-                            '@$username',
-                            textAlign: TextAlign.right,
-                            style: t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w500),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () async {
+              await launchUrl(Uri.parse(socialUrl), mode: LaunchMode.externalApplication);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        platform.nameAr,
+                        textAlign: TextAlign.right,
+                        style: t.labelSmall.copyWith(color: t.secondaryText, fontSize: 10),
                       ),
-                    ),
-                    SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: t.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                      child: Icon(socialIcon, size: 20, color: t.primary),
-                    ),
-                  ],
+                      Text(
+                        '@$username',
+                        textAlign: TextAlign.right,
+                        style: t.bodyMedium.copyWith(color: t.primaryText, fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          })
-          .toList()
-          .divide(
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Divider(height: 1, color: t.alternate.withValues(alpha: 0.5)),
+                SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: t.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: Icon(socialIcon, size: 20, color: t.primary),
+                ),
+              ],
             ),
           ),
+        );
+      })
+          .toList()
+          .divide(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Divider(height: 1, color: t.alternate.withValues(alpha: 0.5)),
+        ),
+      ),
     );
   }
 
@@ -609,8 +612,8 @@ Widget _buildCampaignFilterSheet() {
               InkWell(
                 onTap: isLink
                     ? () async {
-                        await launchUrl(Uri.parse(text), mode: LaunchMode.externalApplication);
-                      }
+                  await launchUrl(Uri.parse(text), mode: LaunchMode.externalApplication);
+                }
                     : null,
                 child: Text(
                   text,
@@ -661,302 +664,302 @@ Widget _buildCampaignFilterSheet() {
               : _error != null
               ? Center(child: Text(_error!))
               : SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(8, 16, 8, 16),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(8, 16, 8, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // New Profile Card Design
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: theme.secondaryBackground,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        // New Profile Card Design
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: theme.secondaryBackground,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
+                        // Header Section
+                        Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.center,
+                          children: [
+                            // Gradient Header
+                            Container(
+                              height: 140,
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(24),
+                                  topRight: Radius.circular(24),
+                                ),
+                                gradient: LinearGradient(
+                                  colors: [theme.primary, theme.primary.withValues(alpha: 0.7)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              // Header Section
-                              Stack(
-                                clipBehavior: Clip.none,
-                                alignment: Alignment.center,
+                              child: Stack(
                                 children: [
-                                  // Gradient Header
-                                  Container(
-                                    height: 140,
-                                    decoration: BoxDecoration(
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(24),
-                                        topRight: Radius.circular(24),
+                                  Positioned(
+                                    top: -20,
+                                    left: -20,
+                                    child: Container(
+                                      width: 100,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withValues(alpha: 0.1),
                                       ),
-                                      gradient: LinearGradient(
-                                        colors: [theme.primary, theme.primary.withValues(alpha: 0.7)],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                          top: -20,
-                                          left: -20,
-                                          child: Container(
-                                            width: 100,
-                                            height: 100,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.white.withValues(alpha: 0.1),
-                                            ),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          bottom: -20,
-                                          right: -20,
-                                          child: Container(
-                                            width: 80,
-                                            height: 80,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.white.withValues(alpha: 0.1),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
                                     ),
                                   ),
-                                  // Profile Image
                                   Positioned(
-                                    bottom: -50,
+                                    bottom: -20,
+                                    right: -20,
                                     child: Container(
-                                      padding: const EdgeInsets.all(4),
+                                      width: 80,
+                                      height: 80,
                                       decoration: BoxDecoration(
-                                        color: theme.secondaryBackground,
                                         shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.1),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                      child: FeqImagePickerWidget(
-                                        initialImageUrl: _profileData?.profileImageUrl,
-                                        isUploading: false,
-                                        onTap: () {},
-                                        size: 100,
-                                        onImagePicked: (url, file, bytes) {},
+                                        color: Colors.white.withValues(alpha: 0.1),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 60),
-
-                              // Content
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                                child: Column(
-                                  children: [
-                                    // Name
-                                    FeqVerifiedNameWidget(name: _profileData!.name, isVerified: _isVerified),
-                                    const SizedBox(height: 8),
-
-                                    // Industry Tag
-                                    if (_profileData?.businessIndustryName != null)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-
-                                        child: Text(
-                                          _profileData!.businessIndustryName,
-                                          style: theme.bodyMedium.copyWith(
-                                            color: theme.primary,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ),
-
-                                    const SizedBox(height: 12),
-
-                                    // Subscription Badge (Owner only)
-                                    if (isOwner) ...[
-                                      GestureDetector(
-                                        onTap: () {
-                                          if (_subscriptionStatus == 'free') {
-                                            Navigator.pushNamed(context, PaymentPage.routeName);
-                                          } else {
-                                            Navigator.pushNamed(
-                                              context,
-                                              SubscriptionDetailsPage.routeName,
-                                              arguments: _subscriptionData,
-                                            );
-                                          }
-                                        },
-                                        child: _buildSubscriptionBadge(),
-                                      ),
-                                      const SizedBox(height: 24),
-                                    ],
-
-                                    if (widget.campaignId == null) ...[
-                                      // Description
-                                      if ((_profileData?.description ?? '').isNotEmpty) ...[
-                                        const SizedBox(height: 8),
-                                        Align(
-                                          alignment: Alignment.bottomRight,
-                                          child: Text(
-                                            _profileData!.description!,
-                                            textAlign: TextAlign.right,
-                                            style: theme.bodyMedium.copyWith(height: 1.6, color: theme.secondaryText),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 24),
-                                      ],
-
-                                      // Contact Info
-                                      _buildContactSection(context),
-
-                                      const SizedBox(height: 32),
-
-                                      if (widget.uid == null)
-                                        FFButtonWidget(
-                                          onPressed: () => context.pushNamed(BusinessProfileFormWidget.routeNameEdit),
-                                          text: 'تعديل الملف التعريفي',
-                                          icon: const Icon(Icons.edit_outlined, size: 20),
-                                          options: FFButtonOptions(
-                                            width: double.infinity,
-                                            height: 44,
-                                            color: theme.primary,
-                                            textStyle: theme.titleSmall.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: GoogleFonts.interTight().fontFamily,
-                                            ),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                    ],
+                            ),
+                            // Profile Image
+                            Positioned(
+                              bottom: -50,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: theme.secondaryBackground,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
                                   ],
+                                ),
+                                child: FeqImagePickerWidget(
+                                  initialImageUrl: _profileData?.profileImageUrl,
+                                  isUploading: false,
+                                  onTap: () {},
+                                  size: 100,
+                                  onImagePicked: (url, file, bytes) {},
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 60),
 
-                        const SizedBox(height: 20),
-
-                        Container(
-                          width: double.infinity,
-                          padding: (widget.campaignId == null) ? EdgeInsets.all(16) : EdgeInsets.all(0),
-                          decoration: BoxDecoration(
-                            color: theme.containers,
-                            boxShadow: const [
-                              BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, -1)),
-                            ],
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                        // Content
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              if (widget.campaignId == null) ...[
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(Icons.filter_list, color: theme.primaryText),
-                                          onPressed: _showCampaignFilterSheet,
-                                        ),
-                                      ],
-                                    ),
-                                    Text(
-                                      'الحملات',
-                                      textAlign: TextAlign.end,
-                                      style: theme.headlineLarge.copyWith(
-                                        fontFamily: GoogleFonts.interTight().fontFamily,
-                                        fontSize: 22,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 16),
-                                  child: Directionality(
-                                    textDirection: TextDirection.rtl,
-                                    child: TextField(
-                                      onChanged: (v) => setState(() => _campaignSearchText = v.trim()),
-                                      decoration: InputDecoration(
-                                        hintText: 'بحث في الحملات...',
-                                        prefixIcon: const Icon(Icons.search),
-                                        filled: true,
-                                        fillColor: theme.tertiary,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      ),
+                              // Name
+                              FeqVerifiedNameWidget(name: _profileData!.name, isVerified: _isVerified),
+                              const SizedBox(height: 8),
+
+                              // Industry Tag
+                              if (_profileData?.businessIndustryName != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+
+                                  child: Text(
+                                    _profileData!.businessIndustryName,
+                                    style: theme.bodyMedium.copyWith(
+                                      color: theme.primary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14,
                                     ),
                                   ),
                                 ),
+
+                              const SizedBox(height: 12),
+
+                              // Subscription Badge (Owner only)
+                              if (isOwner) ...[
+                                GestureDetector(
+                                  onTap: () {
+                                    if (_subscriptionStatus == 'free') {
+                                      Navigator.pushNamed(context, PaymentPage.routeName);
+                                    } else {
+                                      Navigator.pushNamed(
+                                        context,
+                                        SubscriptionDetailsPage.routeName,
+                                        arguments: _subscriptionData,
+                                      );
+                                    }
+                                  },
+                                  child: _buildSubscriptionBadge(),
+                                ),
+                                const SizedBox(height: 24),
                               ],
-                              if (_filteredCampaignList.isEmpty)
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: theme.tertiary,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'لا توجد أي حملات حاليا',
-                                        style: theme.labelSmall.override(
-                                          fontFamily: GoogleFonts.inter().fontFamily,
-                                          color: theme.subtextHints,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
+
+                              if (widget.campaignId == null) ...[
+                                // Description
+                                if ((_profileData?.description ?? '').isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.bottomRight,
+                                    child: Text(
+                                      _profileData!.description!,
+                                      textAlign: TextAlign.right,
+                                      style: theme.bodyMedium.copyWith(height: 1.6, color: theme.secondaryText),
                                     ),
                                   ),
-                                )
-                              else
-                                Padding(
-                                  padding: (widget.campaignId == null)
-                                      ? EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16)
-                                      : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
-                                  child: Column(
-                                    children: _filteredCampaignList
-                                        .map(
-                                          (e) => Padding(
-                                        padding: (widget.campaignId == null)
-                                            ? EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12)
-                                            : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
-                                        child: (widget.campaignId != null)
-                                            ? _tileCampaignSpecial(e)
-                                            : _tileCampaign(e),
+                                  const SizedBox(height: 24),
+                                ],
+
+                                // Contact Info
+                                _buildContactSection(context),
+
+                                const SizedBox(height: 32),
+
+                                if (widget.uid == null)
+                                  FFButtonWidget(
+                                    onPressed: () => context.pushNamed(BusinessProfileFormWidget.routeNameEdit),
+                                    text: 'تعديل الملف التعريفي',
+                                    icon: const Icon(Icons.edit_outlined, size: 20),
+                                    options: FFButtonOptions(
+                                      width: double.infinity,
+                                      height: 44,
+                                      color: theme.primary,
+                                      textStyle: theme.titleSmall.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: GoogleFonts.interTight().fontFamily,
                                       ),
-                                    )
-                                        .toList(),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                ),
+                              ],
                             ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+
+                  const SizedBox(height: 20),
+
+                  Container(
+                    width: double.infinity,
+                    padding: (widget.campaignId == null) ? EdgeInsets.all(16) : EdgeInsets.all(0),
+                    decoration: BoxDecoration(
+                      color: theme.containers,
+                      boxShadow: const [
+                        BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, -1)),
+                      ],
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (widget.campaignId == null) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.filter_list, color: theme.primaryText),
+                                    onPressed: _showCampaignFilterSheet,
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                'الحملات',
+                                textAlign: TextAlign.end,
+                                style: theme.headlineLarge.copyWith(
+                                  fontFamily: GoogleFonts.interTight().fontFamily,
+                                  fontSize: 22,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: TextField(
+                                onChanged: (v) => setState(() => _campaignSearchText = v.trim()),
+                                decoration: InputDecoration(
+                                  hintText: 'بحث في الحملات...',
+                                  prefixIcon: const Icon(Icons.search),
+                                  filled: true,
+                                  fillColor: theme.tertiary,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (_filteredCampaignList.isEmpty)
+                          Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
+                            child: Container(
+                              width: double.infinity,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: theme.tertiary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'لا توجد أي حملات حاليا',
+                                  style: theme.labelSmall.override(
+                                    fontFamily: GoogleFonts.inter().fontFamily,
+                                    color: theme.subtextHints,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          Padding(
+                            padding: (widget.campaignId == null)
+                                ? EdgeInsetsDirectional.fromSTEB(16, 0, 0, 16)
+                                : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                            child: Column(
+                              children: _filteredCampaignList
+                                  .map(
+                                    (e) => Padding(
+                                  padding: (widget.campaignId == null)
+                                      ? EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12)
+                                      : EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                                  child: (widget.campaignId != null)
+                                      ? _tileCampaignSpecial(e)
+                                      : _tileCampaign(e),
+                                ),
+                              )
+                                  .toList(),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -1005,7 +1008,205 @@ Widget _buildCampaignFilterSheet() {
     return _subscriptionData!.tier;
   }
 
-  Widget _tileCampaignSpecial(Map<String, dynamic> e) {
+  Future<void> _loadMyApplications() async {
+    final myId = UserSession.getCurrentUserId();
+    if (myId == null) return;
+
+    try {
+      final snap = await firebaseFirestore
+          .collection('applications')
+          .where('influencer_id', isEqualTo: myId)
+          .get();
+
+      final ids = snap.docs
+          .map((d) => (d.data()['campaign_id'] as String? ?? ''))
+          .where((id) => id.isNotEmpty)
+          .toSet();
+
+      if (mounted) setState(() => _appliedCampaignIds.addAll(ids));
+    } catch (_) {}
+  }
+
+  Future<void> _applyToCampaign(Map<String, dynamic> campaign) async {
+    final myId = UserSession.getCurrentUserId();
+    if (myId == null) return;
+
+    final campaignId = campaign['campaign_id'] as String? ??
+        campaign['id'] as String? ?? '';
+    if (campaignId.isEmpty) return;
+
+    // Already applied?
+    if (_appliedCampaignIds.contains(campaignId)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('لقد تقدمت على هذه الحملة مسبقاً',
+              textDirection: TextDirection.rtl),
+        ),
+      );
+      return;
+    }
+
+    // Fetch influencer's own profile data for the application
+    String influencerName = '';
+    String influencerImageUrl = '';
+    try {
+      final profileSnap = await firebaseFirestore
+          .collection('profiles')
+          .where('profile_id', isEqualTo: myId)
+          .limit(1)
+          .get();
+
+      if (profileSnap.docs.isNotEmpty) {
+        final data = profileSnap.docs.first.data();
+        influencerName = (data['name'] as String? ?? '').trim();
+        final raw = data['profile_image'] as String? ?? '';
+        if (raw.isNotEmpty) {
+          influencerImageUrl = raw.contains('?')
+              ? '${raw.split('?').first}?alt=media'
+              : '$raw?alt=media';
+        }
+      }
+    } catch (_) {}
+
+    // Confirmation dialog — shows campaign details before submitting
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final t = FlutterFlowTheme.of(ctx);
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text('تأكيد التقديم', style: t.titleMedium),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  'هل تريد التقدم على حملة:',
+                  style: t.bodyMedium.copyWith(color: t.secondaryText),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '"${campaign['title'] ?? ''}"',
+                  style: t.titleSmall.copyWith(
+                      fontWeight: FontWeight.w700, color: t.primary),
+                  textAlign: TextAlign.end,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'سيتم إرسال طلبك إلى الجهة المعلنة وستتلقى ردهم قريباً.',
+                  style: t.bodySmall.copyWith(color: t.secondaryText, height: 1.5),
+                  textAlign: TextAlign.end,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: t.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('تأكيد التقديم'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    // Write to Firestore
+    try {
+      final businessId = campaign['business_id'] as String? ?? '';
+      final campaignTitle = campaign['title'] as String? ?? '';
+
+      // Fetch business name and image from profiles collection
+      String businessName = '';
+      String businessImageUrl = '';
+      if (businessId.isNotEmpty) {
+        try {
+          final bizSnap = await firebaseFirestore
+              .collection('profiles')
+              .where('profile_id', isEqualTo: businessId)
+              .limit(1)
+              .get();
+          if (bizSnap.docs.isNotEmpty) {
+            final bizData = bizSnap.docs.first.data();
+            businessName = (bizData['name'] as String? ?? '').trim();
+            final rawImg = bizData['profile_image'] as String? ?? '';
+            if (rawImg.isNotEmpty) {
+              businessImageUrl = rawImg.contains('?')
+                  ? '${rawImg.split('?').first}?alt=media'
+                  : '$rawImg?alt=media';
+            }
+          }
+        } catch (_) {}
+      }
+
+      final docRef = firebaseFirestore.collection('applications').doc();
+
+      await docRef.set({
+        'application_id': docRef.id,
+        'influencer_id': myId,
+        'influencer_name': influencerName,
+        'influencer_image_url': influencerImageUrl,
+        'business_id': businessId,
+        'business_name': businessName,
+        'business_image_url': businessImageUrl,
+        'campaign_id': campaignId,
+        'campaign_title': campaignTitle,
+        'status': 'pending',
+        'applied_at': FieldValue.serverTimestamp(),
+        'is_read_by_business': false,
+      });
+
+      // Write notification for business (red dot on handshake icon)
+      if (businessId.isNotEmpty) {
+        await firebaseFirestore.collection('notifications').add({
+          'to_user_id': businessId,
+          'type': 'new_application',
+          'application_id': docRef.id,
+          'campaign_title': campaignTitle,
+          'influencer_name': influencerName,
+          'created_at': FieldValue.serverTimestamp(),
+          'is_read': false,
+        });
+      }
+
+      // Mark locally so the button updates instantly without a reload
+      if (mounted) setState(() => _appliedCampaignIds.add(campaignId));
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم إرسال تقديمك بنجاح 🎉',
+              textDirection: TextDirection.rtl),
+          backgroundColor: Color(0xFF16A34A),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('حدث خطأ أثناء التقديم: $e',
+              textDirection: TextDirection.rtl),
+        ),
+      );
+    }
+  }
+
+  Widget _tileCampaignSpecial2(Map<String, dynamic> e) {
     final theme = FlutterFlowTheme.of(context);
 
     final labelStyle = theme.bodyMedium.copyWith(color: theme.primaryText, fontWeight: FontWeight.w600);
@@ -1112,6 +1313,155 @@ Widget _buildCampaignFilterSheet() {
     );
   }
 
+  Widget _tileCampaignSpecial(Map<String, dynamic> e) {
+    final theme = FlutterFlowTheme.of(context);
+
+    final labelStyle =
+    theme.bodyMedium.copyWith(color: theme.primaryText, fontWeight: FontWeight.w600);
+    final valueStyle = theme.bodyMedium.copyWith(color: theme.secondaryText);
+
+    final title = e['title'] as String? ?? '';
+    final description = e['description'] as String? ?? '';
+    final influencerContentTypeName =
+        e['influencer_content_type_name'] as String? ?? '';
+    final s = _fmtDate(e['start_date']);
+    final en = _fmtDate(e['end_date']);
+
+    final DateTime? endDate = e['end_date'] is Timestamp
+        ? (e['end_date'] as Timestamp).toDate()
+        : e['end_date'] as DateTime?;
+
+    final bool isExpiringSoon =
+    endDate != null ? CampaignExpiryHelper.isExpiringSoon(endDate) : false;
+
+    // Determine the campaign ID — field may be stored as 'campaign_id' or 'id'
+    final String campaignId =
+    (e['campaign_id'] as String? ?? e['id'] as String? ?? '');
+
+    final bool alreadyApplied = _appliedCampaignIds.contains(campaignId);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.containers,
+        boxShadow: const [
+          BoxShadow(color: Color(0x33000000), blurRadius: 3, offset: Offset(0, 2))
+        ],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (isExpiringSoon) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          CampaignExpiryBadge(endDate: endDate, isCompact: true)
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    Text('عنوان الحملة', style: labelStyle, textAlign: TextAlign.end),
+                    Text(title, style: valueStyle.copyWith(color: theme.primaryText),
+                        textAlign: TextAlign.end),
+                    const SizedBox(height: 8),
+                    if (s.isNotEmpty || en.isNotEmpty) ...[
+                      Text('الفترة الزمنية', style: labelStyle, textAlign: TextAlign.end),
+                      Text('من $s إلى $en',
+                          style: valueStyle.copyWith(color: theme.secondaryText),
+                          textAlign: TextAlign.end),
+                      const SizedBox(height: 8),
+                    ],
+                    Text('تفاصيل الحملة', style: labelStyle, textAlign: TextAlign.end),
+                    Text(description,
+                        style: valueStyle.copyWith(color: theme.secondaryText),
+                        textAlign: TextAlign.end),
+                    const SizedBox(height: 8),
+                    Text('المنصات', style: labelStyle, textAlign: TextAlign.end),
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: _buildCampaignPlatforms(e),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('نوع المحتوى', style: labelStyle, textAlign: TextAlign.end),
+                    Text(influencerContentTypeName,
+                        style: valueStyle.copyWith(color: theme.secondaryText),
+                        textAlign: TextAlign.end),
+                    const SizedBox(height: 12),
+
+                    // ── Apply button ──────────────────────────────────────
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: alreadyApplied
+                      // Already applied state
+                          ? Container(
+                        key: const ValueKey('applied'),
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF16A34A).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_circle,
+                                color: Color(0xFF16A34A), size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'تم التقديم بنجاح',
+                              style: TextStyle(
+                                color: Color(0xFF16A34A),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      // Apply button
+                          : SizedBox(
+                        key: const ValueKey('apply'),
+                        width: double.infinity,
+                        height: 44,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.send_rounded, size: 18),
+                          label: const Text(
+                            'قدّم على هذه الحملة',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () => _applyToCampaign(e),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _tileCampaign(Map<String, dynamic> e) {
     final t = FlutterFlowTheme.of(context);
 
@@ -1179,11 +1529,12 @@ Widget _buildCampaignFilterSheet() {
                             onPressed: isExpired
                                 ? null
                                 : () async {
-                                    await Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (_) => CampaignScreen(campaignId: e['id'] as String)),
-                                    );
-                                    await loadAll();
-                                  },
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => CampaignScreen(campaignId: e['id'] as String)),
+                              );
+                              await loadAll();
+                              await _loadMyApplications();
+                            },
                           ),
                           const SizedBox(width: 8),
 
@@ -1222,6 +1573,7 @@ Widget _buildCampaignFilterSheet() {
                                   await firebaseFirestore.collection('campaigns').doc(expId).delete();
                                   if (!mounted) return;
                                   await loadAll();
+                                  await _loadMyApplications();
                                 } catch (err) {
                                   if (!mounted) return;
                                   ScaffoldMessenger.of(
@@ -1281,6 +1633,7 @@ Widget _buildCampaignFilterSheet() {
                                   ),
                                 );
                                 await loadAll();
+                                await _loadMyApplications();
                               },
                             ),
                           ],
