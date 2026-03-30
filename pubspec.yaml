@@ -13,6 +13,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_animate: ^4.5.2
+  flutter_dotenv: ^6.0.0
   firebase_core: ^3.6.0
   firebase_app_check: ^0.3.1
   firebase_auth: ^5.3.1
@@ -53,6 +54,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - .env
     - assets/images/logo.png
     - assets/images/person_icon.png
     - assets/data/business_industry.json

@@ -14,6 +14,7 @@ import 'package:elan_flutterproject/features/setting/presentation/account_update
 import 'package:elan_flutterproject/features/subscription/subscription_details_page.dart';
 import 'package:elan_flutterproject/features/subscription/subscription_plans_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,8 +35,12 @@ import 'features/setting/presentation/account_settings_widget.dart';
 import 'main_screen.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+
   await FeqFirebaseService.initialize();
   await FeqDropDownListLoader.instance.init();
+
   runApp(const MyApp());
 }
 

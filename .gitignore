@@ -27,12 +27,13 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
 /build/
 /coverage/
-pubspec.lock
 
 # Symbolication related
 app.*.symbols
@@ -45,6 +46,20 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 /android/build/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local signing / credentials
+android/key.properties
+*.jks
+*.keystore
+
+# Never commit backend/admin credentials
+serviceAccountKey*.json
+firebase-admin*.json
 
 # feqra.com
 feqra-*.txt
