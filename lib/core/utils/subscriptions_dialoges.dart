@@ -106,49 +106,40 @@ Future<bool?> showUpgradeRequiredDialog(
             Align(
               alignment: Alignment.center,
               child: Column(
-                spacing: 12,
+                // spacing: 12, // Removed because it doesn't exist in 3.24
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(
-                            context,
-                            PaymentDetailsPage.routeName,
-                            arguments: 'basic',
-                          ).then((_) {
-                            // Navigator.of(dialogContext).pop(true);
-                          }),
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        PaymentDetailsPage.routeName,
+                        arguments: 'basic',
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-
                       child: Text(
                         'تجديد الإشتراك',
-                        style: GoogleFonts.getFont(
-                          'Readex Pro',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: GoogleFonts.getFont('Readex Pro', fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 12), // Manually added spacing
+
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(
-                            context,
-                            PaymentPage.routeName,
-                            arguments: 'premium',
-                          ).then((_) {
-                            // Navigator.of(dialogContext).pop(true);
-                          }),
-
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        PaymentPage.routeName,
+                        arguments: 'premium',
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.primary,
                         foregroundColor: Colors.white,
@@ -156,14 +147,13 @@ Future<bool?> showUpgradeRequiredDialog(
                       ),
                       child: Text(
                         ' ترقية الباقه',
-                        style: GoogleFonts.getFont(
-                          'Readex Pro',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: GoogleFonts.getFont('Readex Pro', fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 12), // Manually added spacing
+
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(false),
                     style: TextButton.styleFrom(foregroundColor: theme.secondaryText),

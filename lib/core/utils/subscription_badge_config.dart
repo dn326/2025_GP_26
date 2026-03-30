@@ -28,7 +28,7 @@ class SubscriptionBadgeConfig {
           label: 'مجاني', // Free in Arabic
           backgroundColor: Colors.grey.shade200,
           textColor: Colors.grey.shade700,
-          icon: Icon(Icons.person_outline, color: const Color(0xFF182B54), size: 20),
+          icon: const Icon(Icons.person_outline, color: Color(0xFF182B54), size: 20),
         );
       case SubscriptionTier.basic:
         return SubscriptionBadgeConfig(

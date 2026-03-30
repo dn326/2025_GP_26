@@ -4,14 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/user_session.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 
-InputDecoration inputDecoration(BuildContext context,
-    {bool isError = false, String? errorText}) {
+InputDecoration inputDecoration(BuildContext context, {bool isError = false, String? errorText}) {
   final t = FlutterFlowTheme.of(context);
 
   return InputDecoration(
@@ -24,9 +23,7 @@ InputDecoration inputDecoration(BuildContext context,
     ),
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
-        color: isError
-            ? Colors.red
-            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
         width: 2,
       ),
       borderRadius: BorderRadius.circular(12),
@@ -127,6 +124,7 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
     try {
       final user = firebaseAuth.currentUser;
       if (user == null) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(' لا يوجد مستخدم مسجّل دخول حالياً')),
         );
@@ -152,12 +150,11 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('account_status', newStatus);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _isDeactivating
-                ? 'تم تعطيل الحساب بنجاح'
-                : 'تم تفعيل الحساب بنجاح',
+            _isDeactivating ? 'تم تعطيل الحساب بنجاح' : 'تم تفعيل الحساب بنجاح',
           ),
           backgroundColor: t.success,
         ),
@@ -169,10 +166,12 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
       if (e.code == 'wrong-password') msg = ' كلمة المرور غير صحيحة';
       if (e.code == 'requires-recent-login') msg = ' يجب تسجيل الدخول مجددًا';
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg), backgroundColor: t.error),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(' حدث خطأ غير متوقع: $e'),
@@ -221,21 +220,18 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
                       borderRadius: const BorderRadius.all(Radius.circular(16)),
                     ),
                     child: Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 16),
+                      padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 16),
                       child: Form(
                         key: _formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             /// ==== LABEL ====
-                            FeqLabeled('كلمة المرور'),
+                            const FeqLabeled('كلمة المرور'),
 
                             /// ==== PASSWORD FIELD ====
                             Padding(
-                              padding:
-                                  const EdgeInsetsDirectional.fromSTEB(
-                                      20, 5, 20, 0),
+                              padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                               child: TextFormField(
                                 controller: _passwordCtrl,
                                 obscureText: _obscure,
@@ -247,19 +243,12 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
                                 },
                                 decoration: inputDecoration(
                                   context,
-                                  isError: _showError &&
-                                      _passwordCtrl.text.isEmpty,
-                                  errorText: _showError &&
-                                          _passwordCtrl.text.isEmpty
-                                      ? 'كلمة المرور مطلوبة'
-                                      : null,
+                                  isError: _showError && _passwordCtrl.text.isEmpty,
+                                  errorText: _showError && _passwordCtrl.text.isEmpty ? 'كلمة المرور مطلوبة' : null,
                                 ).copyWith(
                                   suffixIcon: IconButton(
-                                    icon: Icon(_obscure
-                                        ? Icons.visibility_off
-                                        : Icons.visibility),
-                                    onPressed: () => setState(
-                                        () => _obscure = !_obscure),
+                                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                                    onPressed: () => setState(() => _obscure = !_obscure),
                                   ),
                                 ),
                               ),
@@ -270,14 +259,12 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
                             /// ==== INFO TEXT ====
                             Center(
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24),
+                                padding: const EdgeInsets.symmetric(horizontal: 24),
                                 child: Text(
                                   _isDeactivating
                                       ? 'سيتم تعطيل حسابك مؤقتًا ولن تظهر بياناتك للمستخدمين الآخرين حتى تسجيل الدخول مرة أخرى.'
                                       : 'سيتم تفعيل حسابك وستظهر بياناتك للمستخدمين الآخرين.',
-                                  style: t.bodyMedium.copyWith(
-                                      color: t.secondaryText),
+                                  style: t.bodyMedium.copyWith(color: t.secondaryText),
                                   textAlign: TextAlign.right,
                                 ),
                               ),
@@ -288,15 +275,10 @@ class _AccountDeactivatePageState extends State<AccountDeactivatePage> {
                             /// ==== BUTTON ====
                             Center(
                               child: Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0, 0, 0, 24),
+                                padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 24),
                                 child: FFButtonWidget(
-                                  onPressed: (_isLoading || !isPasswordFilled)
-                                      ? null
-                                      : _handleAccountStatus,
-                                  text: _isLoading
-                                      ? 'جاري التنفيذ...'
-                                      : buttonText,
+                                  onPressed: (_isLoading || !isPasswordFilled) ? null : _handleAccountStatus,
+                                  text: _isLoading ? 'جاري التنفيذ...' : buttonText,
                                   options: FFButtonOptions(
                                     width: 430,
                                     height: 40,

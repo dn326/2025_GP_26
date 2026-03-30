@@ -1,7 +1,9 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import '../../../core/components/feq_components.dart';
 import '../../../core/components/feq_filter_chip_group.dart';
 import '../../../core/services/dropdown_list_loader.dart';
@@ -38,6 +40,7 @@ class FeqProfilesListWidget extends StatefulWidget {
   final bool showSorting;
   final bool paginated;
   final int pageSize;
+
   /// When provided and targetUserType == 'influencer', shows "إرسال عرض" button.
   /// Callback receives (uid, name, imageUrl).
   final void Function(String uid, String name, String imageUrl)? onSendOfferTap;
@@ -208,9 +211,9 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
 
           socials = socialSnap.docs
               .map((s) {
-            final m = s.data();
-            return {'platform': m['platform']?.toString() ?? '', 'username': m['username']?.toString() ?? ''};
-          })
+                final m = s.data();
+                return {'platform': m['platform']?.toString() ?? '', 'username': m['username']?.toString() ?? ''};
+              })
               .where((e) => e['username']!.isNotEmpty)
               .toList();
 
@@ -329,8 +332,6 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
         return FontAwesomeIcons.whatsapp;
       case 'threads':
         return FontAwesomeIcons.threads;
-      case 'bluesky':
-        return FontAwesomeIcons.bluesky;
       default:
         return FontAwesomeIcons.link;
     }
@@ -360,8 +361,6 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
         return const Color(0xFF25D366);
       case 'threads':
         return const Color(0xFF000000);
-      case 'bluesky':
-        return const Color(0xFF1185FE);
       default:
         return Colors.grey;
     }
@@ -453,20 +452,20 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
                   context: context,
                   position: const RelativeRect.fromLTRB(100, 200, 20, 0),
                   items: [
-                    PopupMenuItem(
+                    const PopupMenuItem(
                       value: FeqSortType.dateDesc,
                       child: Row(
-                        children: const [Text('الأحدث أولاً'), SizedBox(width: 8), Icon(Icons.arrow_downward)],
+                        children: [Text('الأحدث أولاً'), SizedBox(width: 8), Icon(Icons.arrow_downward)],
                       ),
                     ),
-                    PopupMenuItem(
+                    const PopupMenuItem(
                       value: FeqSortType.dateAsc,
-                      child: Row(children: const [Text('الأقدم أولاً'), SizedBox(width: 8), Icon(Icons.arrow_upward)]),
+                      child: Row(children: [Text('الأقدم أولاً'), SizedBox(width: 8), Icon(Icons.arrow_upward)]),
                     ),
-                    PopupMenuItem(
+                    const PopupMenuItem(
                       value: FeqSortType.titleAsc,
                       child: Row(
-                        children: const [Text('الاسم أبجديًا'), SizedBox(width: 8), Icon(Icons.sort_by_alpha)],
+                        children: [Text('الاسم أبجديًا'), SizedBox(width: 8), Icon(Icons.sort_by_alpha)],
                       ),
                     ),
                   ],
@@ -490,8 +489,8 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
                     _sortType == FeqSortType.dateDesc
                         ? Icons.arrow_drop_down
                         : _sortType == FeqSortType.dateAsc
-                        ? Icons.arrow_drop_up
-                        : Icons.sort_by_alpha,
+                            ? Icons.arrow_drop_up
+                            : Icons.sort_by_alpha,
                   ),
                 ],
               ),
@@ -503,144 +502,148 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _displayItems.isEmpty
-              ? Center(
-            child: Text(_searchText.isEmpty ? 'لا توجد بيانات' : 'لا توجد نتائج', style: theme.headlineSmall),
-          )
-              : ListView.builder(
-            controller: _scrollController,
-            itemCount: _displayItems.length + (_isLoadingMore ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == _displayItems.length) {
-                return const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
+                  ? Center(
+                      child: Text(_searchText.isEmpty ? 'لا توجد بيانات' : 'لا توجد نتائج', style: theme.headlineSmall),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _displayItems.length + (_isLoadingMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == _displayItems.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
 
-              final item = _displayItems[index];
+                        final item = _displayItems[index];
 
-              return Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.containers,
-                    boxShadow: const [BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))],
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () async {
-                        final needRefresh = await Navigator.of(
-                          context,
-                        ).push(MaterialPageRoute(builder: (_) => widget.detailPageBuilder(context, item.id)));
-                        if (needRefresh == true) _loadInitial();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
+                        return Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: theme.containers,
+                              boxShadow: const [
+                                BoxShadow(blurRadius: 3, color: Color(0x33000000), offset: Offset(0, 2))
+                              ],
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () async {
+                                  final needRefresh = await Navigator.of(
+                                    context,
+                                  ).push(MaterialPageRoute(builder: (_) => widget.detailPageBuilder(context, item.id)));
+                                  if (needRefresh == true) _loadInitial();
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
-                                      const SizedBox(height: 4),
-                                      if (item.content1 == null || item.content1!.isEmpty) const SizedBox(height: 16),
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          if (item.isVerified)
-                                            const Padding(
-                                              padding: EdgeInsetsDirectional.only(end: 6),
-                                              child: Icon(Icons.verified, color: Colors.blue, size: 20),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.end,
+                                              children: [
+                                                const SizedBox(height: 4),
+                                                if (item.content1 == null || item.content1!.isEmpty)
+                                                  const SizedBox(height: 16),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  children: [
+                                                    if (item.isVerified)
+                                                      const Padding(
+                                                        padding: EdgeInsetsDirectional.only(end: 6),
+                                                        child: Icon(Icons.verified, color: Colors.blue, size: 20),
+                                                      ),
+                                                    Flexible(
+                                                      child: Text(
+                                                        item.title,
+                                                        style: theme.titleMedium.copyWith(fontWeight: FontWeight.w600),
+                                                        textAlign: TextAlign.end,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                if (item.content1 == null || item.content1!.isEmpty)
+                                                  const SizedBox(height: 4),
+                                                if (item.content1 != null && item.content1!.isNotEmpty)
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(top: 6),
+                                                    child: Text(
+                                                      item.content1!,
+                                                      style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+                                                      textAlign: TextAlign.end,
+                                                    ),
+                                                  ),
+                                                if (item.content2 != null && item.content2!.isNotEmpty)
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(top: 6),
+                                                    child: Text(
+                                                      item.content2!,
+                                                      style: theme.bodyMedium.copyWith(color: theme.secondaryText),
+                                                      textAlign: TextAlign.end,
+                                                    ),
+                                                  ),
+                                                if (widget.targetUserType == 'influencer' && item.socials.isNotEmpty)
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(top: 10),
+                                                    child: _buildSocialChips(item.socials),
+                                                  ),
+                                              ],
                                             ),
-                                          Flexible(
-                                            child: Text(
-                                              item.title,
-                                              style: theme.titleMedium.copyWith(fontWeight: FontWeight.w600),
-                                              textAlign: TextAlign.end,
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Padding(
+                                            padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 8),
+                                            child: FeqImagePickerWidget(
+                                              initialImageUrl: item.imageUrl,
+                                              isUploading: false,
+                                              size: 100,
+                                              onImagePicked: (url, file, bytes) {},
                                             ),
                                           ),
                                         ],
                                       ),
-                                      if (item.content1 == null || item.content1!.isEmpty) const SizedBox(height: 4),
-                                      if (item.content1 != null && item.content1!.isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 6),
-                                          child: Text(
-                                            item.content1!,
-                                            style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-                                            textAlign: TextAlign.end,
-                                          ),
-                                        ),
-                                      if (item.content2 != null && item.content2!.isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 6),
-                                          child: Text(
-                                            item.content2!,
-                                            style: theme.bodyMedium.copyWith(color: theme.secondaryText),
-                                            textAlign: TextAlign.end,
-                                          ),
-                                        ),
-                                      if (widget.targetUserType == 'influencer' && item.socials.isNotEmpty)
+                                      // "إرسال عرض" button — visible only when business is browsing influencers
+                                      if (widget.onSendOfferTap != null)
                                         Padding(
                                           padding: const EdgeInsets.only(top: 10),
-                                          child: _buildSocialChips(item.socials),
+                                          child: Align(
+                                            alignment: AlignmentDirectional.centerEnd,
+                                            child: ElevatedButton.icon(
+                                              onPressed: () => widget.onSendOfferTap!(
+                                                item.id,
+                                                item.title,
+                                                item.imageUrl,
+                                              ),
+                                              icon: const Icon(Icons.send, size: 16),
+                                              label: const Text('إرسال عرض'),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: FlutterFlowTheme.of(context).primary,
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                              ),
+                                            ),
+                                          ),
                                         ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 8),
-                                  child: FeqImagePickerWidget(
-                                    initialImageUrl: item.imageUrl,
-                                    isUploading: false,
-                                    size: 100,
-                                    onImagePicked: (url, file, bytes) {},
-                                  ),
-                                ),
-                              ],
-                            ),
-                            // "إرسال عرض" button — visible only when business is browsing influencers
-                            if (widget.onSendOfferTap != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                child: Align(
-                                  alignment: AlignmentDirectional.centerEnd,
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => widget.onSendOfferTap!(
-                                      item.id,
-                                      item.title,
-                                      item.imageUrl,
-                                    ),
-                                    icon: const Icon(Icons.send, size: 16),
-                                    label: const Text('إرسال عرض'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: FlutterFlowTheme.of(context).primary,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],  // end Column children
-                        ),   // end Column
-                      ),     // end Padding
-                    ),       // end Material
-                  ),         // end Container
-                ),           // end Padding (outer)
-              );
-            },
-          ),
+                                    ], // end Column children
+                                  ), // end Column
+                                ), // end Padding
+                              ), // end Material
+                            ), // end Container
+                          ), // end Padding (outer)
+                        );
+                      },
+                    ),
         ),
       ],
     );

@@ -12,9 +12,9 @@ class BusinessProfileDataModel {
   final String? website;
 
   // Added fields — needed for matching influencer structure
-  final String? phoneOwner;     // "personal" or "assistant"
-  final String? emailOwner;     // "personal" or "assistant"
-  final bool useCustomEmail;    // same as influencer
+  final String? phoneOwner; // "personal" or "assistant"
+  final String? emailOwner; // "personal" or "assistant"
+  final bool useCustomEmail; // same as influencer
 
   // Social media list
   final List<Map<String, dynamic>>? socialMedia;
@@ -30,7 +30,6 @@ class BusinessProfileDataModel {
     this.profileImageUrl,
     this.website,
     this.socialMedia,
-
     this.phoneOwner,
     this.emailOwner,
     this.useCustomEmail = false,
@@ -53,9 +52,7 @@ class BusinessProfileDataModel {
       emailOwner: json['email_owner']?.toString(),
       useCustomEmail: json['use_custom_email'] ?? false,
 
-      socialMedia: (json['social_media'] as List?)
-          ?.map((e) => Map<String, dynamic>.from(e))
-          .toList(),
+      socialMedia: (json['social_media'] as List?)?.map((e) => Map<String, dynamic>.from(e)).toList(),
     );
   }
 

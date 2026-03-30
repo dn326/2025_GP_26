@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/components/feq_components.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
 import '../../business/presentation/profile_widget.dart';
@@ -23,7 +24,7 @@ class _InfluencerHomeWidgetState extends State<InfluencerHomeWidget> {
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: FeqAppBar(title: 'جهات الأعمال'),
+      appBar: const FeqAppBar(title: 'جهات الأعمال'),
       body: FeqProfilesListWidget(
         targetUserType: 'business',
         titleSortField: 'name',

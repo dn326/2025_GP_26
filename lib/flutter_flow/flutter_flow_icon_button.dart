@@ -26,9 +26,7 @@ class FlutterFlowIconButton extends StatelessWidget {
       color: fillColor ?? Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius),
-        side: borderColor != null
-            ? BorderSide(color: borderColor!, width: borderWidth)
-            : BorderSide.none,
+        side: borderColor != null ? BorderSide(color: borderColor!, width: borderWidth) : BorderSide.none,
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(borderRadius),

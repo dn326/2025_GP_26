@@ -5,8 +5,7 @@ extension NavExt on BuildContext {
   void pop<T extends Object?>([T? result]) => Navigator.of(this).pop<T>(result);
 }
 
-bool isiOS(BuildContext context) =>
-    Theme.of(context).platform == TargetPlatform.iOS;
+bool isiOS(BuildContext context) => Theme.of(context).platform == TargetPlatform.iOS;
 
 T valueOrDefault<T>(T? value, T defaultValue) => value ?? defaultValue;
 

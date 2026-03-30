@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/user_session.dart';
 import '../../../core/widgets/image_picker_widget.dart';
@@ -57,9 +59,7 @@ class _ArchiveTabContentState extends State<ArchiveTabContent> {
     _sub = q.snapshots().listen((snap) {
       if (mounted) {
         setState(() {
-          _items = snap.docs
-              .map((d) => {'id': d.id, ...d.data() as Map<String, dynamic>})
-              .toList();
+          _items = snap.docs.map((d) => {'id': d.id, ...d.data() as Map<String, dynamic>}).toList();
           _isLoading = false;
         });
       }
@@ -120,19 +120,16 @@ class _ArchiveTabContentState extends State<ArchiveTabContent> {
     final imageUrl = widget.isBusinessView
         ? (offer['influencer_image_url'] as String? ?? '')
         : (offer['business_image_url'] as String? ?? '');
-    final name = widget.isBusinessView
-        ? (offer['influencer_name'] as String? ?? '')
-        : (offer['business_name'] as String? ?? '');
+    final name =
+        widget.isBusinessView ? (offer['influencer_name'] as String? ?? '') : (offer['business_name'] as String? ?? '');
 
     return Container(
       margin: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
       decoration: BoxDecoration(
         color: t.containers,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x15000000), blurRadius: 6, offset: Offset(0, 2))
-        ],
+        border: Border.all(color: const Color(0xFF16A34A).withOpacity(0.4)),
+        boxShadow: const [BoxShadow(color: Color(0x15000000), blurRadius: 6, offset: Offset(0, 2))],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -158,11 +155,7 @@ class _ArchiveTabContentState extends State<ArchiveTabContent> {
                     children: [
                       Icon(Icons.check_circle, color: Colors.white, size: 14),
                       SizedBox(width: 4),
-                      Text('مقبول',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600)),
+                      Text('مقبول', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
@@ -180,8 +173,7 @@ class _ArchiveTabContentState extends State<ArchiveTabContent> {
                     children: [
                       Text(
                         name,
-                        style:
-                            t.titleSmall.copyWith(fontWeight: FontWeight.w700),
+                        style: t.titleSmall.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -196,9 +188,7 @@ class _ArchiveTabContentState extends State<ArchiveTabContent> {
                       const SizedBox(height: 4),
                       Text(
                         'المبلغ: $amount ريال سعودي',
-                        style: t.bodySmall.copyWith(
-                            color: t.primaryText,
-                            fontWeight: FontWeight.w600),
+                        style: t.bodySmall.copyWith(color: t.primaryText, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -257,10 +247,8 @@ class _ArchiveTabContentState extends State<ArchiveTabContent> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: t.primary,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            padding:
-                            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           ),
                         ),
                       ),

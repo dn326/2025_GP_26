@@ -1,29 +1,19 @@
+import 'package:elan_flutterproject/features/login_and_signup/use_login_model.dart';
+import 'package:elan_flutterproject/features/login_and_signup/user_resetpassword.dart';
 import 'package:elan_flutterproject/features/login_and_signup/user_signup.dart';
+import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart'
-    as fa; // ← توحيد الاستيراد
+import 'package:flutter_animate/flutter_animate.dart' as fa; // ← توحيد الاستيراد
 
-import '/flutter_flow/flutter_flow_animations.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import '/index.dart';
-
-export 'use_login_model.dart';
+import '../../flutter_flow/flutter_flow_animations.dart';
+import '../../flutter_flow/flutter_flow_model.dart' hide createModel;
+import '../../flutter_flow/flutter_flow_theme.dart';
+import '../../flutter_flow/flutter_flow_widgets.dart';
 
 /// ============================================================================
 /// SHIMS (بدائل خفيفة) لتعويض دوال/ثوابت FlutterFlow إذا كانت غير متوفرة
 /// بدون أي تغيير مرئي على الواجهة.
 /// ============================================================================
-
-/// بديل آمن لـ safeSetState من FlutterFlow (إن لم يُعرّف ضمن flutter_flow_util).
-void safeSetState(VoidCallback fn, [State? state]) {
-  if (state != null) {
-    if (state.mounted) state.setState(fn);
-  } else {
-    fn(); // fallback آمن
-  }
-}
 
 /// ثابت المفتاح المستخدم لتمرير معلومات الانتقال عبر arguments
 const String kTransitionInfoKey = 'transition_info';
@@ -53,11 +43,11 @@ class TransitionInfo {
   });
 
   Map<String, dynamic> toMap() => {
-    'hasTransition': hasTransition,
-    'transitionType': transitionType.name,
-    'durationMs': duration.inMilliseconds,
-    'alignment': alignment?.toString(),
-  };
+        'hasTransition': hasTransition,
+        'transitionType': transitionType.name,
+        'durationMs': duration.inMilliseconds,
+        'alignment': alignment?.toString(),
+      };
 }
 
 /// امتداد بسيط على BuildContext ليحاكي context.pushNamed الخاص بـ FlutterFlow.
@@ -80,8 +70,7 @@ class UseLoginWidget extends StatefulWidget {
   State<UseLoginWidget> createState() => _UseLoginWidgetState();
 }
 
-class _UseLoginWidgetState extends State<UseLoginWidget>
-    with TickerProviderStateMixin {
+class _UseLoginWidgetState extends State<UseLoginWidget> with TickerProviderStateMixin {
   late UseLoginModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -104,36 +93,36 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
         trigger: AnimationTrigger.onPageLoad,
         effects: [
           // إظهار سريع
-          fa.VisibilityEffect(duration: const Duration(milliseconds: 1)),
+          const fa.VisibilityEffect(duration: Duration(milliseconds: 1)),
           // Fade
-          fa.FadeEffect(
+          const fa.FadeEffect(
             curve: Curves.easeInOut,
             delay: Duration.zero,
-            duration: const Duration(milliseconds: 300),
+            duration: Duration(milliseconds: 300),
             begin: 0.0,
             end: 1.0,
           ),
           // Move (من تحت لفوق)
-          fa.MoveEffect(
+          const fa.MoveEffect(
             curve: Curves.easeInOut,
             delay: Duration.zero,
-            duration: const Duration(milliseconds: 300),
-            begin: const Offset(0.0, 140.0),
-            end: const Offset(0.0, 0.0),
+            duration: Duration(milliseconds: 300),
+            begin: Offset(0.0, 140.0),
+            end: Offset(0.0, 0.0),
           ),
           // Scale عرض بسيط
-          fa.ScaleEffect(
+          const fa.ScaleEffect(
             curve: Curves.easeInOut,
             delay: Duration.zero,
-            duration: const Duration(milliseconds: 300),
-            begin: const Offset(0.9, 1.0),
-            end: const Offset(1.0, 1.0),
+            duration: Duration(milliseconds: 300),
+            begin: Offset(0.9, 1.0),
+            end: Offset(1.0, 1.0),
           ),
           // بديل TiltEffect: تدوير بسيط يعطي نفس الإحساس
-          fa.RotateEffect(
+          const fa.RotateEffect(
             curve: Curves.easeInOut,
             delay: Duration.zero,
-            duration: const Duration(milliseconds: 300),
+            duration: Duration(milliseconds: 300),
             begin: -0.05,
             // ≈ -0.349 راديان بشكل أخف
             end: 0.0,
@@ -239,28 +228,25 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                       Text(
                                         'مرحبا بك',
                                         textAlign: TextAlign.center,
-                                        style:
-                                            (Theme.of(
-                                                      context,
-                                                    ).textTheme.headlineSmall ??
-                                                    const TextStyle(
-                                                      fontSize: 24,
-                                                    ))
-                                                .copyWith(
-                                                  fontFamily: 'Outfit',
-                                                  letterSpacing: 0.0,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
+                                        style: (Theme.of(
+                                                  context,
+                                                ).textTheme.headlineSmall ??
+                                                const TextStyle(
+                                                  fontSize: 24,
+                                                ))
+                                            .copyWith(
+                                          fontFamily: 'Outfit',
+                                          letterSpacing: 0.0,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
-
                                       Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional.fromSTEB(
-                                              0.0,
-                                              12.0,
-                                              0.0,
-                                              40.0,
-                                            ),
+                                        padding: const EdgeInsetsDirectional.fromSTEB(
+                                          0.0,
+                                          12.0,
+                                          0.0,
+                                          40.0,
+                                        ),
                                         child: Text(
                                           'أكمل تسجيل الدخول للوصول إلى حسابك',
                                           textAlign: TextAlign.center,
@@ -275,13 +261,12 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                     ],
                                   ),
                                   Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                          0.0,
-                                          0.0,
-                                          0.0,
-                                          5.0,
-                                        ),
+                                    padding: const EdgeInsetsDirectional.fromSTEB(
+                                      0.0,
+                                      0.0,
+                                      0.0,
+                                      5.0,
+                                    ),
                                     child: Text(
                                       'البريد الإلكتروني',
                                       textAlign: TextAlign.end,
@@ -295,18 +280,16 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                     ),
                                   ),
                                   Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                          0.0,
-                                          0.0,
-                                          0.0,
-                                          16.0,
-                                        ),
+                                    padding: const EdgeInsetsDirectional.fromSTEB(
+                                      0.0,
+                                      0.0,
+                                      0.0,
+                                      16.0,
+                                    ),
                                     child: SizedBox(
                                       width: double.infinity,
                                       child: TextFormField(
-                                        controller:
-                                            _model.emailAddressTextController,
+                                        controller: _model.emailAddressTextController,
                                         focusNode: _model.emailAddressFocusNode,
                                         autofocus: true,
                                         autofillHints: const [
@@ -348,15 +331,13 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                               12.0,
                                             ),
                                           ),
-                                          focusedErrorBorder:
-                                              OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: t.alternate,
-                                                  width: 2.0,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                              ),
+                                          focusedErrorBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: t.alternate,
+                                              width: 2.0,
+                                            ),
+                                            borderRadius: BorderRadius.circular(12.0),
+                                          ),
                                           filled: true,
                                           fillColor: t.primaryBackground,
                                         ),
@@ -367,23 +348,19 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                           fontStyle: t.bodyLarge.fontStyle,
                                         ),
                                         textAlign: TextAlign.end,
-                                        keyboardType:
-                                            TextInputType.emailAddress,
+                                        keyboardType: TextInputType.emailAddress,
                                         // بدل asValidator(context)
-                                        validator: (v) => _model
-                                            .emailAddressTextControllerValidator
-                                            ?.call(context, v),
+                                        validator: (v) => _model.emailAddressTextControllerValidator?.call(context, v),
                                       ),
                                     ),
                                   ),
                                   Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                          0.0,
-                                          0.0,
-                                          0.0,
-                                          5.0,
-                                        ),
+                                    padding: const EdgeInsetsDirectional.fromSTEB(
+                                      0.0,
+                                      0.0,
+                                      0.0,
+                                      5.0,
+                                    ),
                                     child: Text(
                                       'كلمة المرور',
                                       textAlign: TextAlign.end,
@@ -397,18 +374,16 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                     ),
                                   ),
                                   Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                          0.0,
-                                          0.0,
-                                          0.0,
-                                          16.0,
-                                        ),
+                                    padding: const EdgeInsetsDirectional.fromSTEB(
+                                      0.0,
+                                      0.0,
+                                      0.0,
+                                      16.0,
+                                    ),
                                     child: SizedBox(
                                       width: double.infinity,
                                       child: TextFormField(
-                                        controller:
-                                            _model.passwordTextController,
+                                        controller: _model.passwordTextController,
                                         focusNode: _model.passwordFocusNode,
                                         autofocus: true,
                                         autofillHints: const [
@@ -450,30 +425,26 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                               12.0,
                                             ),
                                           ),
-                                          focusedErrorBorder:
-                                              OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: t.error,
-                                                  width: 2.0,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                              ),
+                                          focusedErrorBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: t.error,
+                                              width: 2.0,
+                                            ),
+                                            borderRadius: BorderRadius.circular(12.0),
+                                          ),
                                           filled: true,
                                           fillColor: t.primaryBackground,
                                           suffixIcon: InkWell(
                                             onTap: () => safeSetState(() {
-                                              _model.passwordVisibility =
-                                                  !_model.passwordVisibility;
-                                            }, this),
+                                              _model.passwordVisibility = !_model.passwordVisibility;
+                                            }),
                                             focusNode: FocusNode(
                                               skipTraversal: true,
                                             ),
                                             child: Icon(
                                               _model.passwordVisibility
                                                   ? Icons.visibility_outlined
-                                                  : Icons
-                                                        .visibility_off_outlined,
+                                                  : Icons.visibility_off_outlined,
                                               color: t.secondaryText,
                                               size: 24.0,
                                             ),
@@ -487,20 +458,17 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                         ),
                                         textAlign: TextAlign.end,
                                         // بدل asValidator(context)
-                                        validator: (v) => _model
-                                            .passwordTextControllerValidator
-                                            ?.call(context, v),
+                                        validator: (v) => _model.passwordTextControllerValidator?.call(context, v),
                                       ),
                                     ),
                                   ),
                                   Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                          120.0,
-                                          0.0,
-                                          0.0,
-                                          40.0,
-                                        ),
+                                    padding: const EdgeInsetsDirectional.fromSTEB(
+                                      120.0,
+                                      0.0,
+                                      0.0,
+                                      40.0,
+                                    ),
                                     child: InkWell(
                                       splashColor: Colors.transparent,
                                       focusColor: Colors.transparent,
@@ -526,13 +494,12 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                     ),
                                   ),
                                   Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                          0.0,
-                                          0.0,
-                                          0.0,
-                                          16.0,
-                                        ),
+                                    padding: const EdgeInsetsDirectional.fromSTEB(
+                                      0.0,
+                                      0.0,
+                                      0.0,
+                                      16.0,
+                                    ),
                                     child: FFButtonWidget(
                                       onPressed: () {
                                         // TODO: أضيفي منطق تسجيل الدخول الحقيقي هنا
@@ -542,20 +509,18 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                       options: FFButtonOptions(
                                         width: double.infinity,
                                         height: 44.0,
-                                        padding:
-                                            const EdgeInsetsDirectional.fromSTEB(
-                                              0.0,
-                                              0.0,
-                                              0.0,
-                                              0.0,
-                                            ),
-                                        iconPadding:
-                                            const EdgeInsetsDirectional.fromSTEB(
-                                              0.0,
-                                              0.0,
-                                              0.0,
-                                              0.0,
-                                            ),
+                                        padding: const EdgeInsetsDirectional.fromSTEB(
+                                          0.0,
+                                          0.0,
+                                          0.0,
+                                          0.0,
+                                        ),
+                                        iconPadding: const EdgeInsetsDirectional.fromSTEB(
+                                          0.0,
+                                          0.0,
+                                          0.0,
+                                          0.0,
+                                        ),
                                         color: t.primary,
                                         textStyle: t.bodyMedium.override(
                                           fontFamily: 'Readex Pro',
@@ -577,13 +542,12 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                     ),
                                   ),
                                   Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                          0.0,
-                                          12.0,
-                                          0.0,
-                                          12.0,
-                                        ),
+                                    padding: const EdgeInsetsDirectional.fromSTEB(
+                                      0.0,
+                                      12.0,
+                                      0.0,
+                                      12.0,
+                                    ),
                                     child: InkWell(
                                       splashColor: Colors.transparent,
                                       focusColor: Colors.transparent,
@@ -612,8 +576,7 @@ class _UseLoginWidgetState extends State<UseLoginWidget>
                                                 color: t.primary,
                                                 letterSpacing: 0.0,
                                                 fontWeight: FontWeight.w600,
-                                                fontStyle:
-                                                    t.bodyMedium.fontStyle,
+                                                fontStyle: t.bodyMedium.fontStyle,
                                               ),
                                             ),
                                           ],

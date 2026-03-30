@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/firebase_service_utils.dart';
@@ -43,10 +44,10 @@ class _BusinessExploreWidgetState extends State<BusinessExploreWidget> {
   // ── Campaign picker → SendOfferPage ────────────────────────────────────────
 
   Future<void> _handleSendOffer(
-      String influencerId,
-      String influencerName,
-      String influencerImageUrl,
-      ) async {
+    String influencerId,
+    String influencerName,
+    String influencerImageUrl,
+  ) async {
     final uid = UserSession.getCurrentUserId();
     if (uid == null) return;
 
@@ -54,9 +55,7 @@ class _BusinessExploreWidgetState extends State<BusinessExploreWidget> {
     List<Map<String, dynamic>> campaignList = [];
     campaignList = await _firebaseService.fetchBusinessCampaignList(uid, null, 'true');
     campaignList = campaignList.where((c) {
-      final endDate = c['end_date'] is Timestamp
-          ? (c['end_date'] as Timestamp).toDate()
-          : c['end_date'] as DateTime?;
+      final endDate = c['end_date'] is Timestamp ? (c['end_date'] as Timestamp).toDate() : c['end_date'] as DateTime?;
 
       final isExpired = endDate != null && endDate.isBefore(DateTime.now());
 
@@ -111,9 +110,7 @@ class _BusinessExploreWidgetState extends State<BusinessExploreWidget> {
     } catch (_) {}
 
     // Filter out blocked campaigns
-    final campaigns = campaignList
-        .where((c) => !blockedCampaignIds.contains(c['id']))
-        .toList();
+    final campaigns = campaignList.where((c) => !blockedCampaignIds.contains(c['id'])).toList();
 
     if (!mounted) return;
 
@@ -142,7 +139,8 @@ class _BusinessExploreWidgetState extends State<BusinessExploreWidget> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => SendOfferPage(
-          applicationId: null, // business-initiated — no prior application
+          applicationId: null,
+          // business-initiated — no prior application
           campaignId: selected['id'] as String,
           campaignTitle: selected['title'] as String,
           influencerId: influencerId,
@@ -159,21 +157,21 @@ class _BusinessExploreWidgetState extends State<BusinessExploreWidget> {
     return _initialLoading
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
-      key: scaffoldKey,
-      backgroundColor: t.backgroundElan,
-      appBar: FeqAppBar(title: 'المؤثرون', userType: userType),
-      body: FeqProfilesListWidget(
-        targetUserType: 'influencer',
-        titleSortField: 'name',
-        detailPageBuilder: (context, uid) => InfluncerProfileWidget(uid: uid),
-        showSearch: true,
-        showSorting: false,
-        paginated: false,
-        pageSize: 10000,
-        // Only show the send-offer button when the viewer is a business
-        onSendOfferTap: userType == 'business' ? _handleSendOffer : null,
-      ),
-    );
+            key: scaffoldKey,
+            backgroundColor: t.backgroundElan,
+            appBar: FeqAppBar(title: 'المؤثرون', userType: userType),
+            body: FeqProfilesListWidget(
+              targetUserType: 'influencer',
+              titleSortField: 'name',
+              detailPageBuilder: (context, uid) => InfluncerProfileWidget(uid: uid),
+              showSearch: true,
+              showSorting: false,
+              paginated: false,
+              pageSize: 10000,
+              // Only show the send-offer button when the viewer is a business
+              onSendOfferTap: userType == 'business' ? _handleSendOffer : null,
+            ),
+          );
   }
 }
 
@@ -181,6 +179,7 @@ class _BusinessExploreWidgetState extends State<BusinessExploreWidget> {
 
 class _CampaignPickerSheet extends StatelessWidget {
   final List<Map<String, dynamic>> campaigns;
+
   const _CampaignPickerSheet({required this.campaigns});
 
   @override
@@ -217,37 +216,33 @@ class _CampaignPickerSheet extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ...campaigns.map((c) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => Navigator.pop(context, c),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: t.containers,
-                    border: Border.all(color: t.primary.withValues(alpha: 0.3)),
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.campaign_outlined,
-                          color: t.primary, size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          c['title'] as String,
-                          style: t.bodyLarge
-                              .copyWith(fontWeight: FontWeight.w600),
-                        ),
+                    onTap: () => Navigator.pop(context, c),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: t.containers,
+                        border: Border.all(color: t.primary.withOpacity(0.3)),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      Icon(Icons.chevron_left,
-                          color: t.secondaryText, size: 20),
-                    ],
+                      child: Row(
+                        children: [
+                          Icon(Icons.campaign_outlined, color: t.primary, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              c['title'] as String,
+                              style: t.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          Icon(Icons.chevron_left, color: t.secondaryText, size: 20),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            )),
+                )),
           ],
         ),
       ),

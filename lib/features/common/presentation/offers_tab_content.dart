@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/user_session.dart';
 import '../../../core/widgets/image_picker_widget.dart';
@@ -130,9 +132,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
     _sub?.cancel();
     if (_myId == null) return;
 
-    Query q = firebaseFirestore
-        .collection('offers')
-        .orderBy('created_at', descending: true);
+    Query q = firebaseFirestore.collection('offers').orderBy('created_at', descending: true);
 
     if (widget.isBusinessView) {
       q = q.where('business_id', isEqualTo: _myId);
@@ -141,8 +141,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
     }
 
     _sub = q.snapshots().listen((snap) {
-      List<OfferModel> all =
-          snap.docs.map((d) => OfferModel.fromDoc(d)).toList();
+      List<OfferModel> all = snap.docs.map((d) => OfferModel.fromDoc(d)).toList();
 
       if (widget.filterStatuses.isNotEmpty) {
         all = all.where((o) => widget.filterStatuses.contains(o.status)).toList();
@@ -186,10 +185,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
 
   Future<void> _markRead(String docId) async {
     try {
-      await firebaseFirestore
-          .collection('offers')
-          .doc(docId)
-          .update({'is_read_by_influencer': true});
+      await firebaseFirestore.collection('offers').doc(docId).update({'is_read_by_influencer': true});
     } catch (_) {}
   }
 
@@ -200,8 +196,19 @@ class _OffersTabContentState extends State<OffersTabContent> {
 
   String _monthAr(int m) {
     const months = [
-      '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+      '',
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر'
     ];
     return months[m];
   }
@@ -225,9 +232,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Text(label,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 
@@ -274,8 +279,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
                       if (!widget.isBusinessView)
                         Text(
                           name,
-                          style: t.bodySmall.copyWith(
-                              color: t.secondaryText, fontWeight: FontWeight.w500),
+                          style: t.bodySmall.copyWith(color: t.secondaryText, fontWeight: FontWeight.w500),
                           textAlign: TextAlign.end,
                         ),
                       if (!widget.isBusinessView) const SizedBox(height: 2),
@@ -351,8 +355,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: t.primary,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           ),
                           child: const Text('عرض التفاصيل'),
@@ -394,9 +397,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
             Icon(Icons.send_outlined, size: 64, color: t.secondaryText),
             const SizedBox(height: 16),
             Text(
-              widget.isBusinessView
-                  ? 'لم ترسل أي عروض بعد'
-                  : 'لا توجد عروض واردة بعد',
+              widget.isBusinessView ? 'لم ترسل أي عروض بعد' : 'لا توجد عروض واردة بعد',
               style: t.bodyLarge.copyWith(color: t.secondaryText),
             ),
           ],

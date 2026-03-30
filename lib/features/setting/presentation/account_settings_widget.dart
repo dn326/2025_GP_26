@@ -2,15 +2,15 @@ import 'package:elan_flutterproject/core/services/subscription_service.dart';
 import 'package:elan_flutterproject/features/setting/presentation/account_update_certificate_widget.dart';
 import 'package:flutter/material.dart';
 
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/subscription_local_storage.dart';
+import '../../../core/services/subscription_model.dart';
 import '../../../core/services/user_session.dart';
 import '../../../features/login_and_signup/user_login.dart';
 import '../../subscription/subscription_details_page.dart';
 import '../../subscription/subscription_plans_page.dart';
-import '../../../core/services/subscription_model.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import 'account_change_password_widget.dart';
 import 'account_deactivate_widget.dart';
 import 'account_delete_widget.dart';
@@ -85,7 +85,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
   Future<void> _handleSubscriptionButtonTap() async {
     final subscriptionTier = _subscriptionData?.tier ?? 'free';
-    
+
     if (subscriptionTier == 'free') {
       // Show subscription plans page for free users
       if (!mounted) return;
@@ -139,7 +139,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
       textDirection: TextDirection.ltr,
       child: Scaffold(
         backgroundColor: theme.backgroundElan,
-        appBar: FeqAppBar(title: 'إعدادات حسابك', showBack: true),
+        appBar: const FeqAppBar(title: 'إعدادات حسابك', showBack: true),
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -168,11 +168,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
                     _SettingsButton(
                       text: 'تغيير كلمة المرور',
-                      onPressed: () =>
-                          Navigator.pushNamed(context, AccountChangePasswordPage.routeName),
+                      onPressed: () => Navigator.pushNamed(context, AccountChangePasswordPage.routeName),
                       color: theme.secondaryButtonsOnLight,
                     ),
-                    
+
                     const SizedBox(height: 12),
 
                     _SettingsButton(
@@ -183,7 +182,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       ),
                       color: theme.secondaryButtonsOnLight,
                     ),
-                    
+
                     const SizedBox(height: 12),
 
                     if (userType == "influencer")
@@ -195,7 +194,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                         },
                         color: theme.secondaryButtonsOnLight,
                       ),
-                    
+
                     // Only show subscription button for business users
                     if (userType == 'business') ...[
                       _isLoadingSubscription
@@ -216,7 +215,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                               color: theme.secondaryButtonsOnLight,
                             ),
                     ],
-                   
+
                     const SizedBox(height: 12),
 
                     _SettingsButton(

@@ -64,14 +64,10 @@ class SubscriptionModel {
       id: json['id'] as String? ?? '',
       userId: json['user_id'] as String? ?? '',
       planType: json['plan_type'] as String?,
-      startDate: json['start_date'] != null 
-          ? DateTime.fromMillisecondsSinceEpoch(json['start_date'] as int)
-          : null,
+      startDate: json['start_date'] != null ? DateTime.fromMillisecondsSinceEpoch(json['start_date'] as int) : null,
       campaignsUsed: json['campaigns_used'] as int? ?? 0,
       campaignLimit: json['campaign_limit'] as int? ?? 0,
-      createdAt: json['created_at'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(json['created_at'] as int)
-          : null,
+      createdAt: json['created_at'] != null ? DateTime.fromMillisecondsSinceEpoch(json['created_at'] as int) : null,
     );
   }
 

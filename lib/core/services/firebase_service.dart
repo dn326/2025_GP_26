@@ -6,9 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:get_it/get_it.dart';
 
 // Conditional import based on build type
-import 'firebase_service_dev.dart'
-    if (dart.library.js_util) 'firebase_service_prod.dart'
-    as firebase_impl;
+import 'firebase_service_dev.dart' if (dart.library.js_util) 'firebase_service_prod.dart' as firebase_impl;
 
 final getIt = GetIt.instance;
 

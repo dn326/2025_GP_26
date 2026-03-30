@@ -140,9 +140,7 @@ class _PaymentPageState extends State<PaymentPage> {
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? plan['color'].withOpacity(0.1)
-                                : t.primaryBackground,
+                            color: isSelected ? plan['color'].withOpacity(0.1) : t.primaryBackground,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isSelected ? plan['color'] : t.primary.withOpacity(0.2),

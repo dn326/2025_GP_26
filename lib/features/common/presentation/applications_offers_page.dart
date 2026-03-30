@@ -1,11 +1,9 @@
 // lib/features/common/presentation/applications_offers_page.dart
-import 'dart:async';
 import 'dart:core';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../../../core/components/feq_components.dart';
-import '../../../core/components/feq_filter_chip_group.dart';
+
 import '../../../core/services/dropdown_list_loader.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/firebase_service_utils.dart';
@@ -73,8 +71,7 @@ class ApplicationsOffersPage extends StatefulWidget {
   State<ApplicationsOffersPage> createState() => _ApplicationsOffersPageState();
 }
 
-class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
-    with SingleTickerProviderStateMixin {
+class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _userType = '';
   bool _isLoading = true;
@@ -120,25 +117,70 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
     if (userTypeValue == 'business') {
       _loadBusinessCampaigns();
     }
-    // Fix 7: check for unread items on load so nav bar dot is immediate
+    // Check unread counts for ALL tabs immediately on load (tabs are lazy —
+    // we can't wait for each tab widget to build and call onHasNewItems)
+    _checkTabNotifications(userTypeValue);
+  }
+
+  /// Queries Firestore for unread items in both tabs so the red dots appear
+  /// immediately on page load, even before the user visits each tab.
+  Future<void> _checkTabNotifications(String userType) async {
     final uid = UserSession.getCurrentUserId();
-    if (uid != null && userTypeValue.isNotEmpty) {
-      ApplicationsOffersNotifier.checkOnStartup(uid, userTypeValue);
-    }
+    if (uid == null) return;
+    try {
+      if (userType == 'business') {
+        // Tab 0 – incoming applications not yet read by business
+        final appsSnap = await firebaseFirestore
+            .collection('applications')
+            .where('business_id', isEqualTo: uid)
+            .where('is_read_by_business', isEqualTo: false)
+            .where('status', isEqualTo: 'pending')
+            .limit(1)
+            .get();
+        if (mounted) _updateNewIndicators(0, appsSnap.docs.isNotEmpty);
+
+        // Tab 1 – sent offers that the influencer has responded to (not yet read by business)
+        final offersSnap = await firebaseFirestore
+            .collection('offers')
+            .where('business_id', isEqualTo: uid)
+            .where('is_read_by_business', isEqualTo: false)
+            .limit(1)
+            .get();
+        if (mounted) _updateNewIndicators(1, offersSnap.docs.isNotEmpty);
+      } else {
+        // Tab 0 – sent applications that got a response, not yet read by influencer
+        final appsSnap = await firebaseFirestore
+            .collection('applications')
+            .where('influencer_id', isEqualTo: uid)
+            .where('is_read_by_influencer', isEqualTo: false)
+            .limit(1)
+            .get();
+        if (mounted) _updateNewIndicators(0, appsSnap.docs.isNotEmpty);
+
+        // Tab 1 – incoming offers not yet read by influencer
+        final offersSnap = await firebaseFirestore
+            .collection('offers')
+            .where('influencer_id', isEqualTo: uid)
+            .where('is_read_by_influencer', isEqualTo: false)
+            .where('status', isEqualTo: 'pending')
+            .limit(1)
+            .get();
+        if (mounted) _updateNewIndicators(1, offersSnap.docs.isNotEmpty);
+      }
+      // Also update the global nav bar notifier
+      ApplicationsOffersNotifier.setHasNew(_tab0HasNew || _tab1HasNew);
+    } catch (_) {}
   }
 
   Future<void> _loadBusinessCampaigns() async {
     final uid = UserSession.getCurrentUserId();
     if (uid == null) return;
     try {
-      List<Map<String, dynamic>> campaignList =
-      await _firebaseService.fetchBusinessCampaignList(uid, null, 'true');
+      List<Map<String, dynamic>> campaignList = await _firebaseService.fetchBusinessCampaignList(uid, null, 'true');
 
       // Filter out expired campaigns
       campaignList = campaignList.where((c) {
-        final endDate = c['end_date'] is Timestamp
-            ? (c['end_date'] as Timestamp).toDate()
-            : c['end_date'] as DateTime?;
+        final endDate = c['end_date'] is Timestamp ? (c['end_date'] as Timestamp).toDate() : c['end_date'] as DateTime?;
         final isExpired = endDate != null && endDate.isBefore(DateTime.now());
         return !isExpired;
       }).toList();
@@ -176,13 +218,13 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
       return [
         _buildTabWithDot(icon: Icons.inbox, label: 'الطلبات الواردة', hasNew: _tab0HasNew),
         _buildTabWithDot(icon: Icons.send, label: 'العروض المرسلة', hasNew: _tab1HasNew),
-        Tab(icon: const Icon(Icons.handshake), text: 'سجل الاتفاقيات'),
+        const Tab(icon: Icon(Icons.handshake), text: 'سجل الاتفاقيات'),
       ];
     } else {
       return [
         _buildTabWithDot(icon: Icons.send, label: 'الطلبات المرسلة', hasNew: _tab0HasNew),
         _buildTabWithDot(icon: Icons.inbox, label: 'العروض الواردة', hasNew: _tab1HasNew),
-        Tab(icon: const Icon(Icons.archive), text: 'سجل الإتفاقيات'),
+        const Tab(icon: Icon(Icons.archive), text: 'سجل الإتفاقيات'),
       ];
     }
   }
@@ -228,11 +270,11 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
       builder: (context) {
         if (_userType == 'business') {
           if (currentTab == 0) return _buildBusinessTab0Filter();
-          // if (currentTab == 1) return _buildBusinessTab1Filter();
+          if (currentTab == 1) return _buildBusinessTab1Filter();
           return _buildNoFilter();
         } else {
           if (currentTab == 0) return _buildInfluencerTab0Filter();
-          // if (currentTab == 1) return _buildInfluencerTab1Filter();
+          if (currentTab == 1) return _buildInfluencerTab1Filter();
           return _buildNoFilter();
         }
       },
@@ -271,9 +313,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context)),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                       Text('تصفية الطلبات الواردة', style: t.headlineSmall),
                       TextButton(
                         onPressed: () {
@@ -303,10 +343,14 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                           onSelected: (v) => setModalState(() {
                             v ? tempCampaigns.add(campaign['id']!) : tempCampaigns.remove(campaign['id']);
                           }),
-                          selectedColor: t.primary.withValues(alpha: 0.15),
+                          selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
-                          labelStyle: TextStyle(color: isSelected ? t.primary : t.primaryText, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3))),
+                          labelStyle: TextStyle(
+                              color: isSelected ? t.primary : t.primaryText,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
                         );
                       }).toList(),
                     ),
@@ -327,10 +371,14 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                           onSelected: (v) => setModalState(() {
                             v ? tempContentTypes.add(ct.id) : tempContentTypes.remove(ct.id);
                           }),
-                          selectedColor: t.primary.withValues(alpha: 0.15),
+                          selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
-                          labelStyle: TextStyle(color: isSelected ? t.primary : t.primaryText, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3))),
+                          labelStyle: TextStyle(
+                              color: isSelected ? t.primary : t.primaryText,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
                         );
                       }).toList(),
                     ),
@@ -351,10 +399,14 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                           onSelected: (v) => setModalState(() {
                             v ? tempPlatforms.add(p.id) : tempPlatforms.remove(p.id);
                           }),
-                          selectedColor: t.primary.withValues(alpha: 0.15),
+                          selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
-                          labelStyle: TextStyle(color: isSelected ? t.primary : t.primaryText, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3))),
+                          labelStyle: TextStyle(
+                              color: isSelected ? t.primary : t.primaryText,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
                         );
                       }).toList(),
                     ),
@@ -418,9 +470,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context)),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                       Text('تصفية العروض المرسلة', style: t.headlineSmall),
                       TextButton(
                         onPressed: () {
@@ -449,10 +499,14 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                           onSelected: (v) => setModalState(() {
                             v ? tempStatuses.add(status['id']!) : tempStatuses.remove(status['id']);
                           }),
-                          selectedColor: t.primary.withValues(alpha: 0.15),
+                          selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
-                          labelStyle: TextStyle(color: isSelected ? t.primary : t.primaryText, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3))),
+                          labelStyle: TextStyle(
+                              color: isSelected ? t.primary : t.primaryText,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
                         );
                       }).toList(),
                     ),
@@ -473,10 +527,14 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                           onSelected: (v) => setModalState(() {
                             v ? tempCampaigns.add(campaign['id']!) : tempCampaigns.remove(campaign['id']);
                           }),
-                          selectedColor: t.primary.withValues(alpha: 0.15),
+                          selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
-                          labelStyle: TextStyle(color: isSelected ? t.primary : t.primaryText, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3))),
+                          labelStyle: TextStyle(
+                              color: isSelected ? t.primary : t.primaryText,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
                         );
                       }).toList(),
                     ),
@@ -535,9 +593,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context)),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                     Text('تصفية الطلبات المرسلة', style: t.headlineSmall),
                     TextButton(
                       onPressed: () {
@@ -565,10 +621,14 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                         onSelected: (v) => setModalState(() {
                           v ? tempStatuses.add(status['id']!) : tempStatuses.remove(status['id']);
                         }),
-                        selectedColor: t.primary.withValues(alpha: 0.15),
+                        selectedColor: t.primary.withOpacity(0.15),
                         checkmarkColor: t.primary,
-                        labelStyle: TextStyle(color: isSelected ? t.primary : t.primaryText, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3))),
+                        labelStyle: TextStyle(
+                            color: isSelected ? t.primary : t.primaryText,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
                       );
                     }).toList(),
                   ),
@@ -643,9 +703,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context)),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                       Text('تصفية العروض الواردة', style: t.headlineSmall),
                       TextButton(
                         onPressed: () {
@@ -675,10 +733,14 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                           onSelected: (v) => setModalState(() {
                             v ? tempStatuses.add(status['id']!) : tempStatuses.remove(status['id']);
                           }),
-                          selectedColor: t.primary.withValues(alpha: 0.15),
+                          selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
-                          labelStyle: TextStyle(color: isSelected ? t.primary : t.primaryText, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3))),
+                          labelStyle: TextStyle(
+                              color: isSelected ? t.primary : t.primaryText,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
                         );
                       }).toList(),
                     ),
@@ -700,10 +762,14 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                           onSelected: (v) => setModalState(() {
                             v ? tempContentTypes.add(idStr) : tempContentTypes.remove(idStr);
                           }),
-                          selectedColor: t.primary.withValues(alpha: 0.15),
+                          selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
-                          labelStyle: TextStyle(color: isSelected ? t.primary : t.primaryText, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3))),
+                          labelStyle: TextStyle(
+                              color: isSelected ? t.primary : t.primaryText,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
                         );
                       }).toList(),
                     ),
@@ -724,15 +790,18 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
                           onSelected: (v) => setModalState(() {
                             v ? tempPlatforms.add(p['id']!) : tempPlatforms.remove(p['id']);
                           }),
-                          selectedColor: t.primary.withValues(alpha: 0.15),
+                          selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
-                          labelStyle: TextStyle(color: isSelected ? t.primary : t.primaryText, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3))),
+                          labelStyle: TextStyle(
+                              color: isSelected ? t.primary : t.primaryText,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
                         );
                       }).toList(),
                     ),
                   ),
-
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
@@ -816,8 +885,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
         children: [
           Icon(Icons.filter_list_off, size: 48, color: t.secondaryText),
           const SizedBox(height: 16),
-          Text('لا توجد فلاتر متاحة لهذا القسم',
-              style: t.bodyLarge.copyWith(color: t.secondaryText)),
+          Text('لا توجد فلاتر متاحة لهذا القسم', style: t.bodyLarge.copyWith(color: t.secondaryText)),
         ],
       ),
     );
@@ -872,15 +940,15 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
               controller: _tabController,
               children: _userType == 'business'
                   ? [
-                _buildBusinessTab0(),
-                _buildBusinessTab1(),
-                _buildBusinessTab2(),
-              ]
+                      _buildBusinessTab0(),
+                      _buildBusinessTab1(),
+                      _buildBusinessTab2(),
+                    ]
                   : [
-                _buildInfluencerTab0(),
-                _buildInfluencerTab1(),
-                _buildInfluencerTab2(),
-              ],
+                      _buildInfluencerTab0(),
+                      _buildInfluencerTab1(),
+                      _buildInfluencerTab2(),
+                    ],
             ),
           ),
         ],
@@ -911,8 +979,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
   }
 
   Widget _buildBusinessTab2() {
-    return const ArchiveTabContent(
-        key: ValueKey('business_archive'), isBusinessView: true);
+    return const ArchiveTabContent(key: ValueKey('business_archive'), isBusinessView: true);
   }
 
   Widget _buildInfluencerTab0() {
@@ -935,7 +1002,6 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
   }
 
   Widget _buildInfluencerTab2() {
-    return const ArchiveTabContent(
-        key: ValueKey('influencer_archive'), isBusinessView: false);
+    return const ArchiveTabContent(key: ValueKey('influencer_archive'), isBusinessView: false);
   }
 }

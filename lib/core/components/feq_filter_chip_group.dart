@@ -63,8 +63,7 @@ class _FeqFilterChipGroupState<T> extends State<FeqFilterChipGroup<T>> {
                   if (widget.selectedItems.isNotEmpty) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: primaryColor,
                         borderRadius: BorderRadius.circular(12),
@@ -81,9 +80,7 @@ class _FeqFilterChipGroupState<T> extends State<FeqFilterChipGroup<T>> {
                   ],
                   const Spacer(),
                   Icon(
-                    _isExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
+                    _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                     size: 20,
                   ),
                 ],
@@ -106,35 +103,25 @@ class _FeqFilterChipGroupState<T> extends State<FeqFilterChipGroup<T>> {
                   return FilterChip(
                     label: Text(widget.labelBuilder(item)),
                     selected: isSelected,
-                    onSelected: (selected) =>
-                        widget.onSelectionChanged(item, selected),
+                    onSelected: (selected) => widget.onSelectionChanged(item, selected),
                     // ── Consistent styling across the whole app ──
-                    selectedColor: primaryColor.withValues(alpha: 0.15),
+                    selectedColor: primaryColor.withOpacity(0.15),
                     checkmarkColor: primaryColor,
                     labelStyle: TextStyle(
                       color: isSelected ? primaryColor : null,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: isSelected
-                            ? primaryColor
-                            : Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withValues(alpha: 0.4),
+                        color: isSelected ? primaryColor : Theme.of(context).colorScheme.outline.withOpacity(0.4),
                       ),
                     ),
                   );
                 }).toList(),
               ),
             ),
-            crossFadeState: _isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
+            crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 250),
           ),
         ],

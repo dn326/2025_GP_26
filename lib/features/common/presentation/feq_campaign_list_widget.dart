@@ -1,14 +1,16 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import '../../../core/components/feq_components.dart';
 import '../../../core/components/feq_filter_chip_group.dart';
 import '../../../core/services/dropdown_list_loader.dart';
 import '../../../core/services/firebase_service_utils.dart';
 import '../../../core/services/user_session.dart';
 import '../../../core/utils/campaign_expiry_helper.dart';
-import '../../../flutter_flow/flutter_flow_theme.dart';
 import '../../../core/widgets/image_picker_widget.dart';
+import '../../../flutter_flow/flutter_flow_theme.dart';
 import '../../business/models/profile_data_model.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,12 +103,10 @@ class CampaignReactionWidget extends StatefulWidget {
 }
 
 class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
-  CampaignReaction _myReaction = CampaignReaction.none;
+  // CampaignReaction _myReaction = CampaignReaction.none;
   List<CampaignReactionEntry> _allReactions = [];
   bool _isLoading = true;
   String? _currentInfluencerId;
-  String _currentInfluencerName = '';
-  String _currentInfluencerImageUrl = '';
 
   @override
   void initState() {
@@ -119,6 +119,7 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
     _currentInfluencerId = UserSession.getCurrentUserId();
 
     // Fetch name and image from the profiles collection
+    /*
     if (_currentInfluencerId != null) {
       try {
         final profileSnap = await FirebaseFirestore.instance
@@ -129,52 +130,49 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
 
         if (profileSnap.docs.isNotEmpty) {
           final data = profileSnap.docs.first.data();
-          _currentInfluencerName = (data['name'] as String? ?? '').trim();
+          // String _currentInfluencerName = (data['name'] as String? ?? '').trim();
           final rawImage = data['profile_image'] as String? ?? '';
           if (rawImage.isNotEmpty) {
-            _currentInfluencerImageUrl = rawImage.contains('?')
-                ? '${rawImage.split("?").first}?alt=media'
-                : '$rawImage?alt=media';
+            String _currentInfluencerImageUrl =
+                rawImage.contains('?') ? '${rawImage.split("?").first}?alt=media' : '$rawImage?alt=media';
           }
         }
       } catch (_) {
         // silently ignore — name/image are non-critical
       }
     }
+    */
 
     await _loadReactions();
     if (mounted) setState(() => _isLoading = false);
   }
 
-  String get _docId => '${widget.campaignId}_$_currentInfluencerId';
+  // String get _docId => '${widget.campaignId}_$_currentInfluencerId';
 
-  CollectionReference get _col =>
-      FirebaseFirestore.instance.collection('campaign_reactions');
+  CollectionReference get _col => FirebaseFirestore.instance.collection('campaign_reactions');
 
   Future<void> _loadReactions() async {
     if (_currentInfluencerId == null) return;
 
     // Always load my own reaction
+    /*
     final myDoc = await _col.doc(_docId).get();
     if (myDoc.exists) {
       final data = myDoc.data() as Map<String, dynamic>;
-      _myReaction =
-      data['reaction'] == 'like' ? CampaignReaction.like : CampaignReaction.dislike;
+      _myReaction = data['reaction'] == 'like' ? CampaignReaction.like : CampaignReaction.dislike;
     } else {
       _myReaction = CampaignReaction.none;
     }
+    */
 
     // Load all reactions only when needed
     if (widget.showOthersReactions) {
-      final snap = await _col
-          .where('campaign_id', isEqualTo: widget.campaignId)
-          .get();
-      _allReactions = snap.docs
-          .map((d) => CampaignReactionEntry.fromMap(d.data() as Map<String, dynamic>))
-          .toList();
+      final snap = await _col.where('campaign_id', isEqualTo: widget.campaignId).get();
+      _allReactions = snap.docs.map((d) => CampaignReactionEntry.fromMap(d.data() as Map<String, dynamic>)).toList();
     }
   }
 
+  /*
   Future<void> _setReaction(CampaignReaction tapped) async {
     if (_currentInfluencerId == null) return;
 
@@ -208,6 +206,7 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
       });
     }
   }
+  */
 
   void _showReactionsPopup() {
     if (!widget.showOthersReactions) return;
@@ -219,11 +218,9 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
     );
   }
 
-  int get _likeCount =>
-      _allReactions.where((e) => e.reaction == CampaignReaction.like).length;
+  int get _likeCount => _allReactions.where((e) => e.reaction == CampaignReaction.like).length;
 
-  int get _dislikeCount =>
-      _allReactions.where((e) => e.reaction == CampaignReaction.dislike).length;
+  int get _dislikeCount => _allReactions.where((e) => e.reaction == CampaignReaction.dislike).length;
 
   @override
   Widget build(BuildContext context) {
@@ -258,15 +255,17 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
                   ),
                   const SizedBox(width: 6),
                   if (_likeCount > 0) ...[
-                    Icon(Icons.thumb_up, size: 15, color: const Color(0xFF1877F2)),
+                    const Icon(Icons.thumb_up, size: 15, color: Color(0xFF1877F2)),
                     const SizedBox(width: 2),
-                    Text('$_likeCount', style: t.bodySmall.copyWith(color: const Color(0xFF1877F2), fontWeight: FontWeight.w600)),
+                    Text('$_likeCount',
+                        style: t.bodySmall.copyWith(color: const Color(0xFF1877F2), fontWeight: FontWeight.w600)),
                     const SizedBox(width: 6),
                   ],
                   if (_dislikeCount > 0) ...[
-                    Icon(Icons.thumb_down, size: 15, color: const Color(0xFFDC2626)),
+                    const Icon(Icons.thumb_down, size: 15, color: Color(0xFFDC2626)),
                     const SizedBox(width: 2),
-                    Text('$_dislikeCount', style: t.bodySmall.copyWith(color: const Color(0xFFDC2626), fontWeight: FontWeight.w600)),
+                    Text('$_dislikeCount',
+                        style: t.bodySmall.copyWith(color: const Color(0xFFDC2626), fontWeight: FontWeight.w600)),
                   ],
                 ],
               ),
@@ -276,7 +275,7 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
         ],
 
         // ── Action buttons row ────────────────────────────────────
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             // Dislike button
@@ -288,7 +287,7 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: _myReaction == CampaignReaction.dislike
-                      ? const Color(0xFFDC2626).withValues(alpha: 0.12)
+                      ? const Color(0xFFDC2626).withOpacity(0.12)
                       : t.containers,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
@@ -336,7 +335,7 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: _myReaction == CampaignReaction.like
-                      ? const Color(0xFF1877F2).withValues(alpha: 0.12)
+                      ? const Color(0xFF1877F2).withOpacity(0.12)
                       : t.containers,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
@@ -502,7 +501,9 @@ class _ReactionList extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       itemCount: entries.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (BuildContext context, int index) {
+        return const Divider(height: 1);
+      },
       itemBuilder: (_, i) {
         final e = entries[i];
         return Padding(
@@ -513,13 +514,9 @@ class _ReactionList extends StatelessWidget {
               // Avatar
               CircleAvatar(
                 radius: 22,
-                backgroundImage: e.influencerImageUrl.isNotEmpty
-                    ? NetworkImage(e.influencerImageUrl)
-                    : null,
+                backgroundImage: e.influencerImageUrl.isNotEmpty ? NetworkImage(e.influencerImageUrl) : null,
                 backgroundColor: t.alternate,
-                child: e.influencerImageUrl.isEmpty
-                    ? Icon(Icons.person, color: t.secondaryText)
-                    : null,
+                child: e.influencerImageUrl.isEmpty ? Icon(Icons.person, color: t.secondaryText) : null,
               ),
               const SizedBox(width: 12),
               // Name
@@ -534,9 +531,7 @@ class _ReactionList extends StatelessWidget {
               Icon(
                 reactionType == CampaignReaction.like ? Icons.thumb_up : Icons.thumb_down,
                 size: 18,
-                color: reactionType == CampaignReaction.like
-                    ? const Color(0xFF1877F2)
-                    : const Color(0xFFDC2626),
+                color: reactionType == CampaignReaction.like ? const Color(0xFF1877F2) : const Color(0xFFDC2626),
               ),
             ],
           ),
@@ -704,7 +699,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
           if (_selectedPlatforms.isNotEmpty &&
               !platformNames.any((platformNameStr) {
                 final platformObj = _socialPlatforms.firstWhere(
-                      (p) => p.nameAr == platformNameStr.toString(),
+                  (p) => p.nameAr == platformNameStr.toString(),
                   orElse: () => FeqDropDownList(
                     id: 0,
                     nameEn: platformNameStr.toString(),
@@ -717,16 +712,14 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
             continue;
           }
 
-          BusinessProfileDataModel? businessData =
-          await _firebaseService.fetchBusinessProfileData(businessId);
+          BusinessProfileDataModel? businessData = await _firebaseService.fetchBusinessProfileData(businessId);
           if (businessData == null || businessData.name.isEmpty) continue;
 
           final rawImageUrl = businessData.profileImageUrl ?? '';
           String profileImage = '';
           if (rawImageUrl.isNotEmpty) {
-            profileImage = rawImageUrl.contains('?')
-                ? '${rawImageUrl.split('?').first}?alt=media'
-                : '$rawImageUrl?alt=media';
+            profileImage =
+                rawImageUrl.contains('?') ? '${rawImageUrl.split('?').first}?alt=media' : '$rawImageUrl?alt=media';
           }
 
           _allItems.add(FeqCampaignListItem(
@@ -920,7 +913,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                         Text(
                           title,
                           style: valueStyle.copyWith(
-                            color: isExpired ? const Color(0xFFDC2626).withValues(alpha: 0.6) : t.primaryText,
+                            color: isExpired ? const Color(0xFFDC2626).withOpacity(0.6) : t.primaryText,
                             decoration: isExpired ? TextDecoration.lineThrough : null,
                           ),
                           textAlign: TextAlign.end,
@@ -931,9 +924,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                           Text(
                             'من $s إلى $en',
                             style: valueStyle.copyWith(
-                              color: isExpired
-                                  ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                                  : t.secondaryText,
+                              color: isExpired ? const Color(0xFFDC2626).withOpacity(0.6) : t.secondaryText,
                             ),
                             textAlign: TextAlign.end,
                           ),
@@ -943,9 +934,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                         Text(
                           description,
                           style: valueStyle.copyWith(
-                            color: isExpired
-                                ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                                : t.secondaryText,
+                            color: isExpired ? const Color(0xFFDC2626).withOpacity(0.6) : t.secondaryText,
                           ),
                           textAlign: TextAlign.end,
                         ),
@@ -954,9 +943,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                         Text(
                           platformName,
                           style: valueStyle.copyWith(
-                            color: isExpired
-                                ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                                : t.secondaryText,
+                            color: isExpired ? const Color(0xFFDC2626).withOpacity(0.6) : t.secondaryText,
                           ),
                           textAlign: TextAlign.end,
                         ),
@@ -965,9 +952,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                         Text(
                           influencerContentTypeName,
                           style: valueStyle.copyWith(
-                            color: isExpired
-                                ? const Color(0xFFDC2626).withValues(alpha: 0.6)
-                                : t.secondaryText,
+                            color: isExpired ? const Color(0xFFDC2626).withOpacity(0.6) : t.secondaryText,
                           ),
                           textAlign: TextAlign.end,
                         ),
@@ -1181,8 +1166,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                 FeqFilterChipGroup<FeqDropDownList>(
                   title: 'حسب نوع المحتوى',
                   items: contentTypes,
-                  selectedItems:
-                  tempContentTypes.map((id) => contentTypes.firstWhere((ct) => ct.id == id)).toList(),
+                  selectedItems: tempContentTypes.map((id) => contentTypes.firstWhere((ct) => ct.id == id)).toList(),
                   labelBuilder: (ct) => ct.nameAr,
                   initiallyExpanded: false,
                   textDirection: TextDirection.rtl,
@@ -1200,8 +1184,7 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                 FeqFilterChipGroup<FeqDropDownList>(
                   title: 'حسب منصات التواصل',
                   items: platforms,
-                  selectedItems:
-                  tempPlatforms.map((id) => platforms.firstWhere((p) => p.id == id)).toList(),
+                  selectedItems: tempPlatforms.map((id) => platforms.firstWhere((p) => p.id == id)).toList(),
                   labelBuilder: (p) => p.nameAr,
                   initiallyExpanded: false,
                   textDirection: TextDirection.rtl,
@@ -1292,20 +1275,17 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                   context: context,
                   position: const RelativeRect.fromLTRB(100, 200, 20, 0),
                   items: [
-                    PopupMenuItem(
+                    const PopupMenuItem(
                       value: FeqSortType.dateDesc,
-                      child: Row(
-                          children: const [Text('الأحدث أولاً'), SizedBox(width: 8), Icon(Icons.arrow_downward)]),
+                      child: Row(children: [Text('الأحدث أولاً'), SizedBox(width: 8), Icon(Icons.arrow_downward)]),
                     ),
-                    PopupMenuItem(
+                    const PopupMenuItem(
                       value: FeqSortType.dateAsc,
-                      child: Row(
-                          children: const [Text('الأقدم أولاً'), SizedBox(width: 8), Icon(Icons.arrow_upward)]),
+                      child: Row(children: [Text('الأقدم أولاً'), SizedBox(width: 8), Icon(Icons.arrow_upward)]),
                     ),
-                    PopupMenuItem(
+                    const PopupMenuItem(
                       value: FeqSortType.titleAsc,
-                      child: Row(
-                          children: const [Text('الاسم أبجديًا'), SizedBox(width: 8), Icon(Icons.sort_by_alpha)]),
+                      child: Row(children: [Text('الاسم أبجديًا'), SizedBox(width: 8), Icon(Icons.sort_by_alpha)]),
                     ),
                   ],
                 ).then((value) {
@@ -1327,8 +1307,8 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
                     _sortType == FeqSortType.dateDesc
                         ? Icons.arrow_drop_down
                         : _sortType == FeqSortType.dateAsc
-                        ? Icons.arrow_drop_up
-                        : Icons.sort_by_alpha,
+                            ? Icons.arrow_drop_up
+                            : Icons.sort_by_alpha,
                   ),
                 ],
               ),
@@ -1338,73 +1318,72 @@ class _FeqCampaignListWidgetState extends State<FeqCampaignListWidget> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _displayItems.isEmpty
-              ? Center(
-            child: Text(
-              _searchText.isEmpty ? 'لا توجد بيانات' : 'لا توجد نتائج',
-              style: theme.headlineSmall,
-            ),
-          )
-              : widget.groupByBusiness
-              ? ListView.builder(
-            controller: _scrollController,
-            itemCount: _getGroupedItems().fold<int>(
-              0,
-                  (total, entry) =>
-              total + entry.value.length + (widget.showBusinessNameHeader ? 1 : 0),
-            ),
-            itemBuilder: (context, index) {
-              final grouped = _getGroupedItems();
-              int currentIndex = 0;
+                  ? Center(
+                      child: Text(
+                        _searchText.isEmpty ? 'لا توجد بيانات' : 'لا توجد نتائج',
+                        style: theme.headlineSmall,
+                      ),
+                    )
+                  : widget.groupByBusiness
+                      ? ListView.builder(
+                          controller: _scrollController,
+                          itemCount: _getGroupedItems().fold<int>(
+                            0,
+                            (total, entry) => total + entry.value.length + (widget.showBusinessNameHeader ? 1 : 0),
+                          ),
+                          itemBuilder: (context, index) {
+                            final grouped = _getGroupedItems();
+                            int currentIndex = 0;
 
-              for (var groupEntry in grouped) {
-                if (widget.showBusinessNameHeader) {
-                  if (currentIndex == index) {
-                    return _buildBusinessHeader(
-                      groupEntry.value.first.businessNameAr,
-                      groupEntry.value.first.businessImageUrl,
-                    );
-                  }
-                  currentIndex++;
-                }
+                            for (var groupEntry in grouped) {
+                              if (widget.showBusinessNameHeader) {
+                                if (currentIndex == index) {
+                                  return _buildBusinessHeader(
+                                    groupEntry.value.first.businessNameAr,
+                                    groupEntry.value.first.businessImageUrl,
+                                  );
+                                }
+                                currentIndex++;
+                              }
 
-                for (var item in groupEntry.value) {
-                  if (currentIndex == index) {
-                    return Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
-                      child: widget.detailed ? _tileCampaign(item) : _tileCompact(item),
-                    );
-                  }
-                  currentIndex++;
-                }
-              }
+                              for (var item in groupEntry.value) {
+                                if (currentIndex == index) {
+                                  return Padding(
+                                    padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
+                                    child: widget.detailed ? _tileCampaign(item) : _tileCompact(item),
+                                  );
+                                }
+                                currentIndex++;
+                              }
+                            }
 
-              if (index == currentIndex && _isLoadingMore) {
-                return const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
+                            if (index == currentIndex && _isLoadingMore) {
+                              return const Padding(
+                                padding: EdgeInsets.all(20),
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
 
-              return const SizedBox.shrink();
-            },
-          )
-              : ListView.builder(
-            controller: _scrollController,
-            itemCount: _displayItems.length + (_isLoadingMore ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == _displayItems.length) {
-                return const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              final item = _displayItems[index];
-              return Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
-                child: widget.detailed ? _tileCampaign(item) : _tileCompact(item),
-              );
-            },
-          ),
+                            return const SizedBox.shrink();
+                          },
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          itemCount: _displayItems.length + (_isLoadingMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == _displayItems.length) {
+                              return const Padding(
+                                padding: EdgeInsets.all(20),
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
+                            final item = _displayItems[index];
+                            return Padding(
+                              padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
+                              child: widget.detailed ? _tileCampaign(item) : _tileCompact(item),
+                            );
+                          },
+                        ),
         ),
       ],
     );

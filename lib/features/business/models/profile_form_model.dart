@@ -4,19 +4,18 @@ import 'package:image_picker/image_picker.dart';
 
 import '../presentation/profile_form_widget.dart';
 
-class BusinessProfileFormModel
-    extends FlutterFlowModel<BusinessProfileFormWidget> {
+class BusinessProfileFormModel extends FlutterFlowModel<BusinessProfileFormWidget> {
   ///  State fields for stateful widgets in this page.
   // State field(s) for business_name widget.
   FocusNode? businessNameFocusNode;
   TextEditingController? businessNameTextController;
   String? Function(BuildContext, String?)? businessNameTextControllerValidator;
+
   // State field(s) for business_descreption widget.
   FocusNode? businessDescreptionFocusNode;
   GlobalKey<FormState> businessDescreptionFormKey = GlobalKey<FormState>();
   TextEditingController? businessDescreptionTextController;
-  String? Function(BuildContext, String?)?
-  businessDescreptionTextControllerValidator;
+  String? Function(BuildContext, String?)? businessDescreptionTextControllerValidator;
 
   // State field(s) for phone_number widget.
   FocusNode? phoneNumberFocusNode;

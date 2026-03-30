@@ -2,15 +2,14 @@ import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/user_session.dart';
 import '../../../features/login_and_signup/user_login.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 
-InputDecoration inputDecoration(BuildContext context,
-    {bool isError = false, String? errorText}) {
+InputDecoration inputDecoration(BuildContext context, {bool isError = false, String? errorText}) {
   final t = FlutterFlowTheme.of(context);
 
   return InputDecoration(
@@ -23,9 +22,7 @@ InputDecoration inputDecoration(BuildContext context,
     ),
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
-        color: isError
-            ? Colors.red
-            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
         width: 2,
       ),
       borderRadius: BorderRadius.circular(12),
@@ -109,6 +106,7 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
     try {
       final user = firebaseAuth.currentUser;
       if (user == null) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(' لا يوجد مستخدم مسجّل دخول حالياً')),
         );
@@ -125,26 +123,17 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
       // Delete related Firestore docs
       final firestore = firebaseFirestore;
 
-      final campaigns = await firestore
-          .collection('campaigns')
-          .where('business_id', isEqualTo: user.uid)
-          .get();
+      final campaigns = await firestore.collection('campaigns').where('business_id', isEqualTo: user.uid).get();
       for (var doc in campaigns.docs) {
         await doc.reference.delete();
       }
 
-      final profiles = await firestore
-          .collection('profiles')
-          .where('profile_id', isEqualTo: user.uid)
-          .get();
+      final profiles = await firestore.collection('profiles').where('profile_id', isEqualTo: user.uid).get();
       for (var doc in profiles.docs) {
         await doc.reference.delete();
       }
 
-      final subs = await firestore
-          .collection('subscriptions')
-          .where('user_id', isEqualTo: user.uid)
-          .get();
+      final subs = await firestore.collection('subscriptions').where('user_id', isEqualTo: user.uid).get();
       for (var doc in subs.docs) {
         await doc.reference.delete();
       }
@@ -154,6 +143,7 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
       // Delete auth account
       await user.delete();
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('تم حذف الحساب نهائيًا'),
@@ -162,16 +152,19 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
       );
 
       await UserSession.logout();
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, UserLoginPage.routeName);
     } on FirebaseAuthException catch (e) {
       String msg = ' حدث خطأ';
       if (e.code == 'wrong-password') msg = ' كلمة المرور غير صحيحة';
       if (e.code == 'requires-recent-login') msg = ' يجب تسجيل الدخول مجددًا';
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg), backgroundColor: t.error),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(' حدث خطأ غير متوقع: $e'),
@@ -188,19 +181,17 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
     final t = FlutterFlowTheme.of(context);
 
     return Scaffold(
-        backgroundColor: t.primaryBackground,
-
-        appBar: FeqAppBar(
-          title: 'حذف الحساب',
-          showBack: true,
-          backRoute: null,
-        ),
-
-        body: Directionality(
-          textDirection: TextDirection.rtl,
-          child: SafeArea(
-            top: true,
-            child: Padding(
+      backgroundColor: t.primaryBackground,
+      appBar: const FeqAppBar(
+        title: 'حذف الحساب',
+        showBack: true,
+        backRoute: null,
+      ),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SafeArea(
+          top: true,
+          child: Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
             child: Container(
               decoration: BoxDecoration(color: t.backgroundElan),
@@ -208,8 +199,7 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
                 padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
+                    padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
                     child: Container(
                       decoration: BoxDecoration(
                         color: t.containers,
@@ -220,20 +210,17 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
                             offset: Offset(0, 2),
                           ),
                         ],
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(16)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
                       ),
                       child: Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                            0, 16, 0, 16),
+                        padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 16),
                         child: Form(
                           key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-
                               // ==== LABEL ====
-                              FeqLabeled('كلمة المرور'),
+                              const FeqLabeled('كلمة المرور'),
 
                               // ==== PASSWORD FIELD ====
                               Padding(
@@ -249,19 +236,12 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
                                   },
                                   decoration: inputDecoration(
                                     context,
-                                    isError: _showError &&
-                                        (_passwordCtrl.text.isEmpty),
-                                    errorText: _showError &&
-                                            _passwordCtrl.text.isEmpty
-                                        ? 'كلمة المرور مطلوبة'
-                                        : null,
+                                    isError: _showError && (_passwordCtrl.text.isEmpty),
+                                    errorText: _showError && _passwordCtrl.text.isEmpty ? 'كلمة المرور مطلوبة' : null,
                                   ).copyWith(
                                     suffixIcon: IconButton(
-                                      icon: Icon(_obscure
-                                          ? Icons.visibility_off
-                                          : Icons.visibility),
-                                      onPressed: () =>
-                                          setState(() => _obscure = !_obscure),
+                                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                                      onPressed: () => setState(() => _obscure = !_obscure),
                                     ),
                                   ),
                                 ),
@@ -287,13 +267,9 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
                               // ==== DELETE BUTTON ====
                               Center(
                                 child: Padding(
-                                  padding:
-                                      const EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 0, 24),
+                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 24),
                                   child: FFButtonWidget(
-                                    onPressed: (_isLoading || !isPasswordFilled)
-                                        ? null
-                                        : _deleteAccount,
+                                    onPressed: (_isLoading || !isPasswordFilled) ? null : _deleteAccount,
                                     text: _isLoading ? 'جاري الحذف...' : 'حذف',
                                     options: FFButtonOptions(
                                       width: 430,
@@ -334,5 +310,4 @@ class _AccountDeletePageState extends State<AccountDeletePage> {
       setState(() {}); // Rebuild UI whenever the user types
     });
   }
-
 }

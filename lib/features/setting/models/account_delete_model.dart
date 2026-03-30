@@ -16,7 +16,7 @@ class AccountDeleteModel extends FlutterFlowModel {
       for (var doc in profileQuery.docs) {
         await doc.reference.delete();
       }
-      
+
       await firestore.collection('users').doc(user.uid).delete();
       await user.delete();
 

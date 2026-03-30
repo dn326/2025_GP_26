@@ -1,8 +1,8 @@
 import 'dart:core';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/core/components/feq_components.dart';
 import 'package:elan_flutterproject/features/login_and_signup/user_login.dart';
-import 'package:elan_flutterproject/flutter_flow/flutter_flow_icon_button.dart';
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_theme.dart';
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart';
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_widgets.dart';
@@ -26,7 +26,6 @@ class _UserResetPasswordPageState extends State<UserResetPasswordPage> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   String? errorText;
 
-
   @override
   void dispose() {
     emailController.dispose();
@@ -45,11 +44,7 @@ class _UserResetPasswordPageState extends State<UserResetPasswordPage> {
       return;
     }
 
-    final snap = await FirebaseFirestore.instance
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .limit(1)
-        .get();
+    final snap = await FirebaseFirestore.instance.collection('users').where('email', isEqualTo: email).limit(1).get();
 
     if (snap.docs.isEmpty) {
       setState(() => errorText = 'لا يوجد مستخدم بهذا البريد الإلكتروني.');
@@ -59,6 +54,7 @@ class _UserResetPasswordPageState extends State<UserResetPasswordPage> {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: t.success,
@@ -77,7 +73,7 @@ class _UserResetPasswordPageState extends State<UserResetPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-  final t = FlutterFlowTheme.of(context);
+    final t = FlutterFlowTheme.of(context);
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -162,8 +158,7 @@ class _UserResetPasswordPageState extends State<UserResetPasswordPage> {
                         if (errorText != null)
                           Padding(
                             padding: const EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
-                            child: Text(errorText!,
-                                style: const TextStyle(color: Colors.red, fontSize: 12)),
+                            child: Text(errorText!, style: const TextStyle(color: Colors.red, fontSize: 12)),
                           ),
                         const SizedBox(height: 16),
                         FFButtonWidget(

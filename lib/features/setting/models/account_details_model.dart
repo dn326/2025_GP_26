@@ -56,9 +56,7 @@ class AccountDetailsModel extends ChangeNotifier {
   String? accountType;
   String? accountStatus;
 
-  final docRef = firebaseFirestore
-      .collection('users')
-      .doc('defaultUser');
+  final docRef = firebaseFirestore.collection('users').doc('defaultUser');
 
   void initState(BuildContext context) {
     _loadUserData();

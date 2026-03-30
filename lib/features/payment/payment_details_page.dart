@@ -91,20 +91,20 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         // ── Subscription payment flow ─────────────────────────────────────────
         final subscriptionService = SubscriptionService();
 
-      // Get or create subscription
+        // Get or create subscription
         final existingSubscription = await subscriptionService.getSubscription();
         String subscriptionId;
 
         if (existingSubscription != null) {
           subscriptionId = existingSubscription['id'];
-        // Update existing subscription
+          // Update existing subscription
           await FirebaseFirestore.instance.collection('subscriptions').doc(subscriptionId).update({
             'plan_type': planDetails['plan_type'],
             'start_date': FieldValue.serverTimestamp(),
             'campaigns_used': 0, // Reset for new plan
           });
         } else {
-        // Create new subscription
+          // Create new subscription
           final newSubscriptionRef = FirebaseFirestore.instance.collection('subscriptions').doc();
           subscriptionId = newSubscriptionRef.id;
 
@@ -118,13 +118,13 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
             'campaign_limit': 15,
           });
 
-        // Update user with subscription ID
+          // Update user with subscription ID
           await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
             'subscription_id': subscriptionId,
           });
         }
 
-      // Create payment record
+        // Create payment record
         await FirebaseFirestore.instance.collection('payments').add({
           'amount': planDetails['price'],
           'created_at': FieldValue.serverTimestamp(),
@@ -139,13 +139,11 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تمت عملية الدفع بنجاح!')));
 
-        // Save subscription data to local storage after successful payment
+          // Save subscription data to local storage after successful payment
           try {
-          // Fetch the subscription from Firestore to get the actual server timestamp
-            final subscriptionDoc = await FirebaseFirestore.instance
-                .collection('subscriptions')
-                .doc(subscriptionId)
-                .get();
+            // Fetch the subscription from Firestore to get the actual server timestamp
+            final subscriptionDoc =
+                await FirebaseFirestore.instance.collection('subscriptions').doc(subscriptionId).get();
 
             if (subscriptionDoc.exists) {
               final subscriptionData = subscriptionDoc.data()!;
@@ -153,13 +151,15 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
               await SubscriptionLocalStorage.saveSubscription(subscriptionModel);
             }
           } catch (localStorageError) {
-          // Log the error but don't show to user since payment succeeded
+            // Log the error but don't show to user since payment succeeded
             log('Failed to save subscription to local storage: $localStorageError');
           }
 
           if (widget.returnAfterPayment) {
+            if (!mounted) return;
             Navigator.of(context).pop(true);
           } else {
+            if (!mounted) return;
             if (Navigator.canPop(context)) {
               Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
             }
@@ -243,7 +243,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                       decoration: BoxDecoration(
                         color: t.primaryBackground,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: t.primary.withValues(alpha: 0.2), width: 1),
+                        border: Border.all(color: t.primary.withOpacity(0.2), width: 1),
                       ),
                       child: Column(
                         children: [
@@ -286,10 +286,10 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: isSelected ? t.primary.withValues(alpha: 0.1) : t.primaryBackground,
+                            color: isSelected ? t.primary.withOpacity(0.1) : t.primaryBackground,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected ? t.primary : t.secondaryText.withValues(alpha: 0.3),
+                              color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3),
                               width: isSelected ? 2 : 1,
                             ),
                           ),
@@ -314,7 +314,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: t.primary.withValues(alpha: 0.1),
+                                  color: t.primary.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(method['icon'], color: t.primary, size: 24),
@@ -335,13 +335,13 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                       text: selectedPaymentMethod == null
                           ? 'اختر طريقة دفع للمتابعة'
                           : isProcessing
-                          ? 'جاري المعالجة...'
-                          : 'ادفع الآن',
+                              ? 'جاري المعالجة...'
+                              : 'ادفع الآن',
                       options: FFButtonOptions(
                         width: double.infinity,
                         height: 50,
                         color: selectedPaymentMethod == null || isProcessing
-                            ? t.secondaryText.withValues(alpha: 0.3)
+                            ? t.secondaryText.withOpacity(0.3)
                             : t.primary,
                         textStyle: GoogleFonts.interTight(
                           textStyle: t.titleMedium.copyWith(

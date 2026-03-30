@@ -16,8 +16,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_21.toString()
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        }
     }
 
     defaultConfig {
@@ -36,9 +38,9 @@ android {
 }
 
 dependencies {
-    implementation("com.google.android.gms:play-services-base:18.9.0")
+    implementation("com.google.android.gms:play-services-base:18.10.0")
     // Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
 
     // أضف الخدمات التي تستخدمها
     implementation("com.google.firebase:firebase-auth")

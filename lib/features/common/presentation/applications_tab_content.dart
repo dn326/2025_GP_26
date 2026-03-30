@@ -1,6 +1,9 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
+import '../../../core/services/dropdown_list_loader.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/user_session.dart';
 import '../../../core/widgets/image_picker_widget.dart';
@@ -26,6 +29,10 @@ class ApplicationModel {
   final bool isReadByBusiness;
   final DateTime? campaignEndDate;
 
+  // Enriched from influencer profile (for business-side filtering)
+  final int influencerContentTypeId;
+  final List<int> influencerPlatformIds;
+
   ApplicationModel({
     required this.id,
     required this.influencerId,
@@ -40,10 +47,11 @@ class ApplicationModel {
     required this.appliedAt,
     required this.isReadByBusiness,
     this.campaignEndDate,
+    this.influencerContentTypeId = 0,
+    this.influencerPlatformIds = const [],
   });
 
-  bool get isCampaignExpired =>
-      campaignEndDate != null && campaignEndDate!.isBefore(DateTime.now());
+  bool get isCampaignExpired => campaignEndDate != null && campaignEndDate!.isBefore(DateTime.now());
 
   factory ApplicationModel.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
@@ -66,6 +74,32 @@ class ApplicationModel {
       campaignEndDate: endDate,
     );
   }
+
+  ApplicationModel copyWith({
+    DateTime? campaignEndDate,
+    int? influencerContentTypeId,
+    List<int>? influencerPlatformIds,
+    String? businessName,
+    String? businessImageUrl,
+  }) {
+    return ApplicationModel(
+      id: id,
+      influencerId: influencerId,
+      influencerName: influencerName,
+      influencerImageUrl: influencerImageUrl,
+      businessId: businessId,
+      businessName: businessName ?? this.businessName,
+      businessImageUrl: businessImageUrl ?? this.businessImageUrl,
+      campaignId: campaignId,
+      campaignTitle: campaignTitle,
+      status: status,
+      appliedAt: appliedAt,
+      isReadByBusiness: isReadByBusiness,
+      campaignEndDate: campaignEndDate ?? this.campaignEndDate,
+      influencerContentTypeId: influencerContentTypeId ?? this.influencerContentTypeId,
+      influencerPlatformIds: influencerPlatformIds ?? this.influencerPlatformIds,
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -79,6 +113,7 @@ class ApplicationsTabContent extends StatefulWidget {
   final List<int> filterContentTypes;
   final List<int> filterPlatforms;
   final ValueChanged<bool>? onHasNewItems;
+
   /// Reports unique campaigns present in loaded applications (for filter)
   final ValueChanged<List<Map<String, String>>>? onAvailableCampaignsChanged;
 
@@ -136,9 +171,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
     _sub?.cancel();
     if (_myId == null) return;
 
-    Query q = firebaseFirestore
-        .collection('applications')
-        .orderBy('applied_at', descending: true);
+    Query q = firebaseFirestore.collection('applications').orderBy('applied_at', descending: true);
 
     if (widget.isBusinessView) {
       q = q.where('business_id', isEqualTo: _myId);
@@ -147,58 +180,101 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
     }
 
     _sub = q.snapshots().listen((snap) async {
-      List<ApplicationModel> all =
-      snap.docs.map((d) => ApplicationModel.fromDoc(d)).toList();
+      List<ApplicationModel> all = snap.docs.map((d) => ApplicationModel.fromDoc(d)).toList();
 
       // Both views: hide offer_sent — those live in the Offers tab
       all = all.where((a) => a.status != 'offer_sent').toList();
 
-      // Enrich with campaign end dates (for expired campaign banner)
+      // ── Enrich with campaign end dates ──────────────────────────────
       final campaignIds = all.map((a) => a.campaignId).toSet();
       final Map<String, DateTime?> endDateCache = {};
       for (final cid in campaignIds) {
         if (cid.isEmpty) continue;
         try {
-          final snap = await firebaseFirestore
-              .collection('campaigns')
-              .where('campaign_id', isEqualTo: cid)
-              .limit(1)
-              .get();
-          if (snap.docs.isNotEmpty) {
-            final d = snap.docs.first.data();
+          final cSnap =
+              await firebaseFirestore.collection('campaigns').where('campaign_id', isEqualTo: cid).limit(1).get();
+          if (cSnap.docs.isNotEmpty) {
+            final d = cSnap.docs.first.data();
             final raw = d['end_date'];
             if (raw is Timestamp) endDateCache[cid] = raw.toDate();
           }
         } catch (_) {}
       }
-      // Rebuild list with end dates
-      all = all.map((a) {
-        if (endDateCache.containsKey(a.campaignId)) {
-          return ApplicationModel(
-            id: a.id,
-            influencerId: a.influencerId,
-            influencerName: a.influencerName,
-            influencerImageUrl: a.influencerImageUrl,
-            businessId: a.businessId,
-            businessName: a.businessName,
-            businessImageUrl: a.businessImageUrl,
-            campaignId: a.campaignId,
-            campaignTitle: a.campaignTitle,
-            status: a.status,
-            appliedAt: a.appliedAt,
-            isReadByBusiness: a.isReadByBusiness,
-            campaignEndDate: endDateCache[a.campaignId],
-          );
-        }
-        return a;
-      }).toList();
+      all = all
+          .map((a) =>
+              endDateCache.containsKey(a.campaignId) ? a.copyWith(campaignEndDate: endDateCache[a.campaignId]) : a)
+          .toList();
 
-      // Client-side filters
+      // ── Enrich with influencer profile (content type + platforms) ─────
+      // Only needed for business view where these filters are active
+      if (widget.isBusinessView && (widget.filterContentTypes.isNotEmpty || widget.filterPlatforms.isNotEmpty)) {
+        final influencerIds = all.map((a) => a.influencerId).toSet();
+
+        // Load all dropdown lists to match names → IDs
+        final allContentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
+        // final allPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
+
+        final Map<String, Map<String, dynamic>> profileCache = {};
+
+        for (final iid in influencerIds) {
+          if (iid.isEmpty) continue;
+          try {
+            // ── 1. Content type from profiles/{uid}/influencer_profile subcollection ──
+            int ctId = 0;
+            final profileSnap =
+                await firebaseFirestore.collection('profiles').where('profile_id', isEqualTo: iid).limit(1).get();
+            if (profileSnap.docs.isNotEmpty) {
+              final inflSnap = await profileSnap.docs.first.reference.collection('influencer_profile').limit(1).get();
+              if (inflSnap.docs.isNotEmpty) {
+                final contentTypeName = (inflSnap.docs.first.data()['content_type'] ?? '').toString();
+                // Match name string → int ID from dropdown list
+                final match =
+                    allContentTypes.where((ct) => ct.nameAr == contentTypeName || ct.nameEn == contentTypeName);
+                if (match.isNotEmpty) ctId = match.first.id;
+              }
+            }
+
+            // ── 2. Platforms from social_account collection ──────────────────
+            // platform field stores the platform ID as a string (e.g. "1", "2")
+            final socialSnap =
+                await firebaseFirestore.collection('social_account').where('influencer_id', isEqualTo: iid).get();
+            final List<int> platIds = socialSnap.docs
+                .map((d) {
+                  final raw = d.data()['platform']?.toString() ?? '';
+                  return int.tryParse(raw) ?? 0;
+                })
+                .where((id) => id > 0)
+                .toList();
+
+            profileCache[iid] = {
+              'contentTypeId': ctId,
+              'platformIds': platIds,
+            };
+          } catch (_) {}
+        }
+
+        all = all.map((a) {
+          final info = profileCache[a.influencerId];
+          if (info == null) return a;
+          return a.copyWith(
+            influencerContentTypeId: info['contentTypeId'] as int,
+            influencerPlatformIds: info['platformIds'] as List<int>,
+          );
+        }).toList();
+      }
+
+      // ── Client-side filters ───────────────────────────────────────────
       if (widget.filterStatuses.isNotEmpty) {
         all = all.where((a) => widget.filterStatuses.contains(a.status)).toList();
       }
       if (widget.filterCampaigns.isNotEmpty) {
         all = all.where((a) => widget.filterCampaigns.contains(a.campaignId)).toList();
+      }
+      if (widget.filterContentTypes.isNotEmpty) {
+        all = all.where((a) => widget.filterContentTypes.contains(a.influencerContentTypeId)).toList();
+      }
+      if (widget.filterPlatforms.isNotEmpty) {
+        all = all.where((a) => a.influencerPlatformIds.any((pid) => widget.filterPlatforms.contains(pid))).toList();
       }
 
       // Notify parent whether there are new items (for tab dot)
@@ -269,18 +345,12 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
 
   Future<void> _markRead(String docId) async {
     try {
-      await firebaseFirestore
-          .collection('applications')
-          .doc(docId)
-          .update({'is_read_by_business': true});
+      await firebaseFirestore.collection('applications').doc(docId).update({'is_read_by_business': true});
     } catch (_) {}
   }
 
   Future<void> _reject(ApplicationModel app) async {
-    await firebaseFirestore
-        .collection('applications')
-        .doc(app.id)
-        .update({'status': 'rejected'});
+    await firebaseFirestore.collection('applications').doc(app.id).update({'status': 'rejected'});
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -326,9 +396,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Text(label,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 
@@ -376,8 +444,8 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
         border: isNew
             ? Border.all(color: const Color(0xFF3B82F6), width: 1.5)
             : isRejected
-            ? Border.all(color: const Color(0xFFDC2626).withValues(alpha: 0.4))
-            : null,
+                ? Border.all(color: const Color(0xFFDC2626).withOpacity(0.4))
+                : null,
         boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 4, offset: Offset(0, 2))],
       ),
       child: Padding(
@@ -443,8 +511,8 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
                       child: Text(
                         app.influencerName,
                         style: FlutterFlowTheme.of(context).bodySmall.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                              fontWeight: FontWeight.w600,
+                            ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -482,8 +550,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFDC2626),
                       side: const BorderSide(color: Color(0xFFDC2626)),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     ),
                     child: const Text('رفض'),
@@ -496,8 +563,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: t.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     ),
                   ),
@@ -528,12 +594,10 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
     final t = FlutterFlowTheme.of(context);
 
     // Get business info from model or cache
-    final businessName = app.businessName.isNotEmpty
-        ? app.businessName
-        : (_businessInfoCache[app.campaignId]?['name'] ?? '');
-    final businessImageUrl = app.businessImageUrl.isNotEmpty
-        ? app.businessImageUrl
-        : (_businessInfoCache[app.campaignId]?['image'] ?? '');
+    final businessName =
+        app.businessName.isNotEmpty ? app.businessName : (_businessInfoCache[app.campaignId]?['name'] ?? '');
+    final businessImageUrl =
+        app.businessImageUrl.isNotEmpty ? app.businessImageUrl : (_businessInfoCache[app.campaignId]?['image'] ?? '');
 
     return Container(
       margin: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 6),
@@ -559,8 +623,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
                       if (businessName.isNotEmpty)
                         Text(
                           businessName,
-                          style: t.bodySmall.copyWith(
-                              color: t.secondaryText, fontWeight: FontWeight.w500),
+                          style: t.bodySmall.copyWith(color: t.secondaryText, fontWeight: FontWeight.w500),
                           textAlign: TextAlign.end,
                         ),
                       if (businessName.isNotEmpty) const SizedBox(height: 2),
@@ -626,9 +689,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: _items.length,
-      itemBuilder: (_, i) => widget.isBusinessView
-          ? _businessCard(_items[i])
-          : _influencerCard(_items[i]),
+      itemBuilder: (_, i) => widget.isBusinessView ? _businessCard(_items[i]) : _influencerCard(_items[i]),
     );
   }
 }

@@ -2,14 +2,13 @@ import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/components/feq_components.dart';
-import '../../../core/services/firebase_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '../../../core/components/feq_components.dart';
+import '../../../core/services/firebase_service.dart';
 import '../../../core/widgets/password_field_with_validation.dart';
 
-InputDecoration inputDecoration(BuildContext context,
-    {bool isError = false, String? errorText}) {
+InputDecoration inputDecoration(BuildContext context, {bool isError = false, String? errorText}) {
   final t = FlutterFlowTheme.of(context);
 
   return InputDecoration(
@@ -22,9 +21,7 @@ InputDecoration inputDecoration(BuildContext context,
     ),
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
-        color: isError
-            ? Colors.red
-            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
         width: 2,
       ),
       borderRadius: BorderRadius.circular(12),
@@ -49,8 +46,7 @@ class AccountChangePasswordPage extends StatefulWidget {
   static String routePath = '/account_change_password_page';
 
   @override
-  State<AccountChangePasswordPage> createState() =>
-      _AccountChangePasswordPageState();
+  State<AccountChangePasswordPage> createState() => _AccountChangePasswordPageState();
 }
 
 class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
@@ -80,15 +76,9 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
     super.dispose();
   }
 
-  bool get isFilled =>
-      _currentCtrl.text.isNotEmpty &&
-      _newCtrl.text.isNotEmpty &&
-      _confirmCtrl.text.isNotEmpty;
+  bool get isFilled => _currentCtrl.text.isNotEmpty && _newCtrl.text.isNotEmpty && _confirmCtrl.text.isNotEmpty;
 
-  bool get isValid =>
-      isFilled &&
-      _newCtrl.isPasswordValid &&
-      _newCtrl.text.trim() == _confirmCtrl.text.trim();
+  bool get isValid => isFilled && _newCtrl.isPasswordValid && _newCtrl.text.trim() == _confirmCtrl.text.trim();
 
   Future<void> _savePassword() async {
     final t = FlutterFlowTheme.of(context);
@@ -128,6 +118,7 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
 
       await user.updatePassword(_newCtrl.text.trim());
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('تم تغيير كلمة المرور بنجاح'),
@@ -136,7 +127,6 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
       );
 
       Navigator.pop(context);
-
     } on FirebaseAuthException catch (e) {
       String msg = 'حدث خطأ';
 
@@ -146,7 +136,6 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg), backgroundColor: t.error),
       );
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -165,12 +154,11 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
 
     return Scaffold(
       backgroundColor: t.primaryBackground,
-      appBar: FeqAppBar(
+      appBar: const FeqAppBar(
         title: 'تغيير كلمة المرور',
         showBack: true,
         backRoute: null,
       ),
-
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: SafeArea(
@@ -189,15 +177,13 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
                 borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 20),
-
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // ==== CURRENT PASSWORD ====
-                    FeqLabeled('كلمة المرور الحالية'),
+                    const FeqLabeled('كلمة المرور الحالية'),
 
                     Padding(
                       padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
@@ -206,19 +192,12 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
                         obscureText: _obscureCurrent,
                         decoration: inputDecoration(
                           context,
-                          isError:
-                              _showError && _currentCtrl.text.trim().isEmpty,
-                          errorText: _showError &&
-                                  _currentCtrl.text.trim().isEmpty
-                              ? 'كلمة المرور مطلوبة'
-                              : null,
+                          isError: _showError && _currentCtrl.text.trim().isEmpty,
+                          errorText: _showError && _currentCtrl.text.trim().isEmpty ? 'كلمة المرور مطلوبة' : null,
                         ).copyWith(
                           suffixIcon: IconButton(
-                            icon: Icon(_obscureCurrent
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () =>
-                                setState(() => _obscureCurrent = !_obscureCurrent),
+                            icon: Icon(_obscureCurrent ? Icons.visibility_off : Icons.visibility),
+                            onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
                           ),
                         ),
                       ),
@@ -235,10 +214,9 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
                         decoration: inputDecoration(
                           context,
                           isError: _showError && !_newCtrl.isPasswordValid,
-                          errorText: _showError && !_newCtrl.isPasswordValid
-                              ? 'كلمة المرور لا تلبي المتطلبات'
-                              : null,
-                        ), label: 'كلمة المرور الجديدة',
+                          errorText: _showError && !_newCtrl.isPasswordValid ? 'كلمة المرور لا تلبي المتطلبات' : null,
+                        ),
+                        label: 'كلمة المرور الجديدة',
                       ),
                     ),
 
@@ -252,22 +230,17 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
                         showValidationRules: false,
                         decoration: inputDecoration(
                           context,
-                          isError: _showError &&
-                              _confirmCtrl.text.isNotEmpty &&
-                              _confirmCtrl.text != _newCtrl.text,
-                          errorText: _showError &&
-                                  _confirmCtrl.text.isNotEmpty &&
-                                  _confirmCtrl.text != _newCtrl.text
+                          isError: _showError && _confirmCtrl.text.isNotEmpty && _confirmCtrl.text != _newCtrl.text,
+                          errorText: _showError && _confirmCtrl.text.isNotEmpty && _confirmCtrl.text != _newCtrl.text
                               ? 'كلمتا المرور غير متطابقتين'
                               : null,
-                        ), label: 'تأكيد كلمة المرور الجديدة',
+                        ),
+                        label: 'تأكيد كلمة المرور الجديدة',
                       ),
                     ),
 
                     // MISMATCH ERROR
-                    if (_confirmCtrl.text.isNotEmpty &&
-                        _newCtrl.text.isNotEmpty &&
-                        _newCtrl.text != _confirmCtrl.text)
+                    if (_confirmCtrl.text.isNotEmpty && _newCtrl.text.isNotEmpty && _newCtrl.text != _confirmCtrl.text)
                       Padding(
                         padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 0),
                         child: Text(
@@ -287,9 +260,7 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
                       child: Padding(
                         padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 24),
                         child: FFButtonWidget(
-                          onPressed: (_isLoading || !isValid)
-                              ? null
-                              : _savePassword,
+                          onPressed: (_isLoading || !isValid) ? null : _savePassword,
                           text: _isLoading ? 'جاري الحفظ...' : 'حفظ',
                           options: FFButtonOptions(
                             width: 430,
@@ -308,7 +279,6 @@ class _AccountChangePasswordPageState extends State<AccountChangePasswordPage> {
                         ),
                       ),
                     ),
-
                   ],
                 ),
               ),

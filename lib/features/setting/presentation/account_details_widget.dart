@@ -1,18 +1,17 @@
 import 'dart:developer';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_model.dart';
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart' hide createModel;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/user_session.dart';
 import '../../../features/login_and_signup/user_login.dart';
 import '../models/account_details_model.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 
 InputDecoration inputDecoration(
   BuildContext context, {
@@ -23,8 +22,7 @@ InputDecoration inputDecoration(
 
   return InputDecoration(
     isDense: true,
-    contentPadding:
-        const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
+    contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
     errorText: errorText,
     enabledBorder: OutlineInputBorder(
       borderSide: BorderSide(color: t.secondary, width: 2),
@@ -32,9 +30,7 @@ InputDecoration inputDecoration(
     ),
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
-        color: isError
-            ? Colors.red
-            : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
         width: 2,
       ),
       borderRadius: BorderRadius.circular(12),
@@ -71,12 +67,11 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
   bool _isSaving = false;
   bool _showError = false;
 
-  TextEditingController get _emailCtrl =>
-      _model.infEmailTextController;
+  TextEditingController get _emailCtrl => _model.infEmailTextController;
+
   FocusNode? get _emailFocus => _model.infEmailFocusNode;
 
-  bool get _isEmailFilled =>
-      _emailCtrl.text.trim().isNotEmpty;
+  bool get _isEmailFilled => _emailCtrl.text.trim().isNotEmpty;
 
   @override
   void initState() {
@@ -115,7 +110,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
       setState(() => _isLoadingData = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('فشل في تحميل البيانات '),
+          content: const Text('فشل في تحميل البيانات '),
           backgroundColor: t.error,
         ),
       );
@@ -237,6 +232,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
         await user.reauthenticateWithCredential(cred);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'wrong-password') {
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('كلمة المرور غير صحيحة'),
@@ -248,6 +244,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
         }
 
         if (e.code == 'requires-recent-login') {
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('يجب تسجيل الدخول مجددًا'),
@@ -255,6 +252,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
             ),
           );
           await UserSession.logout();
+          if (!mounted) return;
           Navigator.pushNamedAndRemoveUntil(
             context,
             UserLoginPage.routeName,
@@ -264,9 +262,10 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
         }
 
         // أي خطأ غير متوقع
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('فشل التحقق من كلمة المرور '),
+            content: const Text('فشل التحقق من كلمة المرور '),
             backgroundColor: t.error,
           ),
         );
@@ -278,12 +277,11 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
       await user.verifyBeforeUpdateEmail(newEmail);
       await user.sendEmailVerification();
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-              'تم إرسال رسالة تحقق إلى البريد الإلكتروني الجديد'),
-              backgroundColor: t.success,
-
+          content: const Text('تم إرسال رسالة تحقق إلى البريد الإلكتروني الجديد'),
+          backgroundColor: t.success,
         ),
       );
 
@@ -297,7 +295,6 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
         UserLoginPage.routeName,
         (_) => false,
       );
-
     } on FirebaseAuthException catch (e) {
       String msg = ' حدث خطأ';
       if (e.code == 'wrong-password') {
@@ -307,6 +304,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
         msg = ' يجب تسجيل الدخول مجددًا';
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg),
@@ -323,6 +321,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(' حدث خطأ غير متوقع: $e'),
@@ -358,7 +357,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
 
     return Scaffold(
       backgroundColor: t.primaryBackground,
-      appBar: FeqAppBar(
+      appBar: const FeqAppBar(
         title: 'معلومات الحساب',
         showBack: true,
         backRoute: null,
@@ -368,20 +367,14 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
         child: SafeArea(
           top: true,
           child: Padding(
-            padding:
-                const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+            padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
             child: Container(
-              decoration:
-                  BoxDecoration(color: t.backgroundElan),
+              decoration: BoxDecoration(color: t.backgroundElan),
               child: Padding(
-                padding:
-                    const EdgeInsetsDirectional.fromSTEB(
-                        0, 16, 0, 0),
+                padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(
-                            16, 16, 16, 16),
+                    padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
                     child: Container(
                       decoration: BoxDecoration(
                         color: t.containers,
@@ -392,53 +385,36 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
                             offset: Offset(0, 2),
                           ),
                         ],
-                        borderRadius:
-                            const BorderRadius.all(
-                                Radius.circular(16)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
                       ),
                       child: Padding(
-                        padding:
-                            const EdgeInsetsDirectional.fromSTEB(
-                                0, 16, 0, 16),
+                        padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 16),
                         child: Form(
                           key: _formKey,
                           child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // ==== LABEL ====
                               const FeqLabeled('البريد الإلكتروني'),
 
                               // ==== EMAIL FIELD ====
                               Padding(
-                                padding:
-                                    const EdgeInsetsDirectional
-                                        .fromSTEB(
-                                            20, 5, 20, 0),
+                                padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                                 child: TextFormField(
                                   controller: _emailCtrl,
                                   focusNode: _emailFocus,
-                                  keyboardType:
-                                      TextInputType.emailAddress,
+                                  keyboardType: TextInputType.emailAddress,
                                   validator: (v) {
-                                    if (v == null ||
-                                        v.trim().isEmpty) {
+                                    if (v == null || v.trim().isEmpty) {
                                       return 'البريد الإلكتروني مطلوب';
                                     }
                                     return null;
                                   },
                                   decoration: inputDecoration(
                                     context,
-                                    isError: _showError &&
-                                        _emailCtrl.text
-                                            .trim()
-                                            .isEmpty,
-                                    errorText: _showError &&
-                                            _emailCtrl.text
-                                                .trim()
-                                                .isEmpty
-                                        ? 'البريد الإلكتروني مطلوب'
-                                        : null,
+                                    isError: _showError && _emailCtrl.text.trim().isEmpty,
+                                    errorText:
+                                        _showError && _emailCtrl.text.trim().isEmpty ? 'البريد الإلكتروني مطلوب' : null,
                                   ),
                                   textAlign: TextAlign.right,
                                 ),
@@ -448,9 +424,7 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
 
                               Center(
                                 child: Padding(
-                                  padding:
-                                      const EdgeInsets
-                                          .symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                     horizontal: 24,
                                   ),
                                   child: Text(
@@ -468,37 +442,23 @@ class _AccountDetailPageState extends State<AccountDetailsPage> {
                               // ==== SAVE BUTTON ====
                               Center(
                                 child: Padding(
-                                  padding:
-                                      const EdgeInsetsDirectional
-                                          .fromSTEB(
-                                              0, 0, 0, 24),
+                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 24),
                                   child: FFButtonWidget(
-                                    onPressed: (_isSaving ||
-                                            !_isEmailFilled)
-                                        ? null
-                                        : _saveChanges,
-                                    text: _isSaving
-                                        ? 'جاري الحفظ...'
-                                        : 'حفظ',
+                                    onPressed: (_isSaving || !_isEmailFilled) ? null : _saveChanges,
+                                    text: _isSaving ? 'جاري الحفظ...' : 'حفظ',
                                     options: FFButtonOptions(
                                       width: 430,
                                       height: 40,
-                                      color: (!_isSaving &&
-                                              _isEmailFilled)
+                                      color: (!_isSaving && _isEmailFilled)
                                           ? t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
-                                          : Colors
-                                              .grey.shade400,
-                                      textStyle: t.titleMedium
-                                          .override(
+                                          : Colors.grey.shade400,
+                                      textStyle: t.titleMedium.override(
                                         fontFamily: 'Inter',
                                         color: t.containers,
                                       ),
                                       elevation: 2,
-                                      borderRadius:
-                                          BorderRadius.circular(
-                                              12),
-                                      disabledColor:
-                                          Colors.grey.shade400,
+                                      borderRadius: BorderRadius.circular(12),
+                                      disabledColor: Colors.grey.shade400,
                                     ),
                                   ),
                                 ),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '/flutter_flow/flutter_flow_theme.dart';
 import '../../../core/services/subscription_model.dart';
 import '../../../core/services/subscription_service.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
 
 class SubscriptionInfoWidget extends StatefulWidget {
   final bool isEditMode;
@@ -61,8 +62,7 @@ class _SubscriptionInfoWidgetState extends State<SubscriptionInfoWidget> {
       return _subscription!.daysRemaining! > 0;
     } else if (_subscription!.isBasic) {
       // Check if basic subscription still has campaigns available
-      final campaignsRemaining =
-          _subscription!.campaignLimit - _subscription!.campaignsUsed;
+      final campaignsRemaining = _subscription!.campaignLimit - _subscription!.campaignsUsed;
       return campaignsRemaining > 0;
     }
 
@@ -111,7 +111,7 @@ class _SubscriptionInfoWidgetState extends State<SubscriptionInfoWidget> {
         padding: const EdgeInsets.all(12),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: theme.error.withValues(alpha: 0.1),
+          color: theme.error.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: theme.error, width: 1),
         ),
@@ -141,7 +141,7 @@ class _SubscriptionInfoWidgetState extends State<SubscriptionInfoWidget> {
         color: theme.containers,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.primary.withValues(alpha: 0.3),
+          color: theme.primary.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -156,17 +156,15 @@ class _SubscriptionInfoWidgetState extends State<SubscriptionInfoWidget> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: _subscription!.isPremium
-                      ? Color(0xFF6366F1).withValues(alpha: 0.2)
-                      : Color(0xFF10B981).withValues(alpha: 0.2),
+                      ? const Color(0xFF6366F1).withOpacity(0.2)
+                      : const Color(0xFF10B981).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   _getSubscriptionStatus(),
                   style: GoogleFonts.inter(
                     textStyle: theme.bodySmall.copyWith(
-                      color: _subscription!.isPremium
-                          ? Color(0xFF6366F1)
-                          : Color(0xFF10B981),
+                      color: _subscription!.isPremium ? const Color(0xFF6366F1) : const Color(0xFF10B981),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -189,9 +187,7 @@ class _SubscriptionInfoWidgetState extends State<SubscriptionInfoWidget> {
                 Text(
                   '${_subscription!.daysRemaining} يوم  :  ',
                   style: theme.bodySmall.copyWith(
-                    color: _subscription!.daysRemaining! < 30
-                        ? Color(0xFFF59E0B)
-                        : theme.success,
+                    color: _subscription!.daysRemaining! < 30 ? const Color(0xFFF59E0B) : theme.success,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -233,7 +229,7 @@ class _SubscriptionInfoWidgetState extends State<SubscriptionInfoWidget> {
                   '${_subscription!.campaignLimit - _subscription!.campaignsUsed} متبقي',
                   style: theme.bodySmall.copyWith(
                     color: (_subscription!.campaignLimit - _subscription!.campaignsUsed) <= 3
-                        ? Color(0xFFF59E0B)
+                        ? const Color(0xFFF59E0B)
                         : theme.success,
                     fontWeight: FontWeight.w600,
                   ),
@@ -253,10 +249,10 @@ class _SubscriptionInfoWidgetState extends State<SubscriptionInfoWidget> {
               child: LinearProgressIndicator(
                 value: _subscription!.campaignsUsed / _subscription!.campaignLimit,
                 minHeight: 6,
-                backgroundColor: theme.secondaryText.withValues(alpha: 0.2),
+                backgroundColor: theme.secondaryText.withOpacity(0.2),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   _subscription!.campaignsUsed >= _subscription!.campaignLimit * 0.9
-                      ? Color(0xFFF59E0B)
+                      ? const Color(0xFFF59E0B)
                       : theme.primary,
                 ),
               ),
@@ -282,7 +278,7 @@ class _SubscriptionInfoWidgetState extends State<SubscriptionInfoWidget> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Color(0xFFFEE2E2),
+                color: const Color(0xFFFEE2E2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

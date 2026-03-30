@@ -5,13 +5,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/dropdown_list_loader.dart';
 import '../../../core/services/firebase_service.dart';
 import '../models/experience_edit_model.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 
 /// ===================== Helpers محلية =====================
 Widget wrapInMaterialDatePickerTheme(
@@ -37,7 +37,7 @@ Widget wrapInMaterialDatePickerTheme(
 
   return Theme(
     data: theme.copyWith(
-      dialogTheme: DialogThemeData(backgroundColor: pickerBg, surfaceTintColor: Colors.transparent),
+      dialogTheme: DialogTheme(backgroundColor: pickerBg, surfaceTintColor: Colors.transparent),
       textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: actionFg)),
       datePickerTheme: DatePickerThemeData(
         headerBackgroundColor: headerBg,
@@ -130,8 +130,8 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
 
     _socialPlatformsSelected = socials.map((e) {
       return _socialPlatforms.firstWhere(
-            (p) => p.id.toString() == e['platform'],
-        orElse: () => FeqDropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
+        (p) => p.id.toString() == e['platform'],
+        orElse: () => const FeqDropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
       );
     }).toList();
 
@@ -145,14 +145,8 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
 
     // Run both queries in parallel
     final results = await Future.wait([
-      firebaseFirestore
-          .collection('social_account')
-          .where('influencer_id', isEqualTo: uid)
-          .get(),
-      firebaseFirestore
-          .collection('social_account')
-          .where('influencer_id', isEqualTo: usersRef)
-          .get(),
+      firebaseFirestore.collection('social_account').where('influencer_id', isEqualTo: uid).get(),
+      firebaseFirestore.collection('social_account').where('influencer_id', isEqualTo: usersRef).get(),
     ]);
 
     // Combine both snapshots
@@ -163,15 +157,13 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
     // Convert to simple map models
     return allDocs
         .map((d) {
-      final m = d.data();
-      return {
-        'platform': (m['platform'] ?? m['platform_name'] ?? '').toString(),
-        'username': (m['username'] ?? '').toString(),
-      };
-    })
-        .where((e) =>
-    (e['platform'] ?? '').isNotEmpty ||
-        (e['username'] ?? '').isNotEmpty)
+          final m = d.data();
+          return {
+            'platform': (m['platform'] ?? m['platform_name'] ?? '').toString(),
+            'username': (m['username'] ?? '').toString(),
+          };
+        })
+        .where((e) => (e['platform'] ?? '').isNotEmpty || (e['username'] ?? '').isNotEmpty)
         .toList();
   }
 
@@ -254,9 +246,8 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
 
   bool get _fieldsFilled {
     // Check company: either select from list OR enter custom company
-    final companySelected = _useCustomCompany
-        ? (_customCompanyController.text.trim().isNotEmpty)
-        : (_selectedSaudiCompany != null);
+    final companySelected =
+        _useCustomCompany ? (_customCompanyController.text.trim().isNotEmpty) : (_selectedSaudiCompany != null);
     _nameEmpty = !companySelected;
 
     // Check other required fields
@@ -333,7 +324,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: FeqAppBar(
+      appBar: const FeqAppBar(
         title: 'تحديث العمل الإعلاني',
         showBack: true,
       ),
@@ -367,8 +358,8 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       // الشركة / المنظمة
-                                      Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 20, 5),
+                                      const Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(0, 16, 20, 5),
                                         child: FeqLabeled('الشركة / المنظمة'),
                                       ),
                                       Padding(
@@ -441,8 +432,8 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                       ),
 
                                       // عنوان الحملة
-                                      Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
+                                      const Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
                                         child: FeqLabeled('عنوان الحملة'),
                                       ),
                                       Padding(
@@ -501,14 +492,14 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                                                   lastDate: DateTime(2050),
                                                                   builder: (context, child) =>
                                                                       wrapInMaterialDatePickerTheme(
-                                                                        context,
-                                                                        child!,
-                                                                        headerBackgroundColor: t.primary,
-                                                                        headerForegroundColor: Colors.white,
-                                                                        pickerBackgroundColor: t.secondaryBackground,
-                                                                        actionButtonForegroundColor: t.primaryText,
-                                                                        iconSize: 24,
-                                                                      ),
+                                                                    context,
+                                                                    child!,
+                                                                    headerBackgroundColor: t.primary,
+                                                                    headerForegroundColor: Colors.white,
+                                                                    pickerBackgroundColor: t.secondaryBackground,
+                                                                    actionButtonForegroundColor: t.primaryText,
+                                                                    iconSize: 24,
+                                                                  ),
                                                                 );
                                                                 if (picked != null) {
                                                                   setState(
@@ -525,7 +516,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                                           width: 140,
                                                           height: 50,
                                                           color: _sameDayCompletion
-                                                              ? t.tertiary.withValues(alpha: 0.5)
+                                                              ? t.tertiary.withOpacity(0.5)
                                                               : t.tertiary,
                                                           textStyle: GoogleFonts.inter(
                                                             textStyle: t.bodyMedium.copyWith(
@@ -536,7 +527,7 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                                           elevation: 0,
                                                           borderSide: BorderSide(
                                                             color: _sameDayCompletion
-                                                                ? t.tertiary.withValues(alpha: 0.5)
+                                                                ? t.tertiary.withOpacity(0.5)
                                                                 : t.tertiary,
                                                             width: 2,
                                                           ),
@@ -664,8 +655,8 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                       ),
 
                                       // تفاصيل العمل الإعلاني
-                                      Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
+                                      const Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
                                         child: FeqLabeled('تفاصيل العمل الإعلاني'),
                                       ),
                                       Padding(
@@ -700,8 +691,8 @@ class _InfluncerEditExperienceWidgetState extends State<InfluncerEditExperienceW
                                         ),
                                       ),
 
-                                      Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
+                                      const Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(0, 5, 20, 5),
                                         child: FeqLabeled('المنصة التي نشر فيها العمل الإعلاني'),
                                       ),
                                       Padding(

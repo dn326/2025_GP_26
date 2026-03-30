@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/firebase_service_utils.dart';
 import '../../../core/services/user_session.dart';
@@ -125,13 +126,11 @@ class _SendOfferPageState extends State<SendOfferPage> {
   };
   final Map<String, String> _acknowledgmentLabels = {
     'not_intermediary':
-    'أقر بأن منصة إعلان منصة تقنية فقط، ولا تعمل كوسيط مالي أو تجاري، ولا تشارك في التفاوض أو التنفيذ أو الدفع بين الأطراف.',
-    'data_accuracy':
-    'أقر بصحة ودقة واكتمال جميع البيانات المدخلة في هذا العرض، وأتحمل كامل المسؤولية النظامية عنها.',
-    'payment_commitment':
-    'أقر بالتزامي بدفع المقابل المالي المتفق عليه للمؤثر وفق تفاصيل عرض التعاون المعتمد.',
+        'أقر بأن منصة إعلان منصة تقنية فقط، ولا تعمل كوسيط مالي أو تجاري، ولا تشارك في التفاوض أو التنفيذ أو الدفع بين الأطراف.',
+    'data_accuracy': 'أقر بصحة ودقة واكتمال جميع البيانات المدخلة في هذا العرض، وأتحمل كامل المسؤولية النظامية عنها.',
+    'payment_commitment': 'أقر بالتزامي بدفع المقابل المالي المتفق عليه للمؤثر وفق تفاصيل عرض التعاون المعتمد.',
     'preliminary_agreement':
-    'أوافق على أن هذا العرض يُعد اتفاقاً أولياً، ويصبح ملزماً بيني وبين المؤثر فقط عند قبوله، وأي تعديل يتم مباشرةً بين الطرفين وخارج منصة إعلان.',
+        'أوافق على أن هذا العرض يُعد اتفاقاً أولياً، ويصبح ملزماً بيني وبين المؤثر فقط عند قبوله، وأي تعديل يتم مباشرةً بين الطرفين وخارج منصة إعلان.',
   };
 
   @override
@@ -201,11 +200,8 @@ class _SendOfferPageState extends State<SendOfferPage> {
           setState(() {
             _businessName = bData.name;
             final raw = bData.profileImageUrl ?? '';
-            _businessImageUrl = raw.isNotEmpty
-                ? (raw.contains('?')
-                ? '${raw.split('?').first}?alt=media'
-                : '$raw?alt=media')
-                : '';
+            _businessImageUrl =
+                raw.isNotEmpty ? (raw.contains('?') ? '${raw.split('?').first}?alt=media' : '$raw?alt=media') : '';
           });
         }
       }
@@ -218,14 +214,10 @@ class _SendOfferPageState extends State<SendOfferPage> {
             .limit(1)
             .get();
         if (profileSnap.docs.isNotEmpty) {
-          final inflSnap = await profileSnap.docs.first.reference
-              .collection('influencer_profile')
-              .limit(1)
-              .get();
+          final inflSnap = await profileSnap.docs.first.reference.collection('influencer_profile').limit(1).get();
           if (inflSnap.docs.isNotEmpty) {
             setState(() {
-              _influencerContentType =
-                  (inflSnap.docs.first.data()['content_type'] ?? '').toString();
+              _influencerContentType = (inflSnap.docs.first.data()['content_type'] ?? '').toString();
             });
           }
         }
@@ -236,7 +228,9 @@ class _SendOfferPageState extends State<SendOfferPage> {
   }
 
   bool get _allAcknowledged => _acknowledgments.values.every((v) => v);
+
   bool get _hasContentType => _contentTypes.values.any((v) => v);
+
   bool get _hasPlatform => _dynamicPlatforms.values.any((v) => v);
 
   Future<void> _submit() async {
@@ -281,8 +275,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
       final Map<String, dynamic> contentDetails = {};
       for (final key in _contentTypes.keys) {
         if (_contentTypes[key] == true) {
-          final val =
-              int.tryParse(_contentCountControllers[key]!.text.trim()) ?? 0;
+          final val = int.tryParse(_contentCountControllers[key]!.text.trim()) ?? 0;
           contentDetails['${key}_count'] = val;
         }
       }
@@ -301,19 +294,10 @@ class _SendOfferPageState extends State<SendOfferPage> {
         'influencer_content_type_id': _campaignData?['influencer_content_type_id'] ?? 0,
         'influencer_content_type_name': _campaignData?['influencer_content_type_name'] ?? '',
         'status': 'pending',
-        'content_types': _contentTypes.entries
-            .where((e) => e.value)
-            .map((e) => e.key)
-            .toList(),
+        'content_types': _contentTypes.entries.where((e) => e.value).map((e) => e.key).toList(),
         'content_details': contentDetails,
-        'platforms': _dynamicPlatforms.entries
-            .where((e) => e.value)
-            .map((e) => e.key)
-            .toList(),
-        'content_styles': _contentStyles.entries
-            .where((e) => e.value)
-            .map((e) => e.key)
-            .toList(),
+        'platforms': _dynamicPlatforms.entries.where((e) => e.value).map((e) => e.key).toList(),
+        'content_styles': _contentStyles.entries.where((e) => e.value).map((e) => e.key).toList(),
         'additional_requirements': _additionalRequirementsCtrl.text.trim(),
         'collaboration_start': Timestamp.fromDate(_startDate!),
         'collaboration_end': Timestamp.fromDate(_endDate!),
@@ -348,8 +332,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content:
-            Text('تم إرسال العرض بنجاح', textDirection: TextDirection.rtl),
+            content: Text('تم إرسال العرض بنجاح', textDirection: TextDirection.rtl),
             backgroundColor: Color(0xFF16A34A),
           ),
         );
@@ -372,8 +355,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate:
-      isStart ? (_startDate ?? now) : (_endDate ?? (_startDate ?? now)),
+      initialDate: isStart ? (_startDate ?? now) : (_endDate ?? (_startDate ?? now)),
       firstDate: isStart ? now : (_startDate ?? now),
       lastDate: DateTime(now.year + 5),
       locale: const Locale('ar'),
@@ -423,65 +405,59 @@ class _SendOfferPageState extends State<SendOfferPage> {
       body: _loadingCampaign
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _sectionInfluencerInfo(t),
-              const SizedBox(height: 16),
-              _sectionCampaignInfo(t),
-              const SizedBox(height: 20),
-              _sectionContentTypes(t),
-              const SizedBox(height: 20),
-              _sectionPlatforms(t),
-              const SizedBox(height: 20),
-              _sectionContentStyles(t),
-              const SizedBox(height: 20),
-              _sectionAdditionalRequirements(t),
-              const SizedBox(height: 20),
-              _sectionDuration(t),
-              const SizedBox(height: 20),
-              _sectionAmount(t),
-              const SizedBox(height: 20),
-              _sectionAdditionalNotes(t),
-              const SizedBox(height: 24),
-              _sectionAcknowledgments(t),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: t.primary,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: t.alternate,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+              padding: const EdgeInsets.all(20),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _sectionInfluencerInfo(t),
+                    const SizedBox(height: 16),
+                    _sectionCampaignInfo(t),
+                    const SizedBox(height: 20),
+                    _sectionContentTypes(t),
+                    const SizedBox(height: 20),
+                    _sectionPlatforms(t),
+                    const SizedBox(height: 20),
+                    _sectionContentStyles(t),
+                    const SizedBox(height: 20),
+                    _sectionAdditionalRequirements(t),
+                    const SizedBox(height: 20),
+                    _sectionDuration(t),
+                    const SizedBox(height: 20),
+                    _sectionAmount(t),
+                    const SizedBox(height: 20),
+                    _sectionAdditionalNotes(t),
+                    const SizedBox(height: 24),
+                    _sectionAcknowledgments(t),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: _isSubmitting ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: t.primary,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: t.alternate,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('إرسال العرض', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('إلغاء', style: TextStyle(color: t.secondaryText, fontSize: 15)),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
-                )
-                    : const Text('إرسال العرض',
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700)),
               ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('إلغاء',
-                    style:
-                    TextStyle(color: t.secondaryText, fontSize: 15)),
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
@@ -525,11 +501,8 @@ class _SendOfferPageState extends State<SendOfferPage> {
   // ── Section 2: Campaign info ───────────────────────────────────────────────
 
   Widget _sectionCampaignInfo(FlutterFlowTheme t) {
-    final campaignContentType =
-    (_campaignData?['influencer_content_type_name'] ?? '')
-        .toString();
-    final campaignDescription =
-    (_campaignData?['description'] ?? '').toString();
+    final campaignContentType = (_campaignData?['influencer_content_type_name'] ?? '').toString();
+    final campaignDescription = (_campaignData?['description'] ?? '').toString();
 
     return _card(
       child: Column(
@@ -560,8 +533,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
         children: [
           _sectionTitleRequired('نوع المحتوى المطلوب', t, icon: Icons.photo_library),
           const SizedBox(height: 4),
-          Text('يمكن اختيار أكثر من نوع',
-              style: t.bodySmall.copyWith(color: t.secondaryText)),
+          Text('يمكن اختيار أكثر من نوع', style: t.bodySmall.copyWith(color: t.secondaryText)),
           const SizedBox(height: 12),
           ..._contentTypes.keys.map((key) {
             final isSelected = _contentTypes[key]!;
@@ -576,8 +548,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
                 ),
                 if (isSelected)
                   Padding(
-                    padding: const EdgeInsetsDirectional.only(
-                        start: 16, end: 16, bottom: 8),
+                    padding: const EdgeInsetsDirectional.only(start: 16, end: 16, bottom: 8),
                     child: TextFormField(
                       controller: _contentCountControllers[key],
                       keyboardType: TextInputType.number,
@@ -590,9 +561,8 @@ class _SendOfferPageState extends State<SendOfferPage> {
                         hintText: '١',
                         filled: true,
                         fillColor: t.containers,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none),
+                        border:
+                            OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                         errorText: (() {
                           final raw = _contentCountControllers[key]!.text.trim();
                           if (raw.isEmpty) return null; // shown only after typing
@@ -622,8 +592,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
             _sectionTitleRequired('المنصات', t, icon: Icons.share),
             const SizedBox(height: 8),
             Text('لا توجد منصات محددة في الحملة',
-                style: t.bodySmall.copyWith(color: t.secondaryText),
-                textAlign: TextAlign.start),
+                style: t.bodySmall.copyWith(color: t.secondaryText), textAlign: TextAlign.start),
           ],
         ),
       );
@@ -635,16 +604,14 @@ class _SendOfferPageState extends State<SendOfferPage> {
         children: [
           _sectionTitleRequired('المنصات', t, icon: Icons.share),
           const SizedBox(height: 4),
-          Text('اختر من المنصات المدرجة للحملة',
-              style: t.bodySmall.copyWith(color: t.secondaryText)),
+          Text('اختر من المنصات المدرجة للحملة', style: t.bodySmall.copyWith(color: t.secondaryText)),
           const SizedBox(height: 12),
           ..._dynamicPlatforms.keys.map((key) => CheckboxListTile(
-            value: _dynamicPlatforms[key]!,
-            onChanged: (v) =>
-                setState(() => _dynamicPlatforms[key] = v!),
-            title: Text(_getPlatformLabel(key), textAlign: TextAlign.start),
-            controlAffinity: ListTileControlAffinity.leading,
-          )),
+                value: _dynamicPlatforms[key]!,
+                onChanged: (v) => setState(() => _dynamicPlatforms[key] = v!),
+                title: Text(_getPlatformLabel(key), textAlign: TextAlign.start),
+                controlAffinity: ListTileControlAffinity.leading,
+              )),
         ],
       ),
     );
@@ -660,12 +627,11 @@ class _SendOfferPageState extends State<SendOfferPage> {
           _sectionTitle('أسلوب المحتوى (اختياري)', t, icon: Icons.style),
           const SizedBox(height: 12),
           ..._contentStyles.keys.map((key) => CheckboxListTile(
-            value: _contentStyles[key]!,
-            onChanged: (v) => setState(() => _contentStyles[key] = v!),
-            title:
-            Text(_contentStyleLabels[key]!, textAlign: TextAlign.start),
-            controlAffinity: ListTileControlAffinity.leading,
-          )),
+                value: _contentStyles[key]!,
+                onChanged: (v) => setState(() => _contentStyles[key] = v!),
+                title: Text(_contentStyleLabels[key]!, textAlign: TextAlign.start),
+                controlAffinity: ListTileControlAffinity.leading,
+              )),
         ],
       ),
     );
@@ -688,9 +654,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
               hintText: 'أي متطلبات إضافية...',
               filled: true,
               fillColor: t.containers,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
             ),
           ),
         ],
@@ -711,18 +675,18 @@ class _SendOfferPageState extends State<SendOfferPage> {
             children: [
               Expanded(
                 child: _datePicker(
-                  label: 'تاريخ الانتهاء',
-                  value: _endDate,
-                  onTap: () => _pickDate(isStart: false),
+                  label: 'تاريخ البدء',
+                  value: _startDate,
+                  onTap: () => _pickDate(isStart: true),
                   t: t,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _datePicker(
-                  label: 'تاريخ البدء',
-                  value: _startDate,
-                  onTap: () => _pickDate(isStart: true),
+                  label: 'تاريخ الانتهاء',
+                  value: _endDate,
+                  onTap: () => _pickDate(isStart: false),
                   t: t,
                 ),
               ),
@@ -790,9 +754,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
               suffixText: 'ريال سعودي',
               filled: true,
               fillColor: t.containers,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
             ),
           ),
           const SizedBox(height: 10),
@@ -806,10 +768,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
             child: const Text(
               'ملاحظة: يتم تنفيذ جميع المدفوعات خارج منصة إعلان',
               textAlign: TextAlign.start,
-              style: TextStyle(
-                  color: Color(0xFF92400E),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500),
+              style: TextStyle(color: Color(0xFF92400E), fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -834,9 +793,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
               hintText: 'أي ملاحظات إضافية...',
               filled: true,
               fillColor: t.containers,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
             ),
           ),
         ],
@@ -851,25 +808,22 @@ class _SendOfferPageState extends State<SendOfferPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('إقرارات صاحب الشركة (إلزامية)', t,
-              icon: Icons.verified_user, color: const Color(0xFFDC2626)),
+          _sectionTitle('إقرارات صاحب الشركة (إلزامية)', t, icon: Icons.verified_user, color: const Color(0xFFDC2626)),
           const SizedBox(height: 4),
           Text('لا يمكن الإرسال بدون الموافقة على جميع ما سبق ❌',
               style: t.bodySmall.copyWith(color: const Color(0xFFDC2626))),
           const SizedBox(height: 12),
           ..._acknowledgments.keys.map((key) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: CheckboxListTile(
-              value: _acknowledgments[key]!,
-              onChanged: (v) =>
-                  setState(() => _acknowledgments[key] = v!),
-              title: Text(_acknowledgmentLabels[key]!,
-                  textAlign: TextAlign.start,
-                  style: t.bodySmall.copyWith(height: 1.5)),
-              controlAffinity: ListTileControlAffinity.leading,
-              activeColor: t.primary,
-            ),
-          )),
+                padding: const EdgeInsets.only(bottom: 4),
+                child: CheckboxListTile(
+                  value: _acknowledgments[key]!,
+                  onChanged: (v) => setState(() => _acknowledgments[key] = v!),
+                  title: Text(_acknowledgmentLabels[key]!,
+                      textAlign: TextAlign.start, style: t.bodySmall.copyWith(height: 1.5)),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: t.primary,
+                ),
+              )),
         ],
       ),
     );
@@ -884,24 +838,18 @@ class _SendOfferPageState extends State<SendOfferPage> {
       decoration: BoxDecoration(
         color: t.secondaryBackground,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x15000000), blurRadius: 6, offset: Offset(0, 2))
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x15000000), blurRadius: 6, offset: Offset(0, 2))],
       ),
       child: child,
     );
   }
 
   /// Normal title (optional fields)
-  Widget _sectionTitle(String title, FlutterFlowTheme t,
-      {required IconData icon, Color? color}) {
+  Widget _sectionTitle(String title, FlutterFlowTheme t, {required IconData icon, Color? color}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Text(title,
-            style: t.titleSmall.copyWith(
-                fontWeight: FontWeight.w700, color: color ?? t.primaryText)),
+        Text(title, style: t.titleSmall.copyWith(fontWeight: FontWeight.w700, color: color ?? t.primaryText)),
         const SizedBox(width: 8),
         Icon(icon, size: 18, color: color ?? t.primary),
       ],
@@ -909,16 +857,12 @@ class _SendOfferPageState extends State<SendOfferPage> {
   }
 
   /// Title for required fields — red asterisk
-  Widget _sectionTitleRequired(String title, FlutterFlowTheme t,
-      {required IconData icon}) {
+  Widget _sectionTitleRequired(String title, FlutterFlowTheme t, {required IconData icon}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        const Text(' *',
-            style: TextStyle(
-                color: Colors.red, fontWeight: FontWeight.w700, fontSize: 16)),
-        Text(title,
-            style: t.titleSmall.copyWith(fontWeight: FontWeight.w700)),
+        const Text(' *', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700, fontSize: 16)),
+        Text(title, style: t.titleSmall.copyWith(fontWeight: FontWeight.w700)),
         const SizedBox(width: 8),
         Icon(icon, size: 18, color: t.primary),
       ],
@@ -932,8 +876,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
         Text(label, style: t.bodySmall.copyWith(color: t.secondaryText)),
         const SizedBox(height: 2),
         Text(value.isEmpty ? '—' : value,
-            style: t.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-            textAlign: TextAlign.start),
+            style: t.bodyMedium.copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.start),
       ],
     );
   }

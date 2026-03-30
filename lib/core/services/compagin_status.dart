@@ -2,8 +2,7 @@
 enum CampaignCreationResult {
   /// User can create campaign (premium or basic under limit)
   allowed,
-
-   requiresSubscription,
+  requiresSubscription,
 
   /// User is basic and has reached campaign limit
   requiresUpgrade,

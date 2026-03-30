@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
+import '../../../core/components/feq_components.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
 import '../../payment/payment_details_page.dart';
@@ -44,16 +46,13 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
     'execute_campaign': false,
   };
   final Map<String, String> _ackLabels = {
-    'full_review':
-    'أقر بالاطلاع الكامل على جميع تفاصيل عرض التعاون والشروط والأحكام أعلاه.',
+    'full_review': 'أقر بالاطلاع الكامل على جميع تفاصيل عرض التعاون والشروط والأحكام أعلاه.',
     'platform_not_responsible':
-    'أقر بأن منصة إعلان منصة تقنية فقط، وغير مسؤولة عن أي التزامات مالية أو قانونية بيني وبين صاحب الشركة.',
-    'preliminary_agreement':
-    'أوافق على أن هذا العرض يُعد اتفاقاً أولياً، وأي تعديل عليه يتم خارج منصة إعلان.',
-    'pay_fees':
-    'أوافق على دفع رسوم منصة إعلان البالغة 99 ريال سعودي مقابل الخدمة التقنية.',
+        'أقر بأن منصة إعلان منصة تقنية فقط، وغير مسؤولة عن أي التزامات مالية أو قانونية بيني وبين صاحب الشركة.',
+    'preliminary_agreement': 'أوافق على أن هذا العرض يُعد اتفاقاً أولياً، وأي تعديل عليه يتم خارج منصة إعلان.',
+    'pay_fees': 'أوافق على دفع رسوم منصة إعلان البالغة 99 ريال سعودي مقابل الخدمة التقنية.',
     'execute_campaign':
-    'ألتزم بتنفيذ الحملة وفق التفاصيل المتفق عليها والأنظمة المعمول بها في المملكة العربية السعودية.',
+        'ألتزم بتنفيذ الحملة وفق التفاصيل المتفق عليها والأنظمة المعمول بها في المملكة العربية السعودية.',
   };
 
   @override
@@ -64,8 +63,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
 
   Future<void> _load() async {
     try {
-      final snap =
-      await firebaseFirestore.collection('offers').doc(widget.offerId).get();
+      final snap = await firebaseFirestore.collection('offers').doc(widget.offerId).get();
       if (snap.exists) {
         final offerData = Map<String, dynamic>.from(snap.data()!);
 
@@ -82,13 +80,11 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
               final cData = campaignSnap.docs.first.data();
               // Fill description if not already on offer
               if ((offerData['campaign_description'] as String? ?? '').isEmpty) {
-                offerData['campaign_description'] =
-                    cData['description'] as String? ?? '';
+                offerData['campaign_description'] = cData['description'] as String? ?? '';
               }
               // Fill content type name if not already on offer (old offers)
               if ((offerData['influencer_content_type_name'] as String? ?? '').isEmpty) {
-                offerData['influencer_content_type_name'] =
-                    cData['influencer_content_type_name'] as String? ?? '';
+                offerData['influencer_content_type_name'] = cData['influencer_content_type_name'] as String? ?? '';
               }
             }
           } catch (_) {}
@@ -134,18 +130,16 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
     if (videoCount != null && videoCount != 0) parts.add('$videoCount فيديو');
     if (storyCount != null && storyCount != 0) parts.add('$storyCount قصص');
     if (reelsCount != null && reelsCount != 0) parts.add('$reelsCount ريلز');
-    if (liveMin != null && liveMin != 0)
+    if (liveMin != null && liveMin != 0) {
       parts.add('بث مباشر $liveMin دقيقة');
+    }
     return parts.join(' – ');
   }
 
   String _platformsStr() {
     if (_offer == null) return '';
     final platforms = (_offer!['platforms'] as List?) ?? [];
-    return platforms
-        .map((p) =>
-    p.toString()[0].toUpperCase() + p.toString().substring(1))
-        .join(' / ');
+    return platforms.map((p) => p.toString()[0].toUpperCase() + p.toString().substring(1)).join(' / ');
   }
 
   String _stylesStr() {
@@ -158,9 +152,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
       'direct_ad': 'إعلان مباشر',
       'awareness': 'محتوى توعوي',
     };
-    return styles
-        .map((s) => labels[s.toString()] ?? s.toString())
-        .join('، ');
+    return styles.map((s) => labels[s.toString()] ?? s.toString()).join('، ');
   }
 
   // ── Accept offer → redirect to payment ────────────────────────────────────
@@ -199,7 +191,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
 
     final paymentResult = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => PaymentDetailsPage(
+        builder: (_) => const PaymentDetailsPage(
           planId: 'offer_fee',
           returnAfterPayment: true,
         ),
@@ -214,10 +206,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
     // Payment succeeded — now update Firestore
     setState(() => _isSubmitting = true);
     try {
-      await firebaseFirestore
-          .collection('offers')
-          .doc(widget.offerId)
-          .update({
+      await firebaseFirestore.collection('offers').doc(widget.offerId).update({
         'status': 'accepted',
         'influencer_acknowledged': true,
         'accepted_at': FieldValue.serverTimestamp(),
@@ -225,10 +214,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
 
       final appId = _offer?['application_id'] as String?;
       if (appId != null && appId.isNotEmpty) {
-        await firebaseFirestore
-            .collection('applications')
-            .doc(appId)
-            .update({'status': 'accepted'});
+        await firebaseFirestore.collection('applications').doc(appId).update({'status': 'accepted'});
       }
 
       final businessId = _offer?['business_id'] as String? ?? '';
@@ -251,8 +237,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('تم قبول العرض بنجاح!',
-              textDirection: TextDirection.rtl),
+          content: Text('تم قبول العرض بنجاح!', textDirection: TextDirection.rtl),
           backgroundColor: Color(0xFF16A34A),
         ));
       }
@@ -270,8 +255,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('تأكيد الرفض', textDirection: TextDirection.rtl),
-        content: const Text('هل تريد رفض عرض التعاون هذا؟',
-            textDirection: TextDirection.rtl),
+        content: const Text('هل تريد رفض عرض التعاون هذا؟', textDirection: TextDirection.rtl),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -289,17 +273,14 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
 
     setState(() => _isSubmitting = true);
     try {
-      await firebaseFirestore.collection('offers').doc(widget.offerId).update({
-        'status': 'rejected',
-        'rejected_at': FieldValue.serverTimestamp()
-      });
+      await firebaseFirestore
+          .collection('offers')
+          .doc(widget.offerId)
+          .update({'status': 'rejected', 'rejected_at': FieldValue.serverTimestamp()});
 
       final appId = _offer?['application_id'] as String?;
       if (appId != null && appId.isNotEmpty) {
-        await firebaseFirestore
-            .collection('applications')
-            .doc(appId)
-            .update({'status': 'rejected'});
+        await firebaseFirestore.collection('applications').doc(appId).update({'status': 'rejected'});
       }
 
       final businessId = _offer?['business_id'] as String? ?? '';
@@ -319,8 +300,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content:
-          Text('تم رفض العرض.', textDirection: TextDirection.rtl),
+          content: Text('تم رفض العرض.', textDirection: TextDirection.rtl),
         ));
         Navigator.of(context).pop(true);
       }
@@ -332,8 +312,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg, textDirection: TextDirection.rtl)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, textDirection: TextDirection.rtl)));
   }
 
   // ─── Build ─────────────────────────────────────────────────────────────────
@@ -345,50 +324,38 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
 
     return Scaffold(
       backgroundColor: t.backgroundElan,
-      appBar: AppBar(
-        backgroundColor: t.secondaryBackground,
-        elevation: 0,
-        centerTitle: true,
-        // RTL: back arrow appears on the right side
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward_ios, size: 18),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text('تفاصيل العرض', style: t.headlineSmall),
-      ),
+      appBar: const FeqAppBar(title: 'تفاصيل العرض', showBack: true),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _offer == null
-          ? Center(
-          child: Text('لم يتم العثور على العرض',
-              style: t.bodyLarge.copyWith(color: t.secondaryText)))
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Directionality(
-          textDirection: TextDirection.ltr,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (status == 'accepted') _acceptedBanner(t),
-              if (status == 'rejected') _rejectedStamp(t),
-              if (status == 'pending' && !widget.isBusinessView) ...[
-                _pendingInfluencerBanner(t),
-                const SizedBox(height: 12),
-              ],
-              _contractDocument(t, status),
-              const SizedBox(height: 20),
-              _termsSection(t, status),
-              if (!widget.isBusinessView && status == 'pending') ...[
-                const SizedBox(height: 24),
-                _influencerAcknowledgments(t),
-                const SizedBox(height: 20),
-                _influencerActionButtons(t),
-              ],
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),
+              ? Center(child: Text('لم يتم العثور على العرض', style: t.bodyLarge.copyWith(color: t.secondaryText)))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (status == 'accepted') _acceptedBanner(t),
+                        if (status == 'rejected') _rejectedStamp(t),
+                        if (status == 'pending' && !widget.isBusinessView) ...[
+                          _pendingInfluencerBanner(t),
+                          const SizedBox(height: 12),
+                        ],
+                        _contractDocument(t, status),
+                        const SizedBox(height: 20),
+                        _termsSection(t, status),
+                        if (!widget.isBusinessView && status == 'pending') ...[
+                          const SizedBox(height: 24),
+                          _influencerAcknowledgments(t),
+                          const SizedBox(height: 20),
+                          _influencerActionButtons(t),
+                        ],
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+                ),
     );
   }
 
@@ -410,8 +377,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
               widget.isBusinessView
                   ? 'وافق المؤثر على عرض التعاون وهو ملزم بتنفيذ الحملة وفق التفاصيل المذكورة في العرض.'
                   : 'لقد قبلت هذا العرض بنجاح.',
-              style: const TextStyle(
-                  color: Color(0xFF15803D), fontWeight: FontWeight.w600),
+              style: const TextStyle(color: Color(0xFF15803D), fontWeight: FontWeight.w600),
               textAlign: TextAlign.end,
             ),
           ),
@@ -460,15 +426,14 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFF59E0B)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.info_outline, color: Color(0xFFB45309), size: 22),
-          const SizedBox(width: 10),
+          Icon(Icons.info_outline, color: Color(0xFFB45309), size: 22),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
               'لديك عرض تعاون جديد. راجع التفاصيل بعناية قبل القبول أو الرفض.',
-              style: const TextStyle(
-                  color: Color(0xFF92400E), fontWeight: FontWeight.w500),
+              style: TextStyle(color: Color(0xFF92400E), fontWeight: FontWeight.w500),
               textAlign: TextAlign.end,
             ),
           ),
@@ -494,18 +459,14 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
         color: t.secondaryBackground,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: t.alternate),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x15000000), blurRadius: 8, offset: Offset(0, 2))
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x15000000), blurRadius: 8, offset: Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             'عرض تعاون تسويقي',
-            style: t.headlineSmall
-                .copyWith(fontWeight: FontWeight.w900, fontSize: 20),
+            style: t.headlineSmall.copyWith(fontWeight: FontWeight.w900, fontSize: 20),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
@@ -513,8 +474,8 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
             status == 'accepted'
                 ? 'العقد النهائي – (بعد القبول)'
                 : status == 'rejected'
-                ? 'العقد المرسل للمؤثر – (مرفوض)'
-                : 'العقد المرسل للمؤثر – (قبل القبول)',
+                    ? 'العقد المرسل للمؤثر – (مرفوض)'
+                    : 'العقد المرسل للمؤثر – (قبل القبول)',
             style: t.bodySmall.copyWith(color: t.secondaryText),
             textAlign: TextAlign.center,
           ),
@@ -528,17 +489,14 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
           _sectionHeader('معلومات الحملة', t),
           const SizedBox(height: 12),
           _contractRow('عنوان الحملة', campaignTitle, t),
-          if (campaignContentTypeName.isNotEmpty)
-            _contractRow('نوع محتوى الحملة', campaignContentTypeName, t),
-          if (campaignDescription.isNotEmpty)
-            _contractRow('تفاصيل الحملة', campaignDescription, t),
+          if (campaignContentTypeName.isNotEmpty) _contractRow('نوع محتوى الحملة', campaignContentTypeName, t),
+          if (campaignDescription.isNotEmpty) _contractRow('تفاصيل الحملة', campaignDescription, t),
           const Divider(height: 20),
           _sectionHeader('تفاصيل التعاون', t),
           const SizedBox(height: 12),
           _contractRow('المحتوى المطلوب', _contentSummary(), t),
           _contractRow('منصات النشر', _platformsStr(), t),
-          if (_stylesStr().isNotEmpty)
-            _contractRow('أسلوب المحتوى', _stylesStr(), t),
+          if (_stylesStr().isNotEmpty) _contractRow('أسلوب المحتوى', _stylesStr(), t),
           _contractRow('مدة التعاون', 'من $startDate إلى $endDate', t),
           _contractRow('المقابل المالي', '$amount ريال سعودي', t),
           Container(
@@ -550,10 +508,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
             ),
             child: const Text(
               'يتم دفعه خارج منصة إعلان وبالاتفاق المباشر بين الطرفين',
-              style: TextStyle(
-                  color: Color(0xFF92400E),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500),
+              style: TextStyle(color: Color(0xFF92400E), fontSize: 12, fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
           ),
@@ -570,21 +525,21 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
     final isAccepted = status == 'accepted';
     final terms = isAccepted && widget.isBusinessView
         ? [
-      'يلتزم المؤثر بتنفيذ الحملة وفق التفاصيل المذكورة في عرض التعاون المعتمد.',
-      'يلتزم صاحب الشركة بدفع المقابل المالي المتفق عليه للمؤثر وفق التفاصيل المتفق عليها.',
-      'منصة إعلان ليست وسيطاً مالياً ولا تتحمل أي مسؤولية قانونية أو مالية.',
-      'يُعد المؤثر موافقاً على جميع بنود هذا الاتفاق وملتزماً بتنفيذه.',
-      'في حال الإخلال بالشروط، يتم حل النزاع مباشرة بين طرفي الاتفاق.',
-    ]
+            'يلتزم المؤثر بتنفيذ الحملة وفق التفاصيل المذكورة في عرض التعاون المعتمد.',
+            'يلتزم صاحب الشركة بدفع المقابل المالي المتفق عليه للمؤثر وفق التفاصيل المتفق عليها.',
+            'منصة إعلان ليست وسيطاً مالياً ولا تتحمل أي مسؤولية قانونية أو مالية.',
+            'يُعد المؤثر موافقاً على جميع بنود هذا الاتفاق وملتزماً بتنفيذه.',
+            'في حال الإخلال بالشروط، يتم حل النزاع مباشرة بين طرفي الاتفاق.',
+          ]
         : [
-      'يتم تنفيذ جميع المدفوعات المالية الخاصة بهذا التعاون خارج منصة إعلان.',
-      'يقتصر دور منصة إعلان على توفير منصة تقنية لعرض فرص التعاون، ولا تشارك في التفاوض أو التنفيذ أو الدفع.',
-      'يتحمل كل من صاحب الشركة والمؤثر المسؤولية الكاملة عن تنفيذ هذا التعاون.',
-      'يلتزم المؤثر بدفع رسوم خدمة تقنية ثابتة لمنصة إعلان قدرها 99 ريال سعودي عند قبول العرض.',
-      'يلتزم المؤثر بتنفيذ المحتوى وفق الأنظمة واللوائح المعمول بها في المملكة العربية السعودية.',
-      'يُعد هذا العرض اتفاقاً أولياً، وأي تعديل يتم مباشرةً بين الطرفين وخارج منصة إعلان.',
-      'في حال نشوء أي نزاع، يتم حله مباشرةً بين الطرفين دون أي تدخل أو مسؤولية على منصة إعلان.',
-    ];
+            'يتم تنفيذ جميع المدفوعات المالية الخاصة بهذا التعاون خارج منصة إعلان.',
+            'يقتصر دور منصة إعلان على توفير منصة تقنية لعرض فرص التعاون، ولا تشارك في التفاوض أو التنفيذ أو الدفع.',
+            'يتحمل كل من صاحب الشركة والمؤثر المسؤولية الكاملة عن تنفيذ هذا التعاون.',
+            'يلتزم المؤثر بدفع رسوم خدمة تقنية ثابتة لمنصة إعلان قدرها 99 ريال سعودي عند قبول العرض.',
+            'يلتزم المؤثر بتنفيذ المحتوى وفق الأنظمة واللوائح المعمول بها في المملكة العربية السعودية.',
+            'يُعد هذا العرض اتفاقاً أولياً، وأي تعديل يتم مباشرةً بين الطرفين وخارج منصة إعلان.',
+            'في حال نشوء أي نزاع، يتم حله مباشرةً بين الطرفين دون أي تدخل أو مسؤولية على منصة إعلان.',
+          ];
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -599,24 +554,23 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
           _sectionHeader('الشروط والأحكام', t),
           const SizedBox(height: 12),
           ...terms.asMap().entries.map((entry) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              textDirection: TextDirection.rtl,
-              children: [
-                Text('${entry.key + 1}. ',
-                    style: t.bodySmall.copyWith(
-                        fontWeight: FontWeight.w700, color: t.primary)),
-                Expanded(
-                  child: Text(
-                    entry.value,
-                    style: t.bodySmall.copyWith(height: 1.6),
-                    textAlign: TextAlign.end,
-                  ),
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  textDirection: TextDirection.rtl,
+                  children: [
+                    Text('${entry.key + 1}. ',
+                        style: t.bodySmall.copyWith(fontWeight: FontWeight.w700, color: t.primary)),
+                    Expanded(
+                      child: Text(
+                        entry.value,
+                        style: t.bodySmall.copyWith(height: 1.6),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );
@@ -628,8 +582,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
       decoration: BoxDecoration(
         color: t.secondaryBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: _allAcked ? const Color(0xFF16A34A) : t.alternate),
+        border: Border.all(color: _allAcked ? const Color(0xFF16A34A) : t.alternate),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -652,19 +605,19 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
           ),
           const SizedBox(height: 12),
           ..._acks.keys.map((key) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: CheckboxListTile(
-              value: _acks[key]!,
-              onChanged: (v) => setState(() => _acks[key] = v!),
-              title: Text(
-                _ackLabels[key]!,
-                style: t.bodySmall.copyWith(height: 1.5),
-                textAlign: TextAlign.start,
-              ),
-              controlAffinity: ListTileControlAffinity.trailing,
-              activeColor: t.primary,
-            ),
-          )),
+                padding: const EdgeInsets.only(bottom: 4),
+                child: CheckboxListTile(
+                  value: _acks[key]!,
+                  onChanged: (v) => setState(() => _acks[key] = v!),
+                  title: Text(
+                    _ackLabels[key]!,
+                    style: t.bodySmall.copyWith(height: 1.5),
+                    textAlign: TextAlign.start,
+                  ),
+                  controlAffinity: ListTileControlAffinity.trailing,
+                  activeColor: t.primary,
+                ),
+              )),
         ],
       ),
     );
@@ -678,21 +631,16 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
           onPressed: _isSubmitting || !_allAcked ? null : _acceptOffer,
           icon: _isSubmitting
               ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: Colors.white))
+                  width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : const Icon(Icons.check_circle_outline),
           label: const Text('موافقة ومتابعة لدفع رسوم التعاون',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-            _allAcked ? const Color(0xFF16A34A) : null,
+            backgroundColor: _allAcked ? const Color(0xFF16A34A) : null,
             disabledBackgroundColor: const Color(0xFFD1D5DB),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
         ),
         const SizedBox(height: 12),
@@ -704,8 +652,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
           ),
           child: const Text(
             'رسوم منصة إعلان: 99 ريال سعودي — تُدفع عند قبول العرض كرسوم خدمة تقنية فقط.',
-            style: TextStyle(
-                color: Color(0xFF6B7280), fontSize: 12, height: 1.5),
+            style: TextStyle(color: Color(0xFF6B7280), fontSize: 12, height: 1.5),
             textAlign: TextAlign.center,
           ),
         ),
@@ -716,11 +663,9 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
             foregroundColor: const Color(0xFFDC2626),
             side: const BorderSide(color: Color(0xFFDC2626)),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
-          child: const Text('رفض العرض',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          child: const Text('رفض العرض', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         ),
       ],
     );
@@ -730,9 +675,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(title,
-            style: t.titleSmall.copyWith(fontWeight: FontWeight.w800),
-            textAlign: TextAlign.center),
+        Text(title, style: t.titleSmall.copyWith(fontWeight: FontWeight.w800), textAlign: TextAlign.center),
       ],
     );
   }
@@ -752,8 +695,7 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
                 children: [
                   TextSpan(
                     text: '$label: ',
-                    style: t.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w700, color: t.primaryText),
+                    style: t.bodyMedium.copyWith(fontWeight: FontWeight.w700, color: t.primaryText),
                   ),
                   TextSpan(
                     text: value.isEmpty ? '—' : value,

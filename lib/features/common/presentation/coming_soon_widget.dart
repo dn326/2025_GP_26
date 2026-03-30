@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class ComingSoonWidget extends StatefulWidget {
   const ComingSoonWidget({super.key});
 
-  static final String routeName = 'coming-soon';
-  static final String routePath = '/$routeName';
+  static const String routeName = 'coming-soon';
+  static const String routePath = '/$routeName';
 
   @override
   State<ComingSoonWidget> createState() => _ComingSoonWidgetState();

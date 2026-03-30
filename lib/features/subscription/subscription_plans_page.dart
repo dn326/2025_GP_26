@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '../payment/payment_page.dart';
@@ -156,7 +157,7 @@ class SubscriptionPlansPage extends StatelessWidget {
         color: theme.containers,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isCurrentPlan ? theme.primary : theme.secondaryText.withValues(alpha: 0.2),
+          color: isCurrentPlan ? theme.primary : theme.secondaryText.withOpacity(0.2),
           width: isCurrentPlan ? 2 : 1,
         ),
         boxShadow: const [
@@ -236,7 +237,7 @@ class SubscriptionPlansPage extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Divider
-          Divider(color: theme.secondaryText.withValues(alpha: 0.2)),
+          Divider(color: theme.secondaryText.withOpacity(0.2)),
           const SizedBox(height: 16),
 
           // Features

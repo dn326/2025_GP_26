@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../features/setting/presentation/account_settings_widget.dart';
+
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '../../features/setting/presentation/account_settings_widget.dart';
 
 /// Unified label wrapper that can display a label, child widget, and error text
 class FeqLabeled extends StatelessWidget {
@@ -39,8 +40,7 @@ class FeqLabeled extends StatelessWidget {
         crossAxisAlignment: textDirection == TextDirection.rtl ? CrossAxisAlignment.start : CrossAxisAlignment.end,
         children: [
           Padding(
-            padding:
-                labelPadding ??
+            padding: labelPadding ??
                 (textDirection == TextDirection.rtl
                     ? const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 5)
                     : const EdgeInsetsDirectional.fromSTEB(20, 5, 0, 5)),
@@ -61,8 +61,7 @@ class FeqLabeled extends StatelessWidget {
             ),
           ),
           Padding(
-            padding:
-                childPadding ??
+            padding: childPadding ??
                 (textDirection == TextDirection.rtl
                     ? const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6)
                     : const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6)),
@@ -70,8 +69,7 @@ class FeqLabeled extends StatelessWidget {
           ),
           if (errorText != null && errorText!.isNotEmpty)
             Padding(
-              padding:
-                  errorPadding ??
+              padding: errorPadding ??
                   (textDirection == TextDirection.rtl
                       ? const EdgeInsetsDirectional.fromSTEB(0, 6, 24, 10)
                       : const EdgeInsetsDirectional.fromSTEB(24, 6, 0, 10)),
@@ -152,8 +150,7 @@ class FeqTextFieldBox extends StatelessWidget {
           textCapitalization: textCapitalization,
           maxLines: maxLines,
           onTap: onTap,
-          decoration:
-              decoration ??
+          decoration: decoration ??
               InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(color: theme.secondaryText),
@@ -290,11 +287,11 @@ class FeqDropDownList {
   const FeqDropDownList({required this.id, required this.nameAr, required this.nameEn, this.domain});
 
   factory FeqDropDownList.fromJson(Map<String, dynamic> json) => FeqDropDownList(
-    id: (json['id'] is int) ? json['id'] : int.parse(json['id'].toString()),
-    nameAr: json['name_ar'] as String,
-    nameEn: json['name_en'] as String,
-    domain: json['domain'] as String?,
-  );
+        id: (json['id'] is int) ? json['id'] : int.parse(json['id'].toString()),
+        nameAr: json['name_ar'] as String,
+        nameEn: json['name_en'] as String,
+        domain: json['domain'] as String?,
+      );
 
   @override
   String toString() => nameAr;
@@ -451,7 +448,7 @@ class _FeqSearchableDropdownState<T> extends State<FeqSearchableDropdown<T>> {
   InputDecoration _inputDecoration(BuildContext context, {bool isError = false}) {
     final t = FlutterFlowTheme.of(context);
     final errorColor = Theme.of(context).colorScheme.error;
-    final BorderSide normalSide = BorderSide.none;
+    const BorderSide normalSide = BorderSide.none;
     final BorderSide focusSide = BorderSide(color: t.primaryText, width: 2);
     final BorderSide errorSide = BorderSide(color: errorColor, width: 2);
 
@@ -504,7 +501,7 @@ class FeqVerifiedNameWidget extends StatelessWidget {
           if (isVerified) ...[
             const SizedBox(width: 6),
             Container(
-              decoration: BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+              decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
               padding: const EdgeInsets.all(3),
               child: const Icon(Icons.check, color: Colors.white, size: 14),
             ),
@@ -565,8 +562,9 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 )
               : (showBack || showNotification
-                    ? const SizedBox(width: 60) // add space ONLY when actions exist
-                    : null), // no space at all if absolutely nothing is shown
+                  ? const SizedBox(width: 60) // add space ONLY when actions exist
+                  : null),
+          // no space at all if absolutely nothing is shown
 
           actions: [
             if (showBack)
@@ -578,6 +576,7 @@ class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
                     if (onBackTapExtra != null) {
                       await onBackTapExtra!();
                     }
+                    if (!context.mounted) return;
                     Navigator.of(context).pop();
                   },
                   child: FaIcon(Icons.arrow_forward_ios, color: FlutterFlowTheme.of(context).primaryText, size: 24),

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../presentation/experience_edit_widget.dart';
 import '/flutter_flow/flutter_flow_model.dart';
+import '../presentation/experience_edit_widget.dart';
 
-class InfluncerEditExperienceModel
-    extends FlutterFlowModel<InfluncerEditExperienceWidget> {
+class InfluncerEditExperienceModel extends FlutterFlowModel<InfluncerEditExperienceWidget> {
   ///  State fields for stateful widgets in this page.
 
   // State field(s) for campaign_title widget.

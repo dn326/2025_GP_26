@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// بديل مبسّط لقاعدة الـ Model في FlutterFlow
-abstract class FlutterFlowModel<T extends StatefulWidget>
-    extends ChangeNotifier {
+abstract class FlutterFlowModel<T extends StatefulWidget> extends ChangeNotifier {
   void initState(BuildContext context) {}
 
   void onUpdate() {
@@ -17,7 +16,6 @@ abstract class FlutterFlowModel<T extends StatefulWidget>
 /// بديل createModel المستخدم في صفحات FF
 M createModel<M>(BuildContext context, M Function() creator) => creator();
 
-/// بديل safeSetState بصيغة extension.
 /// ملاحظة: setState محمية؛ نكتم تحذير الأنانلايزر لأنها مستخدمة ضمن State.
 extension SafeSetState on State {
   void safeSetState(VoidCallback fn) {

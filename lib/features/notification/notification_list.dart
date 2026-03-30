@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 import '../../../core/components/feq_components.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
@@ -58,7 +58,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
       backgroundColor: t.backgroundElan,
       appBar: const FeqAppBar(
         title: 'الإشعارات',
-        showBack: true,     // back only
+        showBack: true, // back only
         showLeading: false,
         showNotification: false,
       ),

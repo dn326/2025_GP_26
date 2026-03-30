@@ -1,0 +1,16 @@
+# The indexes allow Firestore to query by business_id/influencer_id + order by applied_at/created_at efficiently!
+
+firebase deploy --only "firestore:indexes" --project REMOVED
+
+
+
+# Static analysis — catches type errors, lint, null safety issues
+flutter analyze
+
+# Dry-run compile for web (fast, no browser launch)
+flutter build web --dry-run
+
+# Or for a real compile check without running:
+dart analyze lib/
+
+

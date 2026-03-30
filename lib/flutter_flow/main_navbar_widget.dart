@@ -2,14 +2,14 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 
+import '/flutter_flow/flutter_flow_icon_button.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '../core/services/subscription_service.dart';
+import '../core/services/user_session.dart';
 import '../core/utils/subscriptions_dialoges.dart';
 import '../features/business/presentation/campaign_screen.dart';
 import '../features/common/presentation/applications_offers_page.dart';
-import '../core/services/user_session.dart';
 import '../features/payment/payment_page.dart';
-import '../core/services/subscription_service.dart';
-import '/flutter_flow/flutter_flow_icon_button.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
 
 class MainNavbarWidget extends StatefulWidget {
   const MainNavbarWidget({
@@ -87,9 +87,7 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
               borderRadius: 8,
               buttonSize: 40,
               icon: Icon(
-                widget.userType == "influencer"
-                    ? Icons.search_rounded
-                    : Icons.add_circle_rounded,
+                widget.userType == "influencer" ? Icons.search_rounded : Icons.add_circle_rounded,
                 size: 24,
                 color: iconColor(1),
               ),
@@ -106,6 +104,7 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
                     if (!mounted) return;
 
                     if (status.isAllowed) {
+                      if (!context.mounted) return;
                       final nav = Navigator.of(context);
                       final result = await nav.push(
                         MaterialPageRoute(builder: (_) => const CampaignScreen()),
@@ -118,16 +117,17 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
 
                       widget.onTap?.call(0);
                     } else if (status.needsSubscription) {
-                      if (!mounted) return;
+                      if (!context.mounted) return;
                       final shouldNavigate = await showSubscriptionRequiredDialog(context);
 
                       if (shouldNavigate == true && mounted) {
+                        if (!context.mounted) return;
                         await Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const PaymentPage()),
                         );
                       }
                     } else if (status.needsUpgrade) {
-                      if (!mounted) return;
+                      if (!context.mounted) return;
                       final shouldNavigate = await showUpgradeRequiredDialog(
                         context,
                         status.campaignsUsed ?? 0,
@@ -135,6 +135,7 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
                       );
 
                       if (shouldNavigate == true && mounted) {
+                        if (!context.mounted) return;
                         await Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const PaymentPage()),
                         );
@@ -143,7 +144,7 @@ class _MainNavbarWidgetState extends State<MainNavbarWidget> {
                   } catch (e, stackTrace) {
                     log('Error during subscription validation: $e', error: e, stackTrace: stackTrace);
 
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     await showSubscriptionErrorDialog(
                       context,
                       'فشل في التحقق من الاشتراك. يرجى المحاولة مرة أخرى',

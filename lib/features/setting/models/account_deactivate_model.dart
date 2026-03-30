@@ -20,17 +20,12 @@ class AccountDeactivateModel extends FlutterFlowModel<AccountDeactivatePage> {
       final user = firebaseAuth.currentUser;
       if (user == null) return '⚠️ رجاءً سجّلي الدخول أولاً.';
 
-      final docRef = firebaseFirestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('business')
-          .doc(_businessId);
+      final docRef = firebaseFirestore.collection('users').doc(user.uid).collection('business').doc(_businessId);
 
       await docRef.set({
         'account_status': 'disabled',
         'disabled_at': FieldValue.serverTimestamp(),
-        if (reasonController.text.trim().isNotEmpty)
-          'disable_reason': reasonController.text.trim(),
+        if (reasonController.text.trim().isNotEmpty) 'disable_reason': reasonController.text.trim(),
       }, SetOptions(merge: true)); // ✅ ينشئ/يحدّث بدون خطأ not-found
 
       return '✅ تم تعطيل الحساب بنجاح.';

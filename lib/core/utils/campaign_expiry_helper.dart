@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '/flutter_flow/flutter_flow_theme.dart';
 
 /// Helper class to determine campaign status
@@ -59,9 +60,9 @@ class CampaignExpiryBadge extends StatelessWidget {
     }
 
     final status = CampaignExpiryHelper.getExpiryStatus(endDate);
-    final bgColor = isExpired ? Color(0xFFFEE2E2) : Color(0xFFFEF3C7);
-    final textColor = isExpired ? Color(0xFFDC2626) : Color(0xFFD97706);
-    final iconColor = isExpired ? Color(0xFFDC2626) : Color(0xFFD97706);
+    final bgColor = isExpired ? const Color(0xFFFEE2E2) : const Color(0xFFFEF3C7);
+    final textColor = isExpired ? const Color(0xFFDC2626) : const Color(0xFFD97706);
+    final iconColor = isExpired ? const Color(0xFFDC2626) : const Color(0xFFD97706);
 
     if (isCompact) {
       return Container(

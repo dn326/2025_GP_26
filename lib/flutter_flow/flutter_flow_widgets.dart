@@ -76,11 +76,10 @@ class FFButtonWidget extends StatelessWidget {
 
     // قيم أساس (base)
     final Color baseBg = options.color ?? theme.primary;
-    final Color baseFg =
-        options.textColor ?? (options.textStyle?.color ?? Colors.white);
+    final Color baseFg = options.textColor ?? (options.textStyle?.color ?? Colors.white);
     final double baseElevation = options.elevation ?? 0;
     final BorderSide? baseSide = options.borderSide;
-    final Color baseShadow = Colors.transparent;
+    const Color baseShadow = Colors.transparent;
 
     // نجهّز ButtonStyle باستخدام WidgetStateProperty (البديل الحديث)
     final ButtonStyle style = ButtonStyle(
@@ -92,9 +91,7 @@ class FFButtonWidget extends StatelessWidget {
       ),
       shape: WidgetStateProperty.all<OutlinedBorder>(
         RoundedRectangleBorder(
-          borderRadius:
-              (options.borderRadius as BorderRadius?) ??
-              BorderRadius.circular(12),
+          borderRadius: (options.borderRadius as BorderRadius?) ?? BorderRadius.circular(12),
         ),
       ),
       side: WidgetStateProperty.resolveWith<BorderSide?>((states) {
@@ -112,7 +109,6 @@ class FFButtonWidget extends StatelessWidget {
         }
         return baseBg;
       }),
-
       foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
         if (states.contains(WidgetState.disabled)) {
           return options.disabledTextColor ?? Colors.white70;
@@ -122,7 +118,6 @@ class FFButtonWidget extends StatelessWidget {
         }
         return baseFg;
       }),
-
       elevation: WidgetStateProperty.resolveWith<double>((states) {
         if (states.contains(WidgetState.hovered)) {
           return options.hoverElevation ?? baseElevation;
@@ -139,8 +134,7 @@ class FFButtonWidget extends StatelessWidget {
 
     // نستخدم textStyle الممرّر كما هو
     final TextStyle labelStyle =
-        options.textStyle ??
-        theme.bodyMedium.copyWith(color: baseFg, fontWeight: FontWeight.w600);
+        options.textStyle ?? theme.bodyMedium.copyWith(color: baseFg, fontWeight: FontWeight.w600);
 
     return SizedBox(
       height: options.height,

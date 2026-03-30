@@ -122,8 +122,7 @@ class ElanStorage {
       final uri = Uri.parse(url);
 
       // If it's already a properly formatted firebasestorage.googleapis.com URL, return as-is
-      if (uri.host == 'firebasestorage.googleapis.com' &&
-          uri.path.contains('/o/')) {
+      if (uri.host == 'firebasestorage.googleapis.com' && uri.path.contains('/o/')) {
         return url;
       }
 
@@ -163,12 +162,9 @@ class ElanStorage {
       // Build the URL manually with encoded path
       final queryParams = {'alt': 'media', ...uri.queryParameters};
 
-      final queryString = queryParams.entries
-          .map((e) => '${e.key}=${e.value}')
-          .join('&');
+      final queryString = queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
 
-      final fixedUrl =
-          'https://firebasestorage.googleapis.com/v0/b/$_bucket/o/$encodedPath?$queryString';
+      final fixedUrl = 'https://firebasestorage.googleapis.com/v0/b/$_bucket/o/$encodedPath?$queryString';
 
       debugPrint('Fixed URL: $fixedUrl');
       return fixedUrl;

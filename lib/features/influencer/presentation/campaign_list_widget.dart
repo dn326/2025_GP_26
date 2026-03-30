@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/components/feq_components.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
 import '../../business/presentation/profile_widget.dart';
@@ -23,7 +24,7 @@ class _CampaignListWidgetState extends State<CampaignListWidget> {
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: FeqAppBar(title: 'تصفح الحملات المتاحة'),
+      appBar: const FeqAppBar(title: 'تصفح الحملات المتاحة'),
       body: FeqCampaignListWidget(
         detailPageBuilder: (context, uid, campaignId) => BusinessProfileScreen(uid: uid, campaignId: campaignId),
         showSearch: true,

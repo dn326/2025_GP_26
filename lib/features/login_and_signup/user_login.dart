@@ -31,8 +31,7 @@ InputDecoration inputDecoration(
     ),
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(
-        color:
-            isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+        color: isError ? Colors.red : t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
         width: 2,
       ),
       borderRadius: BorderRadius.circular(12),
@@ -113,8 +112,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
     }
 
     // Optional: simple email format check
-    if (email.isNotEmpty &&
-        !RegExp(r'^[\w\.\-]+@[\w\.\-]+\.\w+$').hasMatch(email)) {
+    if (email.isNotEmpty && !RegExp(r'^[\w\.\-]+@[\w\.\-]+\.\w+$').hasMatch(email)) {
       _emailError = true;
       _emailErrorText = 'صيغة البريد الإلكتروني غير صحيحة';
       hasError = true;
@@ -136,23 +134,21 @@ class _UserLoginPageState extends State<UserLoginPage> {
       );
 
       // Sign in
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
 
       final userId = userCredential.user!.uid;
 
       // Get user data from Firestore
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .get();
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
 
       if (!userDoc.exists) {
+        if (!mounted) return;
         Navigator.pop(context); // Close loading
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             backgroundColor: Colors.red,
-            content: const Text(
+            content: Text(
               'خطأ: لم يتم العثور على بيانات المستخدم',
               style: TextStyle(color: Colors.white),
             ),
@@ -173,15 +169,16 @@ class _UserLoginPageState extends State<UserLoginPage> {
       await prefs.setString('email', email);
       await prefs.setString('account_status', accountStatus ?? '');
 
+      if (!mounted) return;
       Navigator.pop(context); // Close loading
 
       // Login successful - navigate to home
       Navigator.pushReplacementNamed(context, MainScreen.routeName);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           backgroundColor: Colors.green,
-          content: const Text(
+          content: Text(
             'تم تسجيل الدخول بنجاح',
             style: TextStyle(color: Colors.white),
             textAlign: TextAlign.end,
@@ -225,9 +222,9 @@ class _UserLoginPageState extends State<UserLoginPage> {
     } catch (e) {
       Navigator.pop(context); // Close loading
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           backgroundColor: Colors.red,
-          content: const Text(
+          content: Text(
             'حدث خطأ غير متوقع',
             style: TextStyle(color: Colors.white),
           ),
@@ -282,10 +279,8 @@ class _UserLoginPageState extends State<UserLoginPage> {
                   focusNode: emailFocusNode,
                   keyboardType: TextInputType.emailAddress,
                   width: double.infinity,
-                  labelPadding:
-                      const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                  childPadding:
-                      const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                  labelPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                  childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                   decoration: inputDecoration(
                     context,
                     isError: _emailError,
@@ -302,10 +297,8 @@ class _UserLoginPageState extends State<UserLoginPage> {
                   focusNode: passwordFocusNode,
                   obscureText: !passwordVisible,
                   width: double.infinity,
-                  labelPadding:
-                      const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                  childPadding:
-                      const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                  labelPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                  childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                   decoration: inputDecoration(
                     context,
                     isError: _passwordError,
@@ -313,9 +306,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
                   ).copyWith(
                     suffixIcon: IconButton(
                       icon: Icon(
-                        passwordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                        passwordVisible ? Icons.visibility : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -339,8 +330,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
                       options: FFButtonOptions(
                         width: 400,
                         height: 40,
-                        color:
-                            t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                        color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                         textStyle: t.titleMedium.override(
                           fontFamily: 'Inter',
                           color: t.containers,
@@ -367,8 +357,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
 
                 Center(
                   child: TextButton(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, UserTypePage.routeName),
+                    onPressed: () => Navigator.pushNamed(context, UserTypePage.routeName),
                     child: const Text('ليس لديك حساب؟ سجل من هنا'),
                   ),
                 ),

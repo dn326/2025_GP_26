@@ -1,5 +1,6 @@
 // هنا نربط الصفحات
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:elan_flutterproject/core/services/subscription_model.dart';
 import 'package:elan_flutterproject/features/business/presentation/explore_widget.dart';
 import 'package:elan_flutterproject/features/influencer/presentation/home_widget.dart';
 import 'package:elan_flutterproject/features/login_and_signup/user_login.dart';
@@ -12,7 +13,6 @@ import 'package:elan_flutterproject/features/payment/payment_page.dart';
 import 'package:elan_flutterproject/features/setting/presentation/account_update_certificate_widget.dart';
 import 'package:elan_flutterproject/features/subscription/subscription_details_page.dart';
 import 'package:elan_flutterproject/features/subscription/subscription_plans_page.dart';
-import 'package:elan_flutterproject/core/services/subscription_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,30 +47,28 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'إعلان',
       debugShowCheckedModeBanner: false,
-      localizationsDelegates: [
+      localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: [
+      supportedLocales: const [
         Locale('ar'),
         Locale('en'),
       ],
-      locale: Locale('en'),
+      locale: const Locale('en'),
       // Use home instead of initialRoute to check auth state
       home: const AuthWrapper(),
       routes: {
         UserLoginPage.routeName: (context) => const UserLoginPage(),
-        UserResetPasswordPage.routeName: (context) =>
-            const UserResetPasswordPage(),
+        UserResetPasswordPage.routeName: (context) => const UserResetPasswordPage(),
         UserTypePage.routeName: (context) => const UserTypePage(),
         UserSignupPage.routeName: (context) => const UserSignupPage(),
         //BusinessSetupProfilePage.routeName: (context) =>
-            //const BusinessSetupProfilePage(),
-        BusinessProfileFormWidget.routeNameEdit: (context) =>
-            const BusinessProfileFormWidget(mode: ProfileMode.edit),
+        //const BusinessSetupProfilePage(),
+        BusinessProfileFormWidget.routeNameEdit: (context) => const BusinessProfileFormWidget(mode: ProfileMode.edit),
         //InfluencerSetupProfilePage.routeName: (context) =>
-            //const InfluencerSetupProfilePage(),
+        //const InfluencerSetupProfilePage(),
         MainScreen.routeName: (context) {
           // Extract selectedIndex from arguments if passed
           final args = ModalRoute.of(context)?.settings.arguments;
@@ -80,19 +78,15 @@ class MyApp extends StatelessWidget {
         BusinessExploreWidget.routeName: (context) => const BusinessExploreWidget(),
         InfluencerHomeWidget.routeName: (context) => const InfluencerHomeWidget(),
         ComingSoonWidget.routeName: (context) => const ComingSoonWidget(),
-        AccountChangePasswordPage.routeName: (context) =>
-            const AccountChangePasswordPage(),
-        AccountDeactivatePage.routeName: (context) =>
-            const AccountDeactivatePage(),
+        AccountChangePasswordPage.routeName: (context) => const AccountChangePasswordPage(),
+        AccountDeactivatePage.routeName: (context) => const AccountDeactivatePage(),
         AccountDeletePage.routeName: (context) => const AccountDeletePage(),
         AccountDetailsPage.routeName: (context) => const AccountDetailsPage(),
         AccountSettingsPage.routeName: (context) => const AccountSettingsPage(),
-        InfluncerProfileWidget.routeName: (context) =>
-            const InfluncerProfileWidget(),
+        InfluncerProfileWidget.routeName: (context) => const InfluncerProfileWidget(),
         InfluencerProfileFormWidget.routeNameEdit: (context) =>
             const InfluencerProfileFormWidget(mode: ProfileMode.edit),
-        InfluncerAddExperienceWidget.routeName: (context) =>
-            const InfluncerAddExperienceWidget(),
+        InfluncerAddExperienceWidget.routeName: (context) => const InfluncerAddExperienceWidget(),
         InfluncerEditExperienceWidget.routeName: (context) {
           // Extract the experienceId from the arguments passed via Navigator.pushNamed
           final args = ModalRoute.of(context)?.settings.arguments;
@@ -158,7 +152,7 @@ class AuthWrapper extends StatelessWidget {
         final session = snapshot.data;
 
         if (session != null && session['isLoggedIn'] == true) {
-          return MainScreen(selectedIndex: 0);
+          return const MainScreen(selectedIndex: 0);
         } else {
           return const UserLoginPage();
         }

@@ -42,16 +42,13 @@ class _MainScreenState extends State<MainScreen> {
     userType = prefs.getString('user_type') ?? '';
     if (!mounted) return;
     if (userType.isEmpty) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-          UserLoginPage.routeName, (route) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
     } else {
       // Build pages with new structure:
       // 0: Profile, 1: Handshake (Apps/Offers), 2: Search/Add, 3: Home
       _pages = [
         // 0: Profile
-        userType == 'influencer'
-            ? const InfluncerProfileWidget()
-            : BusinessProfileScreen(key: _businessProfileKey),
+        userType == 'influencer' ? const InfluncerProfileWidget() : BusinessProfileScreen(key: _businessProfileKey),
 
         // 1: Search campaigns (influencer) or handled in navbar (business)
         userType == 'influencer'
@@ -62,9 +59,7 @@ class _MainScreenState extends State<MainScreen> {
         const ApplicationsOffersPage(),
 
         // 3: Home/Explore
-        userType == 'influencer'
-            ? const CampaignListWidget()
-            : const BusinessExploreWidget(),
+        userType == 'influencer' ? const CampaignListWidget() : const BusinessExploreWidget(),
       ];
       setState(() {
         _isInitialized = true;

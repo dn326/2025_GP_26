@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '../../core/services/subscription_model.dart';
@@ -167,8 +168,8 @@ class _SubscriptionDetailsPageState extends State<SubscriptionDetailsPage> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(billingPeriod, style: theme.bodyMedium.copyWith(color: theme.secondaryText)),
-              SvgPicture.asset('assets/svg/riyal.svg', color: Colors.black, width: 24),
-
+              SvgPicture.asset('assets/svg/riyal.svg',
+                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn), width: 24),
               const SizedBox(width: 8),
               Text(
                 planPrice,
@@ -182,7 +183,7 @@ class _SubscriptionDetailsPageState extends State<SubscriptionDetailsPage> {
           const SizedBox(height: 16),
 
           // Divider
-          Divider(color: theme.secondaryText.withValues(alpha: 0.2)),
+          Divider(color: theme.secondaryText.withOpacity(0.2)),
           const SizedBox(height: 16),
 
           // Start date
@@ -265,7 +266,7 @@ class _SubscriptionDetailsPageState extends State<SubscriptionDetailsPage> {
             child: LinearProgressIndicator(
               value: percentage,
               minHeight: 10,
-              backgroundColor: theme.secondaryText.withValues(alpha: 0.2),
+              backgroundColor: theme.secondaryText.withOpacity(0.2),
               valueColor: AlwaysStoppedAnimation<Color>(
                 percentage >= 0.9 ? theme.warning : theme.primary,
               ),
@@ -381,13 +382,14 @@ class _SubscriptionDetailsPageState extends State<SubscriptionDetailsPage> {
     final theme = FlutterFlowTheme.of(context);
 
     return FFButtonWidget(
-      icon: SvgPicture.asset('assets/svg/star.svg', width: 20, color: theme.pagesBackground),
+      icon: SvgPicture.asset('assets/svg/star.svg',
+          width: 20, colorFilter: ColorFilter.mode(theme.pagesBackground, BlendMode.srcIn)),
       onPressed: isProcessing ? null : _navigateToUpgrade,
       text: 'الترقية الئ الخطة المتميزة',
       options: FFButtonOptions(
         width: double.infinity,
         height: 50,
-        color: Color(0xFF182B54),
+        color: const Color(0xFF182B54),
         textStyle: GoogleFonts.interTight(
           textStyle: theme.titleMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
         ),

@@ -111,11 +111,8 @@ class FeqFirebaseServiceUtils {
       final userId = currentUserId;
 
       // Query for document with matching profile_id
-      final querySnapshot = await _firestore
-          .collection('profiles')
-          .where('profile_id', isEqualTo: userId)
-          .limit(1)
-          .get();
+      final querySnapshot =
+          await _firestore.collection('profiles').where('profile_id', isEqualTo: userId).limit(1).get();
 
       // Add user ID and timestamp to profile data
       final profileData = profile.toJson()..addAll({'profile_id': userId, 'updated_at': FieldValue.serverTimestamp()});
@@ -140,11 +137,8 @@ class FeqFirebaseServiceUtils {
       final userId = currentUserId;
 
       // Query for document with matching profile_id
-      final querySnapshot = await _firestore
-          .collection('profiles')
-          .where('profile_id', isEqualTo: userId)
-          .limit(1)
-          .get();
+      final querySnapshot =
+          await _firestore.collection('profiles').where('profile_id', isEqualTo: userId).limit(1).get();
 
       // Add user ID and timestamp to profile data
       final profileData = profile.toJson()..addAll({'profile_id': userId, 'updated_at': FieldValue.serverTimestamp()});
@@ -169,11 +163,8 @@ class FeqFirebaseServiceUtils {
       final userId = uid ?? currentUserId;
 
       // Query using profile_id field
-      final querySnapshot = await _firestore
-          .collection('profiles')
-          .where('profile_id', isEqualTo: userId)
-          .limit(1)
-          .get();
+      final querySnapshot =
+          await _firestore.collection('profiles').where('profile_id', isEqualTo: userId).limit(1).get();
 
       if (querySnapshot.docs.isNotEmpty) {
         final doc = querySnapshot.docs.first;
@@ -186,7 +177,8 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchBusinessCampaignList([String? uid, String? campaignId, String? visible]) async {
+  Future<List<Map<String, dynamic>>> fetchBusinessCampaignList(
+      [String? uid, String? campaignId, String? visible]) async {
     try {
       final userId = uid ?? currentUserId;
       Query query = firebaseFirestore.collection('campaigns');
@@ -201,33 +193,35 @@ class FeqFirebaseServiceUtils {
 
       final campaignSnap = await query.get();
 
-      final campaignList = campaignSnap.docs.map((d) {
-        final m = d.data() as Map<String, dynamic>?;
-        if (m == null) return null;
+      final campaignList = campaignSnap.docs
+          .map((d) {
+            final m = d.data() as Map<String, dynamic>?;
+            if (m == null) return null;
 
-        final dateAdded = m['date_added'] ?? m['start_date'];
+            final dateAdded = m['date_added'] ?? m['start_date'];
 
-        final endDate = m['end_date'] is Timestamp
-            ? (m['end_date'] as Timestamp).toDate()
-            : m['end_date'] as DateTime?;
+            final endDate =
+                m['end_date'] is Timestamp ? (m['end_date'] as Timestamp).toDate() : m['end_date'] as DateTime?;
 
-        final isExpired = endDate != null && endDate.isBefore(DateTime.now());
+            final isExpired = endDate != null && endDate.isBefore(DateTime.now());
 
-        return {
-          'id': d.id,
-          'business_id': userId,
-          'title': (m['title'] ?? '').toString(),
-          'description': (m['description'] ?? '').toString(),
-          'platform_names': m['platform_names'] ?? [],
-          'influencer_content_type_id': m['influencer_content_type_id'] ?? 0,
-          'influencer_content_type_name': (m['influencer_content_type_name'] ?? '').toString(),
-          'start_date': m['start_date'],
-          'end_date': m['end_date'],
-          'date_added': dateAdded,
-          'visible': m['visible'] ?? false,
-          'expired': isExpired
-        };
-      }).whereType<Map<String, dynamic>>().toList();
+            return {
+              'id': d.id,
+              'business_id': userId,
+              'title': (m['title'] ?? '').toString(),
+              'description': (m['description'] ?? '').toString(),
+              'platform_names': m['platform_names'] ?? [],
+              'influencer_content_type_id': m['influencer_content_type_id'] ?? 0,
+              'influencer_content_type_name': (m['influencer_content_type_name'] ?? '').toString(),
+              'start_date': m['start_date'],
+              'end_date': m['end_date'],
+              'date_added': dateAdded,
+              'visible': m['visible'] ?? false,
+              'expired': isExpired
+            };
+          })
+          .whereType<Map<String, dynamic>>()
+          .toList();
 
       DateTime? toDate(dynamic v) {
         if (v is Timestamp) return v.toDate();
@@ -258,11 +252,8 @@ class FeqFirebaseServiceUtils {
   Future<InfluencerProfileDataModel?> fetchInfluencerProfileDataByProfileId([String? uid]) async {
     try {
       final userId = uid ?? currentUserId;
-      final profilesSnap = await firebaseFirestore
-          .collection('profiles')
-          .where('profile_id', isEqualTo: userId)
-          .limit(1)
-          .get();
+      final profilesSnap =
+          await firebaseFirestore.collection('profiles').where('profile_id', isEqualTo: userId).limit(1).get();
       final docs = profilesSnap.docs;
 
       if (profilesSnap.docs.isNotEmpty) {
@@ -275,14 +266,12 @@ class FeqFirebaseServiceUtils {
     }
   }
 
-  Future<QueryDocumentSnapshot<Map<String, dynamic>>?> fetchInfluencerProfileByProfileDataByProfileId([String? uid]) async {
+  Future<QueryDocumentSnapshot<Map<String, dynamic>>?> fetchInfluencerProfileByProfileDataByProfileId(
+      [String? uid]) async {
     try {
       final userId = uid ?? currentUserId;
-      final profilesSnap = await firebaseFirestore
-          .collection('profiles')
-          .where('profile_id', isEqualTo: userId)
-          .limit(1)
-          .get();
+      final profilesSnap =
+          await firebaseFirestore.collection('profiles').where('profile_id', isEqualTo: userId).limit(1).get();
       final docs = profilesSnap.docs;
 
       if (profilesSnap.docs.isNotEmpty) {

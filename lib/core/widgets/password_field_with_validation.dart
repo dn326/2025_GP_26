@@ -34,12 +34,10 @@ class PasswordFieldWithValidation extends StatefulWidget {
   });
 
   @override
-  State<PasswordFieldWithValidation> createState() =>
-      PasswordFieldWithValidationState();
+  State<PasswordFieldWithValidation> createState() => PasswordFieldWithValidationState();
 }
 
-class PasswordFieldWithValidationState
-    extends State<PasswordFieldWithValidation> {
+class PasswordFieldWithValidationState extends State<PasswordFieldWithValidation> {
   bool _obscureText = true;
   bool _showRules = false;
 
@@ -72,8 +70,7 @@ class PasswordFieldWithValidationState
   }
 
   /// Check if password meets all requirements
-  bool get isPasswordValid =>
-      _hasMinLength && _hasUpper && _hasLower && _hasNumber;
+  bool get isPasswordValid => _hasMinLength && _hasUpper && _hasLower && _hasNumber;
 
   Widget _buildPasswordRuleRow(String label, bool valid) {
     return Padding(
@@ -115,8 +112,7 @@ class PasswordFieldWithValidationState
             ),
 
           Padding(
-            padding: widget.childPadding ??
-                const EdgeInsets.only(top: 8, bottom: 4),
+            padding: widget.childPadding ?? const EdgeInsets.only(top: 8, bottom: 4),
             child: TextFormField(
               controller: widget.controller,
               focusNode: widget.focusNode,
@@ -129,9 +125,9 @@ class PasswordFieldWithValidationState
               textInputAction: widget.textInputAction ?? TextInputAction.next,
               onTap: widget.showValidationRules
                   ? () {
-                setState(() => _showRules = true);
-                widget.onTap?.call();
-              }
+                      setState(() => _showRules = true);
+                      widget.onTap?.call();
+                    }
                   : widget.onTap,
               onFieldSubmitted: widget.onFieldSubmitted,
               decoration: (widget.decoration ?? const InputDecoration()).copyWith(

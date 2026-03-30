@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../presentation/profile_form_widget.dart';
 import '/flutter_flow/flutter_flow_model.dart';
+import '../presentation/profile_form_widget.dart';
 
-class InfluencerProfileFormModel
-    extends FlutterFlowModel<InfluencerProfileFormWidget> {
+class InfluencerProfileFormModel extends FlutterFlowModel<InfluencerProfileFormWidget> {
   ///  State fields for stateful widgets in this page.
 
   // State field(s) for influncer_name widget.
@@ -15,8 +14,7 @@ class InfluencerProfileFormModel
   // State field(s) for influncer_descreption widget.
   FocusNode? influncerDescreptionFocusNode;
   TextEditingController? influncerDescreptionTextController;
-  String? Function(BuildContext, String?)?
-  influncerDescreptionTextControllerValidator;
+  String? Function(BuildContext, String?)? influncerDescreptionTextControllerValidator;
 
   // State field(s) for phone_number widget.
   FocusNode? phoneNumberFocusNode;

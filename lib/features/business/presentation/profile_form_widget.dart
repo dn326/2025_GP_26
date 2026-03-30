@@ -1,29 +1,28 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:typed_data';
-import 'package:elan_flutterproject/features/login_and_signup/user_signup.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elan_flutterproject/features/business/models/profile_data_model.dart';
 import 'package:elan_flutterproject/features/business/models/profile_form_model.dart';
 import 'package:elan_flutterproject/features/business/presentation/profile_widget.dart';
+import 'package:elan_flutterproject/features/login_and_signup/user_signup.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
+import '/flutter_flow/flutter_flow_icon_button.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
 import '../../../core/components/feq_components.dart';
 import '../../../core/services/dropdown_list_loader.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/services/image_picker_service.dart';
 import '../../../core/utils/enum_profile_mode.dart';
 import '../../../core/widgets/image_picker_widget.dart';
-import '../../../main_screen.dart';
 import '../../../features/login_and_signup/user_login.dart';
-import '/flutter_flow/flutter_flow_icon_button.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
+import '../../../main_screen.dart';
 
 InputDecoration businessInputDecoration(BuildContext context, {bool isError = false}) {
   final t = FlutterFlowTheme.of(context);
@@ -92,6 +91,7 @@ InputDecoration businessPlatformInputDecoration(BuildContext context, {bool isEr
 }
 
 enum PhoneOwner { personal, assistant }
+
 enum EmailOwner { personal, assistant }
 
 class BusinessProfileFormWidget extends StatefulWidget {
@@ -108,7 +108,7 @@ class BusinessProfileFormWidget extends StatefulWidget {
 
 class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> with SingleTickerProviderStateMixin {
   late BusinessProfileFormModel _model;
-  
+
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Firestore doc id
@@ -161,12 +161,13 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
   FeqDropDownList? _selectedBusinessIndustry;
 
   bool get isSetupMode => widget.mode == ProfileMode.setup;
+
   bool get isEditMode => widget.mode == ProfileMode.edit;
 
   @override
   void initState() {
     super.initState();
-      _model = createModel(context, () => BusinessProfileFormModel());
+    _model = createModel(context, () => BusinessProfileFormModel());
 
     _businessIndustries = FeqDropDownListLoader.instance.businessIndustries;
     _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
@@ -203,7 +204,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
   void _initSetupMode() {
     _userEmail = firebaseAuth.currentUser?.email ?? '';
-    
+
     setState(() {
       _loading = false;
       _initialized = true;
@@ -253,9 +254,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
   void _recomputeValidation() {
     final name = _model.businessNameTextController?.text.trim() ?? '';
     final phone = _model.phoneNumberTextController?.text.trim() ?? '';
-    final email = _useCustomEmail
-        ? _customEmailController.text.trim()
-        : _userEmail;
+    final email = _useCustomEmail ? _customEmailController.text.trim() : _userEmail;
 
     _nameEmpty = name.isEmpty;
     _industryEmpty = _selectedBusinessIndustry == null;
@@ -275,9 +274,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
     final license = _model.commercialRegisterTextController?.text.trim() ?? '';
     commercialRegisterRequiredError = license.isEmpty;
     commercialRegisterFormatError = license.isNotEmpty && !RegExp(r'^[0-9]{10}$').hasMatch(license);
-
   }
-  
 
   bool get _isFormValid {
     final name = _model.businessNameTextController?.text.trim() ?? '';
@@ -358,8 +355,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
     } catch (e) {
       setState(() => _uploadingImage = false);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('فشل رفع الصورة: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل رفع الصورة: $e')));
       }
     }
   }
@@ -394,11 +390,8 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
         return;
       }
 
-      final profilesSnap = await firebaseFirestore
-          .collection('profiles') 
-          .where('profile_id', isEqualTo: uid)
-          .limit(1)
-          .get();
+      final profilesSnap =
+          await firebaseFirestore.collection('profiles').where('profile_id', isEqualTo: uid).limit(1).get();
 
       if (profilesSnap.docs.isNotEmpty) {
         final profileDoc = profilesSnap.docs.first;
@@ -429,23 +422,21 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
         final rawImageUrl = userProfileModel.profileImageUrl;
         if (rawImageUrl != null && rawImageUrl.isNotEmpty) {
-          _imageUrl = rawImageUrl.contains('?')
-              ? '${rawImageUrl.split('?').first}?alt=media'
-              : '$rawImageUrl?alt=media';
+          _imageUrl =
+              rawImageUrl.contains('?') ? '${rawImageUrl.split('?').first}?alt=media' : '$rawImageUrl?alt=media';
         }
 
+        final industryTypeRaw = profileDoc.data()['business_industry_id'];
+        int industrytId = 0;
 
-          final industryTypeRaw = profileDoc.data()['business_industry_id'];
-          int industrytId = 0;
+        if (industryTypeRaw is int) {
+          industrytId = industryTypeRaw;
+        }
 
-          if (industryTypeRaw is int) {
-            industrytId = industryTypeRaw;
-          }
-
-          _selectedBusinessIndustry = _businessIndustries.firstWhere(
-            (c) => c.id == industrytId,
-            orElse: () => _businessIndustries.first,
-          );
+        _selectedBusinessIndustry = _businessIndustries.firstWhere(
+          (c) => c.id == industrytId,
+          orElse: () => _businessIndustries.first,
+        );
 
         _model.businessWebsiteTextController!.text = userProfileModel.website ?? '';
 
@@ -495,8 +486,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
   void _redirectToLogin() {
     if (!mounted) return;
-    Navigator.of(context)
-        .pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
+    Navigator.of(context).pushNamedAndRemoveUntil(UserLoginPage.routeName, (route) => false);
   }
 
   Future<void> _saveAll() async {
@@ -568,12 +558,9 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
       DocumentReference profileRef;
       if (_profileDocId != null) {
-        profileRef = firebaseFirestore
-            .collection('profiles')
-            .doc(_profileDocId);
+        profileRef = firebaseFirestore.collection('profiles').doc(_profileDocId);
       } else {
-        profileRef =
-            firebaseFirestore.collection('profiles').doc();
+        profileRef = firebaseFirestore.collection('profiles').doc();
         _profileDocId = profileRef.id;
       }
 
@@ -584,7 +571,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
         'business_industry_name': _selectedBusinessIndustry?.nameAr,
         'website': _model.businessWebsiteTextController!.text.trim(),
         'description': _model.businessDescreptionTextController!.text.trim(),
-        'contact_email': _useCustomEmail? _customEmailController.text.trim() : _userEmail,
+        'contact_email': _useCustomEmail ? _customEmailController.text.trim() : _userEmail,
         'phone_number': _model.phoneNumberTextController!.text.trim(),
         'email_owner': _useCustomEmail ? _emailOwner.name : 'personal',
         'use_custom_email': _useCustomEmail,
@@ -592,7 +579,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
       if (isSetupMode) {
         final usersRef = firebaseFirestore.collection('users').doc(uid);
-        
+
         await usersRef.set({
           'commercial_register_expiry_date': commercialRegisterExpiry ?? '',
           'commercial_register_number': commercialRegisterNumber ?? '',
@@ -602,8 +589,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
       }
 
       if (_imageUrl != null && _imageUrl!.isNotEmpty) {
-        final cleanUrl =
-            _imageUrl!.contains('?') ? _imageUrl!.split('?').first : _imageUrl!;
+        final cleanUrl = _imageUrl!.contains('?') ? _imageUrl!.split('?').first : _imageUrl!;
         updates['profile_image'] = cleanUrl;
       } else {
         updates['profile_image'] = null;
@@ -614,8 +600,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
         final platform = row.platform;
         final username = row.usernameCtrl.text.trim();
 
-        final platformEmpty =
-            platform == null || platform.id.toString().isEmpty;
+        final platformEmpty = platform == null || platform.id.toString().isEmpty;
         if (platformEmpty && username.isEmpty) continue;
 
         socialList.add({
@@ -644,12 +629,10 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
         } else {
           Navigator.pushReplacementNamed(context, MainScreen.routeName);
         }
-
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('فشل الحفظ: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل الحفظ: $e')));
       }
       debugPrint('Save error: $e');
     }
@@ -663,11 +646,6 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
     }
     _model.dispose();
     super.dispose();
-  }
-
-  double _shakeOffset() {
-    if (!_shakeCtrl.isAnimating) return 0;
-    return math.sin(_shakeCtrl.value * 10 * math.pi) * 8;
   }
 
   String? _validatePhone(String? value) {
@@ -693,7 +671,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
     if (v.isEmpty) return null;
 
-    final urlPattern = r'^(https?:\/\/)[\w\-\.]+\.\w{2,}.*$';
+    const urlPattern = r'^(https?:\/\/)[\w\-\.]+\.\w{2,}.*$';
 
     if (!RegExp(urlPattern).hasMatch(v)) {
       return 'رابط الموقع الإلكتروني غير صحيح. يرجى إدخال رابط يبدأ بـ http أو https.';
@@ -719,9 +697,9 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
         // 🔹 Only delete account in setup mode, and only on this page
         onBackTapExtra: isSetupMode
             ? () async {
-                await _DeleteAccount();   // your existing method
+                await _deleteAccount(); // your existing method
               }
-            : null, 
+            : null,
       ),
       body: SafeArea(
         top: true,
@@ -735,20 +713,16 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                     ),
                   )
                 : Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
                     child: Container(
                       decoration: BoxDecoration(color: t.backgroundElan),
                       child: Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                            0, 16, 0, 0),
+                        padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
                         child: SingleChildScrollView(
                           child: Column(
                             children: [
                               Padding(
-                                padding:
-                                    const EdgeInsetsDirectional.fromSTEB(
-                                        16, 16, 16, 16),
+                                padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: t.containers,
@@ -764,12 +738,9 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                     ),
                                   ),
                                   child: Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                            0, 16, 0, 16),
+                                    padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 16),
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         Padding(
                                           padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
@@ -816,95 +787,63 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                         ),
 
                                         Padding(
-                                          padding:
-                                              const EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                  20, 5, 20, 0),
+                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                                           child: FeqLabeledTextField(
                                             label: 'اسم الشركة',
-                                            controller:
-                                                _model.businessNameTextController,
+                                            controller: _model.businessNameTextController,
                                             focusNode: _model.businessNameFocusNode,
-                                            textCapitalization:
-                                                TextCapitalization.words,
+                                            textCapitalization: TextCapitalization.words,
                                             width: double.infinity,
-                                            isError: _showErrors &&
-                                                _nameEmpty,
-                                            errorText: _showErrors &&
-                                                    _nameEmpty
-                                                ? 'يرجى إدخال الاسم.'
-                                                : null,
-                                            decoration:
-                                                businessInputDecoration(
+                                            isError: _showErrors && _nameEmpty,
+                                            errorText: _showErrors && _nameEmpty ? 'يرجى إدخال الاسم.' : null,
+                                            decoration: businessInputDecoration(
                                               context,
-                                              isError: _showErrors &&
-                                                  _nameEmpty,
+                                              isError: _showErrors && _nameEmpty,
                                             ),
                                           ),
                                         ),
 
                                         Padding(
-                                          padding:
-                                              const EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                  20, 5, 20, 0),
+                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                                           child: FeqLabeled(
                                             'نوع المجال',
-                                            errorText: _showErrors &&
-                                                    _industryEmpty
-                                                ? 'يرجى اختيار نوع المجال.'
-                                                : null,
-                                            child: FeqSearchableDropdown<
-                                                FeqDropDownList>(
+                                            errorText: _showErrors && _industryEmpty ? 'يرجى اختيار نوع المجال.' : null,
+                                            child: FeqSearchableDropdown<FeqDropDownList>(
                                               items: _businessIndustries,
-                                              value:
-                                                  _selectedBusinessIndustry,
+                                              value: _selectedBusinessIndustry,
                                               onChanged: (v) {
-                                                setState(() =>
-                                                    _selectedBusinessIndustry =
-                                                        v);
+                                                setState(() => _selectedBusinessIndustry = v);
                                                 _onAnyFieldChanged();
                                               },
                                               hint: 'اختر أو ابحث...',
-                                              isError: _showErrors &&
-                                                  _industryEmpty,
+                                              isError: _showErrors && _industryEmpty,
                                             ),
                                           ),
                                         ),
 
                                         Padding(
-                                          padding:
-                                              const EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                  20, 5, 20, 0),
+                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                                           child: FeqLabeledTextField(
                                             label: 'الموقع الإلكتروني',
                                             required: false,
                                             controller: _model.businessWebsiteTextController,
                                             focusNode: _model.businessWebsiteFocusNode,
-                                            textCapitalization:
-                                                TextCapitalization.none,
+                                            textCapitalization: TextCapitalization.none,
                                             width: double.infinity,
-                                            decoration:
-                                                businessInputDecoration(
+                                            decoration: businessInputDecoration(
                                               context,
                                               isError: false,
                                             ).copyWith(
-                                              hintText:
-                                                  'مثال: https://example.com',
+                                              hintText: 'مثال: https://example.com',
                                             ),
                                           ),
                                         ),
 
                                         Padding(
-                                          padding:
-                                              const EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                  20, 20, 20, 20),
+                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              borderRadius:
-                                                  const BorderRadius.all(
+                                              borderRadius: const BorderRadius.all(
                                                 Radius.circular(16),
                                               ),
                                               border: Border.all(
@@ -914,65 +853,42 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                             child: Column(
                                               children: [
                                                 Padding(
-                                                  padding:
-                                                      const EdgeInsetsDirectional
-                                                          .fromSTEB(
-                                                          0, 0, 0, 16),
+                                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
                                                   child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    crossAxisAlignment: CrossAxisAlignment.center,
                                                     children: [
                                                       Align(
-                                                        alignment:
-                                                            const AlignmentDirectional(
-                                                                1, 0),
-                                                        child:
-                                                            FlutterFlowIconButton(
+                                                        alignment: const AlignmentDirectional(1, 0),
+                                                        child: FlutterFlowIconButton(
                                                           borderRadius: 8,
                                                           buttonSize: 50,
                                                           icon: Icon(
                                                             Icons.add_circle,
-                                                            color: t
-                                                                .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                            color:
+                                                                t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                                                             size: 20,
                                                           ),
                                                           onPressed: () {
                                                             setState(() {
-                                                              final r =
-                                                                  _SocialRow();
-                                                              _attachSocialRowListeners(
-                                                                  r);
-                                                              _socialRows
-                                                                  .add(r);
+                                                              final r = _SocialRow();
+                                                              _attachSocialRowListeners(r);
+                                                              _socialRows.add(r);
                                                             });
                                                             _onAnyFieldChanged();
                                                           },
                                                         ),
                                                       ),
                                                       Align(
-                                                        alignment:
-                                                            const AlignmentDirectional(
-                                                                1, -1),
+                                                        alignment: const AlignmentDirectional(1, -1),
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                  0, 0, 20, 0),
+                                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
                                                           child: Text(
                                                             'منصاتك في مواقع التواصل الاجتماعي',
-                                                            textAlign:
-                                                                TextAlign.end,
-                                                            style: t
-                                                                .bodyMedium
-                                                                .override(
-                                                              fontFamily:
-                                                                  'Inter',
-                                                              color: t
-                                                                  .primaryText,
+                                                            textAlign: TextAlign.end,
+                                                            style: t.bodyMedium.override(
+                                                              fontFamily: 'Inter',
+                                                              color: t.primaryText,
                                                               fontSize: 16,
                                                             ),
                                                           ),
@@ -981,29 +897,19 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                     ],
                                                   ),
                                                 ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsetsDirectional
-                                                          .fromSTEB(
-                                                          35, 0, 20, 5),
+                                                const Padding(
+                                                  padding: EdgeInsetsDirectional.fromSTEB(35, 0, 20, 5),
                                                   child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: [
                                                       Padding(
-                                                        padding:
-                                                            const EdgeInsetsDirectional
-                                                                .fromSTEB(
-                                                                0, 0, 10, 0),
+                                                        padding: EdgeInsetsDirectional.fromSTEB(0, 0, 10, 0),
                                                         child: FeqLabeled(
                                                           'اسم الحساب في المنصة',
                                                         ),
                                                       ),
                                                       Align(
-                                                        alignment:
-                                                            const AlignmentDirectional(
-                                                                1, -1),
+                                                        alignment: AlignmentDirectional(1, -1),
                                                         child: FeqLabeled(
                                                           'اسم المنصة',
                                                         ),
@@ -1012,88 +918,48 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                   ),
                                                 ),
                                                 Padding(
-                                                  padding:
-                                                      const EdgeInsetsDirectional
-                                                          .fromSTEB(
-                                                          0, 0, 0, 16),
+                                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
                                                   child: Column(
-                                                    children: List.generate(
-                                                        _socialRows.length,
-                                                        (i) {
-                                                      final row =
-                                                          _socialRows[i];
-                                                      final isFirstRow =
-                                                          i == 0;
-                                                      final platformEmpty =
-                                                          row.platform?.id ==
-                                                                  null ||
-                                                              row
-                                                                  .platform!.id
-                                                                  .toString()
-                                                                  .isEmpty;
-                                                      final usernameEmpty = row
-                                                          .usernameCtrl.text
-                                                          .trim()
-                                                          .isEmpty;
-                                                      final showPlatformErr =
-                                                          _showErrors &&
-                                                              isFirstRow &&
-                                                              _socialsRequireError &&
-                                                              platformEmpty;
-                                                      final showUsernameErr =
-                                                          _showErrors &&
-                                                              isFirstRow &&
-                                                              _socialsRequireError &&
-                                                              usernameEmpty;
+                                                    children: List.generate(_socialRows.length, (i) {
+                                                      final row = _socialRows[i];
+                                                      final isFirstRow = i == 0;
+                                                      final platformEmpty = row.platform?.id == null ||
+                                                          row.platform!.id.toString().isEmpty;
+                                                      final usernameEmpty = row.usernameCtrl.text.trim().isEmpty;
+                                                      final showPlatformErr = _showErrors &&
+                                                          isFirstRow &&
+                                                          _socialsRequireError &&
+                                                          platformEmpty;
+                                                      final showUsernameErr = _showErrors &&
+                                                          isFirstRow &&
+                                                          _socialsRequireError &&
+                                                          usernameEmpty;
 
                                                       return Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceEvenly,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
+                                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
                                                         children: [
                                                           Align(
-                                                            alignment:
-                                                                const AlignmentDirectional(
-                                                                    1, 0),
+                                                            alignment: const AlignmentDirectional(1, 0),
                                                             child: Padding(
                                                               padding:
-                                                                  const EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                      0,
-                                                                      0,
-                                                                      0,
-                                                                      16),
-                                                              child:
-                                                                  FlutterFlowIconButton(
-                                                                borderRadius:
-                                                                    8,
+                                                                  const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
+                                                              child: FlutterFlowIconButton(
+                                                                borderRadius: 8,
                                                                 buttonSize: 50,
                                                                 icon: Icon(
-                                                                  Icons
-                                                                      .minimize_outlined,
+                                                                  Icons.minimize_outlined,
                                                                   color: t
                                                                       .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
                                                                   size: 20,
                                                                 ),
-                                                                onPressed:
-                                                                    () {
-                                                                  setState(
-                                                                      () {
-                                                                    _socialRows
-                                                                        .removeAt(
-                                                                            i);
-                                                                    if (_socialRows
-                                                                        .isEmpty) {
-                                                                      final r =
-                                                                          _SocialRow();
-                                                                      _attachSocialRowListeners(
-                                                                          r);
-                                                                      _socialRows
-                                                                          .add(
-                                                                              r);
+                                                                onPressed: () {
+                                                                  setState(() {
+                                                                    _socialRows.removeAt(i);
+                                                                    if (_socialRows.isEmpty) {
+                                                                      final r = _SocialRow();
+                                                                      _attachSocialRowListeners(r);
+                                                                      _socialRows.add(r);
                                                                     }
                                                                   });
                                                                   _onAnyFieldChanged();
@@ -1104,89 +970,52 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                           Expanded(
                                                             child: Padding(
                                                               padding:
-                                                                  const EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                      0,
-                                                                      0,
-                                                                      20,
-                                                                      0),
+                                                                  const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
                                                               child: Column(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .end,
+                                                                crossAxisAlignment: CrossAxisAlignment.end,
                                                                 children: [
                                                                   TextFormField(
-                                                                    controller:
-                                                                        row.usernameCtrl,
-                                                                    textCapitalization:
-                                                                        TextCapitalization
-                                                                            .none,
-                                                                    decoration:
-                                                                        businessPlatformInputDecoration(
+                                                                    controller: row.usernameCtrl,
+                                                                    textCapitalization: TextCapitalization.none,
+                                                                    decoration: businessPlatformInputDecoration(
                                                                       context,
-                                                                      isError:
-                                                                          showUsernameErr,
+                                                                      isError: showUsernameErr,
                                                                     ),
-                                                                    style: t
-                                                                        .bodyMedium
-                                                                        .copyWith(
-                                                                      color: t
-                                                                          .primaryText,
+                                                                    style: t.bodyMedium.copyWith(
+                                                                      color: t.primaryText,
                                                                     ),
-                                                                    textAlign:
-                                                                        TextAlign
-                                                                            .end,
+                                                                    textAlign: TextAlign.end,
                                                                   ),
-                                                                  if (row.platform !=
-                                                                          null &&
-                                                                      row.usernameCtrl
-                                                                          .text
-                                                                          .trim()
-                                                                          .isNotEmpty)
+                                                                  if (row.platform != null &&
+                                                                      row.usernameCtrl.text.trim().isNotEmpty)
                                                                     Padding(
-                                                                      padding: const EdgeInsets
-                                                                          .only(
-                                                                          top:
-                                                                              4),
-                                                                      child:
-                                                                          InkWell(
-                                                                        onTap:
-                                                                            () {
+                                                                      padding: const EdgeInsets.only(top: 4),
+                                                                      child: InkWell(
+                                                                        onTap: () {
                                                                           final url =
                                                                               'https://${row.platform!.domain}/${row.usernameCtrl.text.trim()}';
                                                                           launchUrl(
                                                                             Uri.parse(url),
                                                                           );
                                                                         },
-                                                                        child:
-                                                                            Text(
+                                                                        child: Text(
                                                                           '${row.platform!.domain}/${row.usernameCtrl.text.trim()}',
-                                                                          style:
-                                                                              const TextStyle(
-                                                                            color:
-                                                                                Colors.blue,
-                                                                            decoration:
-                                                                                TextDecoration.underline,
+                                                                          style: const TextStyle(
+                                                                            color: Colors.blue,
+                                                                            decoration: TextDecoration.underline,
                                                                           ),
-                                                                          textAlign:
-                                                                              TextAlign.end,
+                                                                          textAlign: TextAlign.end,
                                                                         ),
                                                                       ),
                                                                     ),
                                                                   if (showUsernameErr)
                                                                     const Padding(
-                                                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                                                          0,
-                                                                          6,
-                                                                          4,
-                                                                          0),
-                                                                      child:
-                                                                          Text(
+                                                                      padding:
+                                                                          EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
+                                                                      child: Text(
                                                                         'يرجى إدخال اسم الحساب.',
-                                                                        style: TextStyle(
-                                                                            color:
-                                                                                Colors.red,
-                                                                            fontSize: 12),
+                                                                        style:
+                                                                            TextStyle(color: Colors.red, fontSize: 12),
                                                                       ),
                                                                     ),
                                                                 ],
@@ -1196,49 +1025,28 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                           Expanded(
                                                             child: Padding(
                                                               padding:
-                                                                  const EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                      0,
-                                                                      0,
-                                                                      20,
-                                                                      0),
+                                                                  const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
                                                               child: Column(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .end,
+                                                                crossAxisAlignment: CrossAxisAlignment.end,
                                                                 children: [
-                                                                  FeqSearchableDropdown<
-                                                                      FeqDropDownList>(
-                                                                    items:
-                                                                        _socialPlatforms,
-                                                                    value: row
-                                                                        .platform,
-                                                                    onChanged:
-                                                                        (v) {
-                                                                      setState(
-                                                                          () =>
-                                                                              row.platform = v);
+                                                                  FeqSearchableDropdown<FeqDropDownList>(
+                                                                    items: _socialPlatforms,
+                                                                    value: row.platform,
+                                                                    onChanged: (v) {
+                                                                      setState(() => row.platform = v);
                                                                       _onAnyFieldChanged();
                                                                     },
-                                                                    hint:
-                                                                        'اختر المنصة',
-                                                                    isError:
-                                                                        showPlatformErr,
+                                                                    hint: 'اختر المنصة',
+                                                                    isError: showPlatformErr,
                                                                   ),
                                                                   if (showPlatformErr)
                                                                     const Padding(
-                                                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                                                          0,
-                                                                          6,
-                                                                          4,
-                                                                          0),
-                                                                      child:
-                                                                          Text(
+                                                                      padding:
+                                                                          EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
+                                                                      child: Text(
                                                                         'يرجى اختيار المنصة.',
-                                                                        style: TextStyle(
-                                                                            color:
-                                                                                Colors.red,
-                                                                            fontSize: 12),
+                                                                        style:
+                                                                            TextStyle(color: Colors.red, fontSize: 12),
                                                                       ),
                                                                     ),
                                                                 ],
@@ -1256,374 +1064,366 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                         ),
 
                                         Padding(
-                                          padding:
-                                              const EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                  20, 5, 20, 0),
+                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                                           child: FeqLabeledTextField(
                                             label: 'نبذة تعريفية',
                                             required: false,
-                                            controller:
-                                                _model.businessDescreptionTextController,
+                                            controller: _model.businessDescreptionTextController,
                                             focusNode: _model.businessDescreptionFocusNode,
-                                            textCapitalization:
-                                                TextCapitalization.sentences,
+                                            textCapitalization: TextCapitalization.sentences,
                                             width: double.infinity,
                                             maxLines: 3,
-                                            decoration:
-                                                businessInputDecoration(
+                                            decoration: businessInputDecoration(
                                               context,
                                               isError: false,
                                             ),
                                           ),
                                         ),
 
-                                    // Contact Information Section
-                                    Padding(
-                                      padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                      child: FeqLabeled('معلومات التواصل'),
-                                    ),
-
-                                    // Phone Section
-                                    Padding(
-                                      padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          FeqLabeledTextField(
-                                            label: 'رقم التواصل ',
-                                            required: false,
-                                            controller: _model.phoneNumberTextController,
-                                            focusNode: _model.phoneNumberFocusNode,
-                                            keyboardType: TextInputType.phone,
-                                            decoration: businessInputDecoration(
-                                              context,
-                                              isError: _showErrors && _contactsEmpty,
-                                            ).copyWith(hintText: '05XXXXXXXX'),
-                                          ),
-                                          // Phone Radio Buttons
-                                        ],
-                                      ),
-                                    ),
-
-                                    // ==================== EMAIL SECTION ====================
-                                    // Email Section
-                                    Padding(
-                                      padding: const EdgeInsetsDirectional.fromSTEB(20, 15, 20, 6),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          // Display field (changes based on selection)
-                                          if (!_useCustomEmail)
-                                            // Show logged-in email as read-only
-                                            Column(
-                                              crossAxisAlignment: CrossAxisAlignment.end,
-                                              children: [
-                                                FeqLabeledTextField(
-                                                  label: 'البريد الإلكتروني',
-                                                  style: TextStyle(color: t.tertiaryText),
-                                                  required: false,
-                                                  initialValue: _userEmail,
-                                                  enabled: false,
-                                                  decoration: businessInputDecoration(context),
-                                                ),
-                                              ],
-                                            )
-                                          else
-                                          // Show input field for custom email
-                                            FeqLabeledTextField(
-                                              label: 'البريد الإلكتروني',
-                                              required: false,
-                                              controller: _customEmailController,
-                                              focusNode: _model.emailFocusNode,
-                                              keyboardType: TextInputType.emailAddress,
-                                              decoration: businessInputDecoration(
-                                                context,
-                                                isError: _showErrors && _contactsEmpty,
-                                              ).copyWith(hintText: 'أدخل البريد الإلكتروني'),
-                                            ),
-
-                                          // Email Radio Buttons
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 12),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.end,
-                                              children: [
-                                                InkWell(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      _useCustomEmail = false;
-                                                      _emailOwner = EmailOwner.personal;
-                                                      //_customEmailController.clear();
-                                                    });
-                                                    _onAnyFieldChanged();
-                                                  },
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.end,
-                                                    children: [
-                                                      Text(
-                                                        'استخدم البريد الإلكتروني الخاص بالتسجيل',
-                                                        style: t.bodyMedium.override(
-                                                          fontFamily: 'Inter',
-                                                          color: t.primaryText,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                      RadioMenuButton<bool>(
-                                                        value: false,
-                                                        groupValue: _useCustomEmail,
-                                                        onChanged: (value) {
-                                                          setState(() {
-                                                            _useCustomEmail = value ?? false;
-                                                            _emailOwner = EmailOwner.personal;
-                                                            _customEmailController.clear();
-                                                          });
-                                                          _onAnyFieldChanged();
-                                                        },
-                                                        child: const SizedBox.shrink(),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                InkWell(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      _useCustomEmail = true;
-                                                      _customEmailController.clear();
-                                                    });
-                                                    _onAnyFieldChanged();
-                                                  },
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.end,
-                                                    children: [
-                                                      Text(
-                                                        'إضافة بريد إلكتروني مختلف',
-                                                        style: t.bodyMedium.override(
-                                                          fontFamily: 'Inter',
-                                                          color: t.primaryText,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                      RadioMenuButton<bool>(
-                                                        value: true,
-                                                        groupValue: _useCustomEmail,
-                                                        onChanged: (value) {
-                                                          setState(() {
-                                                            _useCustomEmail = value ?? false;
-                                                            _customEmailController.clear();
-                                                          });
-                                                          _onAnyFieldChanged();
-                                                        },
-                                                        child: const SizedBox.shrink(),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    // Error message for contact info
-                                    if (_showErrors && _contactsEmpty)
-                                      Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 6, 24, 10),
-                                        child: Text(
-                                          'يرجى إدخال رقم الجوال أو البريد الإلكتروني.',
-                                          textAlign: TextAlign.end,
-                                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                                        // Contact Information Section
+                                        const Padding(
+                                          padding: EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                          child: FeqLabeled('معلومات التواصل'),
                                         ),
-                                      ),
 
-                                    if(isSetupMode) ...[ 
-                                      // License Information Section
-                                      Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                        child: Row(
-                                          textDirection: TextDirection.rtl,
-                                          crossAxisAlignment: CrossAxisAlignment.end, 
-                                          children: [
-                                            Expanded(
-                                              child: FeqLabeledTextField(
-                                                label: 'رقم السجل التجاري الموحد',
-                                                required: true,
-                                                controller: _model.commercialRegisterTextController,
-                                                focusNode: _model.commercialRegisterFocusNode,
-                                                keyboardType: TextInputType.number,
+                                        // Phone Section
+                                        Padding(
+                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                            children: [
+                                              FeqLabeledTextField(
+                                                label: 'رقم التواصل ',
+                                                required: false,
+                                                controller: _model.phoneNumberTextController,
+                                                focusNode: _model.phoneNumberFocusNode,
+                                                keyboardType: TextInputType.phone,
                                                 decoration: businessInputDecoration(
                                                   context,
-                                                  isError: _showLicenseErrors &&
-                                                      (commercialRegisterRequiredError ||
-                                                      commercialRegisterFormatError ||
-                                                      commercialRegisterFetchingError),
-                                                ).copyWith(hintText: '7xxxxxxxxx'),
+                                                  isError: _showErrors && _contactsEmpty,
+                                                ).copyWith(hintText: '05XXXXXXXX'),
+                                              ),
+                                              // Phone Radio Buttons
+                                            ],
+                                          ),
+                                        ),
+
+                                        // ==================== EMAIL SECTION ====================
+                                        // Email Section
+                                        Padding(
+                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 15, 20, 6),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                            children: [
+                                              // Display field (changes based on selection)
+                                              if (!_useCustomEmail)
+                                                // Show logged-in email as read-only
+                                                Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                  children: [
+                                                    FeqLabeledTextField(
+                                                      label: 'البريد الإلكتروني',
+                                                      style: TextStyle(color: t.tertiaryText),
+                                                      required: false,
+                                                      initialValue: _userEmail,
+                                                      enabled: false,
+                                                      decoration: businessInputDecoration(context),
+                                                    ),
+                                                  ],
+                                                )
+                                              else
+                                                // Show input field for custom email
+                                                FeqLabeledTextField(
+                                                  label: 'البريد الإلكتروني',
+                                                  required: false,
+                                                  controller: _customEmailController,
+                                                  focusNode: _model.emailFocusNode,
+                                                  keyboardType: TextInputType.emailAddress,
+                                                  decoration: businessInputDecoration(
+                                                    context,
+                                                    isError: _showErrors && _contactsEmpty,
+                                                  ).copyWith(hintText: 'أدخل البريد الإلكتروني'),
+                                                ),
+
+                                              // Email Radio Buttons
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 12),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                  children: [
+                                                    InkWell(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          _useCustomEmail = false;
+                                                          _emailOwner = EmailOwner.personal;
+                                                          //_customEmailController.clear();
+                                                        });
+                                                        _onAnyFieldChanged();
+                                                      },
+                                                      child: Row(
+                                                        mainAxisAlignment: MainAxisAlignment.end,
+                                                        children: [
+                                                          Text(
+                                                            'استخدم البريد الإلكتروني الخاص بالتسجيل',
+                                                            style: t.bodyMedium.override(
+                                                              fontFamily: 'Inter',
+                                                              color: t.primaryText,
+                                                              fontSize: 14,
+                                                            ),
+                                                          ),
+                                                          RadioMenuButton<bool>(
+                                                            value: false,
+                                                            groupValue: _useCustomEmail,
+                                                            onChanged: (value) {
+                                                              setState(() {
+                                                                _useCustomEmail = value ?? false;
+                                                                _emailOwner = EmailOwner.personal;
+                                                                _customEmailController.clear();
+                                                              });
+                                                              _onAnyFieldChanged();
+                                                            },
+                                                            child: const SizedBox.shrink(),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    InkWell(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          _useCustomEmail = true;
+                                                          _customEmailController.clear();
+                                                        });
+                                                        _onAnyFieldChanged();
+                                                      },
+                                                      child: Row(
+                                                        mainAxisAlignment: MainAxisAlignment.end,
+                                                        children: [
+                                                          Text(
+                                                            'إضافة بريد إلكتروني مختلف',
+                                                            style: t.bodyMedium.override(
+                                                              fontFamily: 'Inter',
+                                                              color: t.primaryText,
+                                                              fontSize: 14,
+                                                            ),
+                                                          ),
+                                                          RadioMenuButton<bool>(
+                                                            value: true,
+                                                            groupValue: _useCustomEmail,
+                                                            onChanged: (value) {
+                                                              setState(() {
+                                                                _useCustomEmail = value ?? false;
+                                                                _customEmailController.clear();
+                                                              });
+                                                              _onAnyFieldChanged();
+                                                            },
+                                                            child: const SizedBox.shrink(),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        // Error message for contact info
+                                        if (_showErrors && _contactsEmpty)
+                                          const Padding(
+                                            padding: EdgeInsetsDirectional.fromSTEB(0, 6, 24, 10),
+                                            child: Text(
+                                              'يرجى إدخال رقم الجوال أو البريد الإلكتروني.',
+                                              textAlign: TextAlign.end,
+                                              style: TextStyle(color: Colors.red, fontSize: 12),
+                                            ),
+                                          ),
+
+                                        if (isSetupMode) ...[
+                                          // License Information Section
+                                          Padding(
+                                            padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                            child: Row(
+                                              textDirection: TextDirection.rtl,
+                                              crossAxisAlignment: CrossAxisAlignment.end,
+                                              children: [
+                                                Expanded(
+                                                  child: FeqLabeledTextField(
+                                                    label: 'رقم السجل التجاري الموحد',
+                                                    required: true,
+                                                    controller: _model.commercialRegisterTextController,
+                                                    focusNode: _model.commercialRegisterFocusNode,
+                                                    keyboardType: TextInputType.number,
+                                                    decoration: businessInputDecoration(
+                                                      context,
+                                                      isError: _showLicenseErrors &&
+                                                          (commercialRegisterRequiredError ||
+                                                              commercialRegisterFormatError ||
+                                                              commercialRegisterFetchingError),
+                                                    ).copyWith(hintText: '7xxxxxxxxx'),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Padding(
+                                                  padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 0, 7),
+                                                  child: ElevatedButton(
+                                                    onPressed: _fetchLicenseData,
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: t.secondaryButtonsOnLight,
+                                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(12),
+                                                      ),
+                                                    ),
+                                                    child: Text(
+                                                      'تحقق',
+                                                      style: TextStyle(color: t.primaryText, fontSize: 14),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          // ERROR: Required
+                                          if (_showLicenseErrors && commercialRegisterRequiredError)
+                                            const Padding(
+                                              padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                              child: Text(
+                                                'يرجى إدخال الرقم الموحد للسجل التجاري.',
+                                                style: TextStyle(color: Colors.red, fontSize: 12),
                                               ),
                                             ),
 
-                                            const SizedBox(width: 10),
+                                          // ERROR: Format
+                                          if (_showLicenseErrors && commercialRegisterFormatError)
+                                            const Padding(
+                                              padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                              child: Text(
+                                                'رقم السجل يجب أن يكون 10 أرقام صحيحة.',
+                                                style: TextStyle(color: Colors.red, fontSize: 12),
+                                              ),
+                                            ),
 
+                                          // Duplicate CR number
+                                          if (_showLicenseErrors && commercialRegisterDuplicateError)
+                                            const Padding(
+                                              padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                              child: Text(
+                                                'رقم السجل مستخدم مسبقًا.',
+                                                style: TextStyle(color: Colors.red, fontSize: 12),
+                                              ),
+                                            ),
+
+                                          // Invalid / fetch error
+                                          if (_showLicenseErrors && commercialRegisterFetchingError)
+                                            const Padding(
+                                              padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                              child: Text(
+                                                'رقم السجل غير صحيح أو غير موجود.',
+                                                style: TextStyle(color: Colors.red, fontSize: 12),
+                                              ),
+                                            ),
+
+                                          // ===== SHOW Fetched License Data =====
+                                          if (commercialRegisterFetched) ...[
+                                            const SizedBox(height: 12),
+
+                                            // License Status
                                             Padding(
-                                              padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 0, 7),
-                                              child: ElevatedButton(
-                                                onPressed: _fetchLicenseData,
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: t.secondaryButtonsOnLight,
-                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(12),
-                                                  ),
-                                                ),
-                                                child: Text(
-                                                  'تحقق',
-                                                  style: TextStyle(color: t.primaryText, fontSize: 14),
-                                                ),
+                                              padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                              child: FeqLabeledTextField(
+                                                label: 'حالة السجل',
+                                                required: false,
+                                                enabled: false,
+                                                style: TextStyle(color: t.tertiaryText),
+                                                initialValue: commercialRegisterStatus ?? '',
+                                                decoration: businessInputDecoration(context),
+                                              ),
+                                            ),
+
+                                            // License Expiry Date
+                                            Padding(
+                                              padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                              child: FeqLabeledTextField(
+                                                label: 'تاريخ انتهاء السجل',
+                                                required: false,
+                                                enabled: false,
+                                                style: TextStyle(color: t.tertiaryText),
+                                                initialValue: commercialRegisterExpiry ?? '',
+                                                decoration: businessInputDecoration(context),
                                               ),
                                             ),
                                           ],
-                                        ),
-                                      ),
-                                    
-                                    // ERROR: Required
-                                    if (_showLicenseErrors && commercialRegisterRequiredError)
-                                      const Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
-                                        child: Text(
-                                          'يرجى إدخال الرقم الموحد للسجل التجاري.',
-                                          style: TextStyle(color: Colors.red, fontSize: 12),
-                                        ),
-                                      ),
-                                    
-                                    // ERROR: Format
-                                    if (_showLicenseErrors && commercialRegisterFormatError)
-                                      const Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
-                                        child: Text(
-                                          'رقم السجل يجب أن يكون 10 أرقام صحيحة.',
-                                          style: TextStyle(color: Colors.red, fontSize: 12),
-                                        ),
-                                      ),
-                                    
-                                    // Duplicate CR number
-                                    if (_showLicenseErrors && commercialRegisterDuplicateError)
-                                      const Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
-                                        child: Text(
-                                          'رقم السجل مستخدم مسبقًا.',
-                                          style: TextStyle(color: Colors.red, fontSize: 12),
-                                        ),
-                                      ),
-
-                                    // Invalid / fetch error
-                                    if (_showLicenseErrors && commercialRegisterFetchingError)
-                                      const Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
-                                        child: Text(
-                                          'رقم السجل غير صحيح أو غير موجود.',
-                                          style: TextStyle(color: Colors.red, fontSize: 12),
-                                        ),
-                                      ),
-
-                                    // ===== SHOW Fetched License Data =====
-                                    if (commercialRegisterFetched) ...[
-                                      const SizedBox(height: 12),
-
-                                      // License Status
-                                      Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                        child: FeqLabeledTextField(
-                                          label: 'حالة السجل',
-                                          required: false,                                            
-                                          enabled: false,
-                                          style: TextStyle(color: t.tertiaryText),
-                                          initialValue: commercialRegisterStatus ?? '',
-                                          decoration: businessInputDecoration(context),
-                                        ),
-                                      ),
-
-                                      // License Expiry Date
-                                      Padding(
-                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                        child: FeqLabeledTextField(
-                                          label: 'تاريخ انتهاء السجل',
-                                          required: false,                                            
-                                          enabled: false,
-                                          style: TextStyle(color: t.tertiaryText),
-                                          initialValue: commercialRegisterExpiry ?? '',
-                                          decoration: businessInputDecoration(context),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                    // Buttons
-                                    if (isEditMode)
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
-                                            child: FFButtonWidget(
-                                              onPressed: _isFormValid ? () => _saveAll() : null,
-                                              text: 'تحديث',
-                                              options: FFButtonOptions(
-                                                width: 400,
-                                                height: 40,
-                                                color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                textStyle: t.titleMedium.override(
-                                                  fontFamily: 'Inter',
-                                                  color: t.containers,
-                                                ),
-                                                elevation: 2,
-                                                borderRadius: BorderRadius.circular(12),
-                                                disabledColor: Colors.grey,
-                                                disabledTextColor: Colors.white70,
-                                              ),
-                                            ),
-                                          ),
                                         ],
-                                      )
-                                    else
-                                      Center(
-                                        child: Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
-                                          child: FFButtonWidget(
-                                            onPressed: _isFormValid ? () => _saveAll() : null,
-                                            text: 'إنشاء',
-                                            options: FFButtonOptions(
-                                              width: 400,
-                                              height: 40,
-                                              color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                              textStyle: t.titleMedium.override(
-                                                fontFamily: 'Inter',
-                                                color: t.containers,
+                                        // Buttons
+                                        if (isEditMode)
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
+                                                child: FFButtonWidget(
+                                                  onPressed: _isFormValid ? () => _saveAll() : null,
+                                                  text: 'تحديث',
+                                                  options: FFButtonOptions(
+                                                    width: 400,
+                                                    height: 40,
+                                                    color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                    textStyle: t.titleMedium.override(
+                                                      fontFamily: 'Inter',
+                                                      color: t.containers,
+                                                    ),
+                                                    elevation: 2,
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    disabledColor: Colors.grey,
+                                                    disabledTextColor: Colors.white70,
+                                                  ),
+                                                ),
                                               ),
-                                              elevation: 2,
-                                              borderRadius: BorderRadius.circular(12),
-                                              disabledColor: Colors.grey,
-                                              disabledTextColor: Colors.white70,
+                                            ],
+                                          )
+                                        else
+                                          Center(
+                                            child: Padding(
+                                              padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
+                                              child: FFButtonWidget(
+                                                onPressed: _isFormValid ? () => _saveAll() : null,
+                                                text: 'إنشاء',
+                                                options: FFButtonOptions(
+                                                  width: 400,
+                                                  height: 40,
+                                                  color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                  textStyle: t.titleMedium.override(
+                                                    fontFamily: 'Inter',
+                                                    color: t.containers,
+                                                  ),
+                                                  elevation: 2,
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  disabledColor: Colors.grey,
+                                                  disabledTextColor: Colors.white70,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                      )
-                                  ],
+                                          )
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
       ),
     );
   }
 
   Future<void> _fetchLicenseData() async {
     setState(() {
-      _showLicenseErrors = true; 
+      _showLicenseErrors = true;
       commercialRegisterRequiredError = false;
       commercialRegisterFormatError = false;
       commercialRegisterFetchingError = false;
@@ -1653,7 +1453,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
           .get();
 
       if (dupSnap.docs.isNotEmpty) {
-        commercialRegisterDuplicateError = true; 
+        commercialRegisterDuplicateError = true;
         setState(() {});
         return;
       }
@@ -1698,9 +1498,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
     final fetchedStatus = data["status"]?["name"] ?? "";
     final fetchedConfirmationDate = data["status"]?["confirmationDate"]?["gregorian"] ?? "";
 
-    if (fetchedCrNumber.isEmpty ||
-        fetchedStatus.isEmpty ||
-        fetchedConfirmationDate.isEmpty) {
+    if (fetchedCrNumber.isEmpty || fetchedStatus.isEmpty || fetchedConfirmationDate.isEmpty) {
       commercialRegisterFetchingError = true;
       setState(() {});
       return;
@@ -1724,7 +1522,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
     setState(() {});
   }
 
-  Future<void> _DeleteAccount() async {
+  Future<void> _deleteAccount() async {
     try {
       final auth = firebaseAuth;
       final user = auth.currentUser;
@@ -1740,12 +1538,10 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
       // Delete auth account
       await user.delete();
-
     } catch (e) {
       // ignore all errors silently
     }
   }
-  
 }
 
 class _SocialRow {
@@ -1753,7 +1549,7 @@ class _SocialRow {
   final TextEditingController usernameCtrl;
 
   _SocialRow({this.platform, TextEditingController? usernameCtrl})
-    : usernameCtrl = usernameCtrl ?? TextEditingController();
+      : usernameCtrl = usernameCtrl ?? TextEditingController();
 
   void dispose() {
     usernameCtrl.dispose();

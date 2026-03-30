@@ -1,9 +1,9 @@
 import 'package:elan_flutterproject/core/components/feq_components.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/services/signup_flow_controller.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
+import '../../core/services/signup_flow_controller.dart';
 import 'user_signup.dart';
 
 class UserTypePage extends StatefulWidget {
@@ -78,8 +78,7 @@ class _UserTypePageState extends State<UserTypePage> {
                             size: containerSize * 0.4,
                           ),
                           onPressed: () {
-                            SignUpFlowController.userType =
-                                'business'; // <-- Icon tap also works
+                            SignUpFlowController.userType = 'business'; // <-- Icon tap also works
                             Navigator.pushNamed(
                               context,
                               UserSignupPage.routeName,

@@ -51,7 +51,7 @@ class FlutterFlowDropDown<T> extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: DropdownButtonFormField<T>(
         isExpanded: isExpanded,
-        initialValue: value,
+        value: value,
         items: options,
         decoration: InputDecoration(
           hintText: hintText,

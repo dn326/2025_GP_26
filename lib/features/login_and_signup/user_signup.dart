@@ -6,7 +6,6 @@ import 'package:elan_flutterproject/features/influencer/presentation/profile_for
 import 'package:elan_flutterproject/flutter_flow/flutter_flow_util.dart';
 import 'package:elan_flutterproject/index.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +15,11 @@ import '../../core/services/terms_and_privacy.dart';
 import '../../flutter_flow/flutter_flow_theme.dart';
 import '../../flutter_flow/flutter_flow_widgets.dart';
 
-InputDecoration inputDecoration(BuildContext context, {bool isError = false, String? errorText,}) {
+InputDecoration inputDecoration(
+  BuildContext context, {
+  bool isError = false,
+  String? errorText,
+}) {
   final t = FlutterFlowTheme.of(context);
   return InputDecoration(
     isDense: true,
@@ -85,6 +88,7 @@ class _UserSignupPageState extends State<UserSignupPage> {
   bool _emailError = false;
   bool _passwordError = false;
   bool _confirmPasswordError = false;
+
   //bool _generalError = false;
 
   String? _emailErrorMessage;
@@ -148,7 +152,6 @@ class _UserSignupPageState extends State<UserSignupPage> {
   }
 
   Future<void> _signUp() async {
-
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يجب الموافقة على شروط الاستخدام وسياسة الخصوصية')),
@@ -181,7 +184,6 @@ class _UserSignupPageState extends State<UserSignupPage> {
     });
 
     bool hasError = false;
-
 
     // EMAIL VALIDATION
     if (email.isEmpty) {
@@ -217,13 +219,13 @@ class _UserSignupPageState extends State<UserSignupPage> {
     }
 
     setState(() {});
-    if (hasError) return;   // STOP SIGN UP
+    if (hasError) return; // STOP SIGN UP
 
     // ─────────────── Firebase Signup ───────────────
     try {
       if (!_feqTesting) {
-        UserCredential userCredential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
+        UserCredential userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
 
         final user = userCredential.user!;
         final userId = user.uid;
@@ -261,6 +263,7 @@ class _UserSignupPageState extends State<UserSignupPage> {
 
                 bool verified = _feqTesting ? _feqTesting : await checkEmailVerified();
 
+                if (!ctxAlertDialog.mounted) return;
                 if (Navigator.canPop(ctxAlertDialog)) Navigator.pop(ctxAlertDialog);
 
                 if (verified) {
@@ -304,8 +307,10 @@ class _UserSignupPageState extends State<UserSignupPage> {
       } else if (e.code == 'weak-password') {
         msg = 'كلمة المرور ضعيفة';
       }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('حدث خطأ غير متوقع')),
       );
@@ -347,7 +352,7 @@ class _UserSignupPageState extends State<UserSignupPage> {
           title: 'إنشاء الحساب',
           showBack: true,
           backRoute: UserTypePage.routeName,
-          onBackTapExtra: _DeleteAccount,
+          onBackTapExtra: _deleteAccount,
         ),
         body: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -376,9 +381,12 @@ class _UserSignupPageState extends State<UserSignupPage> {
                       focusNode: _emailFocus,
                       keyboardType: TextInputType.emailAddress,
                       width: double.infinity,
-                      childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),                                          
-                      decoration: inputDecoration(context, isError: _emailError,
-                          errorText: _emailError ? _emailErrorMessage  : null,),
+                      childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                      decoration: inputDecoration(
+                        context,
+                        isError: _emailError,
+                        errorText: _emailError ? _emailErrorMessage : null,
+                      ),
                     ),
 
                     const SizedBox(height: 16),
@@ -393,11 +401,11 @@ class _UserSignupPageState extends State<UserSignupPage> {
                           focusNode: _passwordFocus1,
                           obscureText: !_passwordVisibility1,
                           width: double.infinity,
-                          childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),                                          
+                          childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                           decoration: inputDecoration(
                             context,
                             isError: _passwordError,
-                            errorText: _passwordError ? _passwordErrorMessage  : null,
+                            errorText: _passwordError ? _passwordErrorMessage : null,
                           ).copyWith(
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -441,11 +449,11 @@ class _UserSignupPageState extends State<UserSignupPage> {
                       focusNode: _passwordFocus2,
                       obscureText: !_passwordVisibility2,
                       width: double.infinity,
-                      childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),                                          
+                      childPadding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
                       decoration: inputDecoration(
                         context,
                         isError: _confirmPasswordError,
-                        errorText: _confirmPasswordError ? _confirmPasswordErrorMessage  : null,
+                        errorText: _confirmPasswordError ? _confirmPasswordErrorMessage : null,
                       ).copyWith(
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -459,7 +467,7 @@ class _UserSignupPageState extends State<UserSignupPage> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
 
                     // Terms & Privacy checkbox
@@ -550,14 +558,12 @@ class _UserSignupPageState extends State<UserSignupPage> {
                           options: FFButtonOptions(
                             width: 400,
                             height: 44,
-                            color: _isFormValid
-                                ? theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds
-                                : Colors.grey, // disabled state
+                            color:
+                                _isFormValid ? theme.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds : Colors.grey,
+                            // disabled state
                             textStyle: theme.titleMedium.override(
                               fontFamily: 'Inter',
-                              color: _isFormValid
-                                  ? theme.containers
-                                  : Colors.white70,
+                              color: _isFormValid ? theme.containers : Colors.white70,
                             ),
                             elevation: 2,
                             borderRadius: BorderRadius.circular(12),
@@ -577,7 +583,7 @@ class _UserSignupPageState extends State<UserSignupPage> {
     );
   }
 
-  Future<void> _DeleteAccount() async {
+  Future<void> _deleteAccount() async {
     try {
       final auth = firebaseAuth;
       final user = auth.currentUser;
@@ -593,7 +599,6 @@ class _UserSignupPageState extends State<UserSignupPage> {
 
       // Delete auth account
       await user.delete();
-
     } catch (e) {
       // ignore all errors silently
     }
