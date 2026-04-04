@@ -8,6 +8,7 @@ import '../../../core/services/user_session.dart';
 import '../../../core/widgets/image_picker_widget.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
 import 'offer_detail_page.dart';
+import 'offer_enums.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Model
@@ -21,12 +22,14 @@ class OfferModel {
   final String influencerId;
   final String influencerName;
   final String influencerImageUrl;
+  final String influencerContentType;
   final String campaignId;
   final String campaignTitle;
-  final String status; // pending | accepted | rejected
+  final OfferInitiator initiator;
+  final OfferStatus status;
   final Timestamp createdAt;
   final double amount;
-  final List<String> platforms;
+  final List<int> platforms;
   final List<String> contentTypes;
   final bool isReadByInfluencer;
 
@@ -38,8 +41,10 @@ class OfferModel {
     required this.influencerId,
     required this.influencerName,
     required this.influencerImageUrl,
+    required this.influencerContentType,
     required this.campaignId,
     required this.campaignTitle,
+    required this.initiator,
     required this.status,
     required this.createdAt,
     required this.amount,
@@ -58,12 +63,14 @@ class OfferModel {
       influencerId: d['influencer_id'] as String? ?? '',
       influencerName: d['influencer_name'] as String? ?? '',
       influencerImageUrl: d['influencer_image_url'] as String? ?? '',
+      influencerContentType: d['influencer_content_type_name'] as String? ?? '',
       campaignId: d['campaign_id'] as String? ?? '',
       campaignTitle: d['campaign_title'] as String? ?? '',
-      status: d['status'] as String? ?? 'pending',
+      initiator: OfferInitiator.fromFirestore(d['initiator'] as String? ?? 'influencer'),
+      status: OfferStatus.fromFirestore(d['status'] as String? ?? 'pending'),
       createdAt: d['created_at'] as Timestamp? ?? Timestamp.now(),
       amount: (d['amount'] as num?)?.toDouble() ?? 0,
-      platforms: List<String>.from((d['platforms'] as List?) ?? []),
+      platforms: List<int>.from((d['platforms'] as List?) ?? []),
       contentTypes: List<String>.from((d['content_types'] as List?) ?? []),
       isReadByInfluencer: d['is_read_by_influencer'] as bool? ?? false,
     );
@@ -79,7 +86,7 @@ class OffersTabContent extends StatefulWidget {
   final List<String> filterStatuses;
   final List<String> filterCampaigns;
   final List<String> filterContentTypes;
-  final List<String> filterPlatforms;
+  final List<int> filterPlatforms;
   final ValueChanged<bool>? onHasNewItems;
 
   const OffersTabContent({
@@ -102,7 +109,6 @@ class _OffersTabContentState extends State<OffersTabContent> {
   bool _isLoading = true;
   final String? _myId = UserSession.getCurrentUserId();
 
-  // Influencer view: blue dot for new unread offers
   final Set<String> _animatingNew = {};
 
   @override
@@ -144,25 +150,24 @@ class _OffersTabContentState extends State<OffersTabContent> {
       List<OfferModel> all = snap.docs.map((d) => OfferModel.fromDoc(d)).toList();
 
       if (widget.filterStatuses.isNotEmpty) {
-        all = all.where((o) => widget.filterStatuses.contains(o.status)).toList();
+        all = all.where((o) => widget.filterStatuses.contains(o.status.toFirestore())).toList();
       }
       if (widget.filterCampaigns.isNotEmpty) {
         all = all.where((o) => widget.filterCampaigns.contains(o.campaignId)).toList();
       }
       if (widget.filterContentTypes.isNotEmpty) {
-        all = all.where((o) => o.contentTypes.any((ct) => widget.filterContentTypes.contains(ct))).toList();
+        all = all.where((o) => widget.filterContentTypes.contains(o.influencerContentType)).toList();
       }
       if (widget.filterPlatforms.isNotEmpty) {
         all = all.where((o) => o.platforms.any((p) => widget.filterPlatforms.contains(p))).toList();
       }
 
-      // Influencer view: track new unread offers + notify parent
       if (!widget.isBusinessView) {
-        final hasUnread = all.any((o) => !o.isReadByInfluencer && o.status == 'pending');
+        final hasUnread = all.any((o) => !o.isReadByInfluencer && o.status == OfferStatus.pending);
         widget.onHasNewItems?.call(hasUnread);
 
         for (final o in all) {
-          if (!o.isReadByInfluencer && o.status == 'pending' && !_animatingNew.contains(o.id)) {
+          if (!o.isReadByInfluencer && o.status == OfferStatus.pending && !_animatingNew.contains(o.id)) {
             _animatingNew.add(o.id);
             Future.delayed(const Duration(seconds: 2), () {
               _markRead(o.id);
@@ -213,26 +218,23 @@ class _OffersTabContentState extends State<OffersTabContent> {
     return months[m];
   }
 
-  Widget _statusBadge(String status) {
-    Color bg;
-    String label;
-    switch (status) {
-      case 'accepted':
-        bg = const Color(0xFF16A34A);
-        label = 'مقبول';
-        break;
-      case 'rejected':
-        bg = const Color(0xFFDC2626);
-        label = 'مرفوض';
-        break;
-      default:
-        bg = const Color(0xFFF59E0B); // Orange for pending
-        label = 'قيد الانتظار';
+  String _getInitiatorLabel(OfferModel offer) {
+    if (!widget.isBusinessView) {
+      return offer.initiator == OfferInitiator.influencer
+          ? 'تم التقديم على الحملة'
+          : 'تم إرسال عرض';
+    } else {
+      return offer.initiator == OfferInitiator.business
+          ? 'تم إرسال عرض'
+          : 'تم التقديم على الحملة';
     }
+  }
+
+  Widget _statusBadge(OfferStatus status) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+      decoration: BoxDecoration(color: status.getColor(), borderRadius: BorderRadius.circular(12)),
+      child: Text(status.toArabic(), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 
@@ -240,7 +242,6 @@ class _OffersTabContentState extends State<OffersTabContent> {
     final t = FlutterFlowTheme.of(context);
     final isNew = !widget.isBusinessView && _animatingNew.contains(offer.id);
 
-    // For business: show influencer info. For influencer: show business info.
     final imageUrl = widget.isBusinessView ? offer.influencerImageUrl : offer.businessImageUrl;
     final name = widget.isBusinessView ? offer.influencerName : offer.businessName;
 
@@ -275,7 +276,21 @@ class _OffersTabContentState extends State<OffersTabContent> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      // For influencer: show business name above campaign
+                      /*
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: t.secondaryText.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _getInitiatorLabel(offer),
+                          style: t.bodySmall.copyWith(color: t.secondaryText, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.end,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      */
                       if (!widget.isBusinessView)
                         Text(
                           name,
@@ -288,7 +303,6 @@ class _OffersTabContentState extends State<OffersTabContent> {
                         style: t.titleSmall.copyWith(fontWeight: FontWeight.w700),
                         textAlign: TextAlign.end,
                       ),
-                      // For business: show influencer name below campaign
                       if (widget.isBusinessView)
                         Text(
                           name,

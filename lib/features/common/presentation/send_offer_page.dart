@@ -1,4 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:elan_flutterproject/core/components/feq_components.dart';
+import 'package:elan_flutterproject/features/common/presentation/application_enums.dart';
+import '../../../core/services/dropdown_list_loader.dart';
+import 'offer_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -47,18 +51,7 @@ class _SendOfferPageState extends State<SendOfferPage> {
 
   // ── Platforms: dynamic from campaign ───────────────────────────────────────
   // Map<platformKey, isSelected>
-  Map<String, bool> _dynamicPlatforms = {};
-
-  static const Map<String, String> _allPlatformLabels = {
-    'instagram': 'Instagram',
-    'tiktok': 'TikTok',
-    'snapchat': 'Snapchat',
-    'x': 'X (Twitter)',
-    'twitter': 'X (Twitter)',
-    'youtube': 'YouTube',
-    'facebook': 'Facebook',
-    'linkedin': 'LinkedIn',
-  };
+  Map<int, bool> _dynamicPlatforms = {};
 
   // ── Content types (required, multi-select) ──────────────────────────────────
   final Map<String, bool> _contentTypes = {
@@ -133,6 +126,8 @@ class _SendOfferPageState extends State<SendOfferPage> {
         'أوافق على أن هذا العرض يُعد اتفاقاً أولياً، ويصبح ملزماً بيني وبين المؤثر فقط عند قبوله، وأي تعديل يتم مباشرةً بين الطرفين وخارج منصة إعلان.',
   };
 
+  final socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
+
   @override
   void initState() {
     super.initState();
@@ -150,18 +145,6 @@ class _SendOfferPageState extends State<SendOfferPage> {
     super.dispose();
   }
 
-  String _normalizePlatformKey(String name) {
-    final n = name.toLowerCase().trim();
-    if (n.contains('instagram')) return 'instagram';
-    if (n.contains('tiktok')) return 'tiktok';
-    if (n.contains('snapchat')) return 'snapchat';
-    if (n.contains('twitter') || n == 'x') return 'x';
-    if (n.contains('youtube')) return 'youtube';
-    if (n.contains('facebook')) return 'facebook';
-    if (n.contains('linkedin')) return 'linkedin';
-    return n.replaceAll(' ', '_');
-  }
-
   Future<void> _loadCampaignData() async {
     try {
       // Load campaign
@@ -177,10 +160,14 @@ class _SendOfferPageState extends State<SendOfferPage> {
 
         // Build dynamic platforms from campaign only
         final platformNames = (data['platform_names'] as List?) ?? [];
-        final Map<String, bool> newPlatforms = {};
-        for (final p in platformNames) {
-          final key = _normalizePlatformKey(p.toString());
-          if (key.isNotEmpty && !newPlatforms.containsKey(key)) {
+        final Map<int, bool> newPlatforms = {};
+        for (final platformName in platformNames) {
+          final platform = socialPlatforms.firstWhere(
+                (p) => p.nameAr.toString() == platformName,
+            orElse: () => const FeqDropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
+          );
+          final key = platform.id;
+          if (key != 0 && !newPlatforms.containsKey(key)) {
             newPlatforms[key] = false;
           }
         }
@@ -214,10 +201,10 @@ class _SendOfferPageState extends State<SendOfferPage> {
             .limit(1)
             .get();
         if (profileSnap.docs.isNotEmpty) {
-          final inflSnap = await profileSnap.docs.first.reference.collection('influencer_profile').limit(1).get();
-          if (inflSnap.docs.isNotEmpty) {
+          final influencerSnap = await profileSnap.docs.first.reference.collection('influencer_profile').limit(1).get();
+          if (influencerSnap.docs.isNotEmpty) {
             setState(() {
-              _influencerContentType = (inflSnap.docs.first.data()['content_type'] ?? '').toString();
+              _influencerContentType = (influencerSnap.docs.first.data()['content_type'] ?? '').toString();
             });
           }
         }
@@ -293,7 +280,8 @@ class _SendOfferPageState extends State<SendOfferPage> {
         'campaign_title': widget.campaignTitle,
         'influencer_content_type_id': _campaignData?['influencer_content_type_id'] ?? 0,
         'influencer_content_type_name': _campaignData?['influencer_content_type_name'] ?? '',
-        'status': 'pending',
+        'initiator': OfferInitiator.business.toFirestore(),
+        'status': OfferStatus.pending.toFirestore(),
         'content_types': _contentTypes.entries.where((e) => e.value).map((e) => e.key).toList(),
         'content_details': contentDetails,
         'platforms': _dynamicPlatforms.entries.where((e) => e.value).map((e) => e.key).toList(),
@@ -316,7 +304,12 @@ class _SendOfferPageState extends State<SendOfferPage> {
         await firebaseFirestore
             .collection('applications')
             .doc(widget.applicationId)
-            .update({'status': 'offer_sent', 'offer_id': offerId});
+            .update({
+          'initiator': ApplicationInitiator.business.toFirestore(),
+          'status': ApplicationStatus.offerSent.toFirestore(),
+          'business_name': _businessName,
+          'business_image_url': _businessImageUrl,
+          'offer_id': offerId});
       }
 
       await firebaseFirestore.collection('notifications').add({
@@ -376,8 +369,12 @@ class _SendOfferPageState extends State<SendOfferPage> {
     return '${d.day}/${d.month}/${d.year}';
   }
 
-  String _getPlatformLabel(String key) {
-    return _allPlatformLabels[key] ?? key;
+  String _getPlatformLabel(int key) {
+    final platform = socialPlatforms.firstWhere(
+          (p) => p.id == key,
+      orElse: () => const FeqDropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
+    );
+    return platform.nameAr;
   }
 
   // ─── Build ─────────────────────────────────────────────────────────────────

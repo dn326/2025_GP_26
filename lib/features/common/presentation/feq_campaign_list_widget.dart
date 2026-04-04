@@ -103,10 +103,12 @@ class CampaignReactionWidget extends StatefulWidget {
 }
 
 class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
-  // CampaignReaction _myReaction = CampaignReaction.none;
+  CampaignReaction _myReaction = CampaignReaction.none;
   List<CampaignReactionEntry> _allReactions = [];
   bool _isLoading = true;
   String? _currentInfluencerId;
+  String _currentInfluencerName = '';
+  String _currentInfluencerImageUrl = '';
 
   @override
   void initState() {
@@ -119,7 +121,6 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
     _currentInfluencerId = UserSession.getCurrentUserId();
 
     // Fetch name and image from the profiles collection
-    /*
     if (_currentInfluencerId != null) {
       try {
         final profileSnap = await FirebaseFirestore.instance
@@ -130,10 +131,10 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
 
         if (profileSnap.docs.isNotEmpty) {
           final data = profileSnap.docs.first.data();
-          // String _currentInfluencerName = (data['name'] as String? ?? '').trim();
+          _currentInfluencerName = (data['name'] as String? ?? '').trim();
           final rawImage = data['profile_image'] as String? ?? '';
           if (rawImage.isNotEmpty) {
-            String _currentInfluencerImageUrl =
+            _currentInfluencerImageUrl =
                 rawImage.contains('?') ? '${rawImage.split("?").first}?alt=media' : '$rawImage?alt=media';
           }
         }
@@ -141,13 +142,12 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
         // silently ignore — name/image are non-critical
       }
     }
-    */
 
     await _loadReactions();
     if (mounted) setState(() => _isLoading = false);
   }
 
-  // String get _docId => '${widget.campaignId}_$_currentInfluencerId';
+  String get _docId => '${widget.campaignId}_$_currentInfluencerId';
 
   CollectionReference get _col => FirebaseFirestore.instance.collection('campaign_reactions');
 
@@ -155,7 +155,6 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
     if (_currentInfluencerId == null) return;
 
     // Always load my own reaction
-    /*
     final myDoc = await _col.doc(_docId).get();
     if (myDoc.exists) {
       final data = myDoc.data() as Map<String, dynamic>;
@@ -163,7 +162,6 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
     } else {
       _myReaction = CampaignReaction.none;
     }
-    */
 
     // Load all reactions only when needed
     if (widget.showOthersReactions) {
@@ -172,7 +170,6 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
     }
   }
 
-  /*
   Future<void> _setReaction(CampaignReaction tapped) async {
     if (_currentInfluencerId == null) return;
 
@@ -206,7 +203,6 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
       });
     }
   }
-  */
 
   void _showReactionsPopup() {
     if (!widget.showOthersReactions) return;
@@ -275,7 +271,7 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
         ],
 
         // ── Action buttons row ────────────────────────────────────
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             // Dislike button
@@ -327,7 +323,6 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
             const SizedBox(width: 8),
             */
             // Like button
-            /*
             GestureDetector(
               onTap: () => _setReaction(CampaignReaction.like),
               child: AnimatedContainer(
@@ -372,7 +367,6 @@ class _CampaignReactionWidgetState extends State<CampaignReactionWidget> {
                 ),
               ),
             ),
-            */
           ],
         ),
       ],

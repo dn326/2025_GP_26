@@ -1,0 +1,1 @@
+flutter run -d chrome --dart-define=ENV=prod --web-hostname=127.0.0.1 --web-port=8080 --web-browser-flag="--ignore-certificate-errors" --web-browser-flag="--disable-web-security"

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/components/feq_components.dart';
+import '../../../core/services/dropdown_list_loader.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
 import '../../payment/payment_details_page.dart';
@@ -139,7 +140,16 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
   String _platformsStr() {
     if (_offer == null) return '';
     final platforms = (_offer!['platforms'] as List?) ?? [];
-    return platforms.map((p) => p.toString()[0].toUpperCase() + p.toString().substring(1)).join(' / ');
+    final socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
+
+    return platforms.map((pId) {
+      final platformObj = socialPlatforms.firstWhere(
+            (p) => p.id == pId,
+        orElse: () =>
+            const FeqDropDownList(id: 0, nameEn: '', nameAr: '', domain: ''),
+      );
+      return platformObj.nameAr;
+    }).join(' / ');
   }
 
   String _stylesStr() {

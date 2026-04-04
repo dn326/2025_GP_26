@@ -14,6 +14,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../common/presentation/application_enums.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -1067,6 +1068,24 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       }
     } catch (_) {}
 
+    final businessId = campaign['business_id'] as String? ?? '';
+    // Fetch business's own profile data for the application
+    String businessName = '';
+    String businessImageUrl = '';
+    try {
+      final profileSnap =
+      await firebaseFirestore.collection('profiles').where('profile_id', isEqualTo: businessId).limit(1).get();
+
+      if (profileSnap.docs.isNotEmpty) {
+        final data = profileSnap.docs.first.data();
+        businessName = (data['name'] as String? ?? '').trim();
+        final raw = data['profile_image'] as String? ?? '';
+        if (raw.isNotEmpty) {
+          businessImageUrl = raw.contains('?') ? '${raw.split('?').first}?alt=media' : '$raw?alt=media';
+        }
+      }
+    } catch (_) {}
+
     if (!mounted) return;
     // Confirmation dialog — shows campaign details before submitting
     final confirmed = await showDialog<bool>(
@@ -1124,19 +1143,20 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
     // Write to Firestore
     try {
-      final businessId = campaign['business_id'] as String? ?? '';
       final campaignTitle = campaign['title'] as String? ?? '';
 
       final docRef = firebaseFirestore.collection('applications').doc();
-
       await docRef.set({
         'application_id': docRef.id,
         'influencer_id': myId,
         'influencer_name': influencerName,
         'influencer_image_url': influencerImageUrl,
         'business_id': businessId,
+        'business_name': businessName,
+        'business_image_url': businessImageUrl,
         'campaign_id': campaignId,
         'campaign_title': campaignTitle,
+        'initiator': ApplicationInitiator.influencer.toFirestore(),
         'status': 'pending',
         'applied_at': FieldValue.serverTimestamp(),
         'is_read_by_business': false,

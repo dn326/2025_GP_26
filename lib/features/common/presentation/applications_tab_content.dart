@@ -8,6 +8,7 @@ import '../../../core/services/firebase_service.dart';
 import '../../../core/services/user_session.dart';
 import '../../../core/widgets/image_picker_widget.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
+import 'application_enums.dart';
 import 'send_offer_page.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,7 +25,8 @@ class ApplicationModel {
   final String businessImageUrl;
   final String campaignId;
   final String campaignTitle;
-  final String status; // pending | offer_sent | rejected
+  final ApplicationInitiator initiator;
+  final ApplicationStatus status;
   final Timestamp appliedAt;
   final bool isReadByBusiness;
   final DateTime? campaignEndDate;
@@ -43,6 +45,7 @@ class ApplicationModel {
     required this.businessImageUrl,
     required this.campaignId,
     required this.campaignTitle,
+    required this.initiator,
     required this.status,
     required this.appliedAt,
     required this.isReadByBusiness,
@@ -68,7 +71,8 @@ class ApplicationModel {
       businessImageUrl: d['business_image_url'] as String? ?? '',
       campaignId: d['campaign_id'] as String? ?? '',
       campaignTitle: d['campaign_title'] as String? ?? '',
-      status: d['status'] as String? ?? 'pending',
+      initiator: ApplicationInitiator.fromFirestore(d['initiator'] as String? ?? 'influencer'),
+      status: ApplicationStatus.fromFirestore(d['status'] as String? ?? 'pending'),
       appliedAt: d['applied_at'] as Timestamp? ?? Timestamp.now(),
       isReadByBusiness: d['is_read_by_business'] as bool? ?? false,
       campaignEndDate: endDate,
@@ -92,6 +96,7 @@ class ApplicationModel {
       businessImageUrl: businessImageUrl ?? this.businessImageUrl,
       campaignId: campaignId,
       campaignTitle: campaignTitle,
+      initiator: initiator,
       status: status,
       appliedAt: appliedAt,
       isReadByBusiness: isReadByBusiness,
@@ -108,6 +113,7 @@ class ApplicationModel {
 
 class ApplicationsTabContent extends StatefulWidget {
   final bool isBusinessView;
+  final List<String> filterByInitiator;
   final List<String> filterStatuses;
   final List<String> filterCampaigns;
   final List<int> filterContentTypes;
@@ -120,6 +126,7 @@ class ApplicationsTabContent extends StatefulWidget {
   const ApplicationsTabContent({
     super.key,
     required this.isBusinessView,
+    this.filterByInitiator = const [],
     this.filterStatuses = const [],
     this.filterCampaigns = const [],
     this.filterContentTypes = const [],
@@ -153,7 +160,8 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
   @override
   void didUpdateWidget(ApplicationsTabContent old) {
     super.didUpdateWidget(old);
-    if (old.filterStatuses != widget.filterStatuses ||
+    if (old.filterByInitiator != widget.filterByInitiator ||
+        old.filterStatuses != widget.filterStatuses ||
         old.filterCampaigns != widget.filterCampaigns ||
         old.filterContentTypes != widget.filterContentTypes ||
         old.filterPlatforms != widget.filterPlatforms) {
@@ -182,8 +190,9 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
     _sub = q.snapshots().listen((snap) async {
       List<ApplicationModel> all = snap.docs.map((d) => ApplicationModel.fromDoc(d)).toList();
 
-      // Both views: hide offer_sent — those live in the Offers tab
-      all = all.where((a) => a.status != 'offer_sent').toList();
+      if (widget.isBusinessView) {
+        all = all.where((a) => a.status == ApplicationStatus.pending || a.status == ApplicationStatus.rejected).toList();
+      }
 
       // ── Enrich with campaign end dates ──────────────────────────────
       final campaignIds = all.map((a) => a.campaignId).toSet();
@@ -224,9 +233,10 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
             final profileSnap =
                 await firebaseFirestore.collection('profiles').where('profile_id', isEqualTo: iid).limit(1).get();
             if (profileSnap.docs.isNotEmpty) {
-              final inflSnap = await profileSnap.docs.first.reference.collection('influencer_profile').limit(1).get();
-              if (inflSnap.docs.isNotEmpty) {
-                final contentTypeName = (inflSnap.docs.first.data()['content_type'] ?? '').toString();
+              final influencerSnap =
+                  await profileSnap.docs.first.reference.collection('influencer_profile').limit(1).get();
+              if (influencerSnap.docs.isNotEmpty) {
+                final contentTypeName = (influencerSnap.docs.first.data()['content_type'] ?? '').toString();
                 // Match name string → int ID from dropdown list
                 final match =
                     allContentTypes.where((ct) => ct.nameAr == contentTypeName || ct.nameEn == contentTypeName);
@@ -264,8 +274,19 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
       }
 
       // ── Client-side filters ───────────────────────────────────────────
+      if (widget.filterByInitiator.isNotEmpty) {
+        if (widget.filterByInitiator.contains(ApplicationStatus.pending.toFirestore())) {
+          all = all.where((a) => widget.filterByInitiator.contains(a.status.toFirestore())).toList();
+        }
+        if (widget.filterByInitiator.contains(ApplicationStatus.rejected.toFirestore())) {
+          all = all.where((a) => a.initiator != ApplicationInitiator.business && widget.filterByInitiator.contains(a.status.toFirestore())).toList();
+        }
+        if (widget.filterByInitiator.contains(ApplicationInitiator.business.toFirestore())) {
+          all = all.where((a) => a.initiator == ApplicationInitiator.business && a.status != ApplicationStatus.pending).toList();
+        }
+      }
       if (widget.filterStatuses.isNotEmpty) {
-        all = all.where((a) => widget.filterStatuses.contains(a.status)).toList();
+        all = all.where((a) => widget.filterStatuses.contains(a.status.toFirestore())).toList();
       }
       if (widget.filterCampaigns.isNotEmpty) {
         all = all.where((a) => widget.filterCampaigns.contains(a.campaignId)).toList();
@@ -279,11 +300,11 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
 
       // Notify parent whether there are new items (for tab dot)
       if (widget.isBusinessView) {
-        final hasUnread = all.any((a) => !a.isReadByBusiness && a.status == 'pending');
+        final hasUnread = all.any((a) => !a.isReadByBusiness && a.status == ApplicationStatus.pending);
         widget.onHasNewItems?.call(hasUnread);
 
         for (final a in all) {
-          if (!a.isReadByBusiness && a.status == 'pending' && !_animatingNew.contains(a.id)) {
+          if (!a.isReadByBusiness && a.status == ApplicationStatus.pending && !_animatingNew.contains(a.id)) {
             _animatingNew.add(a.id);
             Future.delayed(const Duration(seconds: 2), () {
               _markRead(a.id);
@@ -371,32 +392,22 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
+  String _getInitiatorLabel(ApplicationModel model) {
+    if (!widget.isBusinessView) {
+      return model.initiator == ApplicationInitiator.influencer ? 'تم التقديم على الحملة' : 'تم إرسال عرض';
+    } else {
+      return model.initiator == ApplicationInitiator.business ? 'تم إرسال عرض' : 'تم التقديم على الحملة';
+    }
+  }
+
   // ── Status badge for influencer view ────────────────────────────────────────
 
-  Widget _statusBadge(String status, FlutterFlowTheme t) {
-    Color bg;
-    String label;
-    switch (status) {
-      case 'offer_sent':
-        bg = const Color(0xFF16A34A);
-        label = 'تم تقديم عرض';
-        break;
-      case 'accepted':
-        bg = const Color(0xFF16A34A);
-        label = 'مقبول';
-        break;
-      case 'rejected':
-        bg = const Color(0xFFDC2626);
-        label = 'مرفوض';
-        break;
-      default:
-        bg = const Color(0xFFF59E0B); // Orange for pending
-        label = 'قيد الانتظار';
-    }
+  Widget _statusBadge(ApplicationStatus status) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+      decoration: BoxDecoration(color: status.getColor(), borderRadius: BorderRadius.circular(12)),
+      child: Text(status.toArabic(),
+          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 
@@ -433,7 +444,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
   Widget _businessCard(ApplicationModel app) {
     final t = FlutterFlowTheme.of(context);
     final isNew = _animatingNew.contains(app.id);
-    final isRejected = app.status == 'rejected';
+    final isRejected = app.status == ApplicationStatus.rejected;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -525,7 +536,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
             const SizedBox(height: 12),
 
             // If rejected: show badge, no action buttons
-            if (app.isCampaignExpired) _expiredBanner(t),
+            if (app.isCampaignExpired && app.status == ApplicationStatus.pending) _expiredBanner(t),
             if (isRejected)
               Align(
                 alignment: AlignmentDirectional.centerEnd,
@@ -611,7 +622,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (app.isCampaignExpired) _expiredBanner(t),
+            if (app.isCampaignExpired && app.status == ApplicationStatus.pending) _expiredBanner(t),
             Row(
               textDirection: TextDirection.rtl,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -632,8 +643,23 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
                         style: t.titleSmall.copyWith(fontWeight: FontWeight.w700),
                         textAlign: TextAlign.end,
                       ),
+                      if (!(app.initiator == ApplicationInitiator.business && app.status != ApplicationStatus.pending))
                       const SizedBox(height: 6),
-                      _statusBadge(app.status, t),
+                      if (!(app.initiator == ApplicationInitiator.business && app.status != ApplicationStatus.pending))
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: t.secondaryText.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _getInitiatorLabel(app),
+                          style: t.bodySmall.copyWith(color: t.secondaryText, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.end,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      _statusBadge((app.initiator == ApplicationInitiator.business && app.status != ApplicationStatus.pending) ? ApplicationStatus.offerSent : app.status),
                       const SizedBox(height: 6),
                       Text(
                         _fmtDate(app.appliedAt),

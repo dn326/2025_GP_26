@@ -91,12 +91,13 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
   List<String> _businessTab1SelectedCampaigns = [];
 
   // Filter states for influencer - tab 0 (sent applications)
-  List<String> _influencerTab0SelectedStatuses = [];
+  List<String> _influencerTab0SelectedInitiators = [];
+  // List<String> _influencerTab0SelectedStatuses = [];
 
   // Filter states for influencer - tab 1 (received offers)
   List<String> _influencerTab1SelectedStatuses = [];
   List<String> _influencerTab1SelectedContentTypes = [];
-  List<String> _influencerTab1SelectedPlatforms = [];
+  List<int> _influencerTab1SelectedPlatforms = [];
 
   // Business campaigns (loaded for filter)
   List<Map<String, String>> _businessCampaigns = [];
@@ -566,15 +567,22 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
 
   Widget _buildInfluencerTab0Filter() {
     final t = FlutterFlowTheme.of(context);
-    final tempStatuses = List<String>.from(_influencerTab0SelectedStatuses);
+    final tempInitiators = List<String>.from(_influencerTab0SelectedInitiators);
+    // final tempStatuses = List<String>.from(_influencerTab0SelectedStatuses);
 
     final statuses = [
+      {'id': 'business', 'name': 'تم تقديم عرض'},
+      {'id': 'pending', 'name': 'قيد الانتظار'},
+      {'id': 'rejected', 'name': 'مرفوض'},
+    ];
+    /*final statuses = [
       {'id': 'pending', 'name': 'قيد الانتظار'},
       {'id': 'accepted', 'name': 'مقبول'},
       {'id': 'rejected', 'name': 'مرفوض'},
-    ];
+    ];*/
 
-    bool statusExpanded = false;
+    bool initiatorExpanded = false;
+    // bool statusExpanded = false;
 
     return StatefulBuilder(
       builder: (context, setModalState) {
@@ -597,7 +605,8 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
                     Text('تصفية الطلبات المرسلة', style: t.headlineSmall),
                     TextButton(
                       onPressed: () {
-                        tempStatuses.clear();
+                        tempInitiators.clear();
+                        // tempStatuses.clear();
                         setModalState(() {});
                       },
                       child: Text('مسح الكل', style: TextStyle(color: t.error)),
@@ -606,6 +615,34 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
                 ),
                 const SizedBox(height: 12),
                 _filterSection(
+                  title: 'حسب الحالة',
+                  expanded: initiatorExpanded,
+                  onToggle: () => setModalState(() => initiatorExpanded = !initiatorExpanded),
+                  child: Wrap(
+                    textDirection: TextDirection.rtl,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: statuses.map((status) {
+                      final isSelected = tempInitiators.contains(status['id']);
+                      return FilterChip(
+                        label: Text(status['name']!),
+                        selected: isSelected,
+                        onSelected: (v) => setModalState(() {
+                          v ? tempInitiators.add(status['id']!) : tempInitiators.remove(status['id']);
+                        }),
+                        selectedColor: t.primary.withOpacity(0.15),
+                        checkmarkColor: t.primary,
+                        labelStyle: TextStyle(
+                            color: isSelected ? t.primary : t.primaryText,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(color: isSelected ? t.primary : t.secondaryText.withOpacity(0.3))),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                /*_filterSection(
                   title: 'حسب الحالة',
                   expanded: statusExpanded,
                   onToggle: () => setModalState(() => statusExpanded = !statusExpanded),
@@ -632,11 +669,12 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
                       );
                     }).toList(),
                   ),
-                ),
+                ),*/
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      _influencerTab0SelectedStatuses = tempStatuses;
+                      _influencerTab0SelectedInitiators = tempInitiators;
+                      // _influencerTab0SelectedStatuses = tempStatuses;
                     });
                     Navigator.pop(context);
                   },
@@ -661,7 +699,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
     // Use int-keyed lists to match FeqDropDownList.id (same type as influencerContentTypes)
     final tempStatuses = List<String>.from(_influencerTab1SelectedStatuses);
     final tempContentTypes = List<String>.from(_influencerTab1SelectedContentTypes);
-    final tempPlatforms = List<String>.from(_influencerTab1SelectedPlatforms);
+    final tempPlatforms = List<int>.from(_influencerTab1SelectedPlatforms);
 
     // Campaign content types from the dropdown loader (كوميديا, أسلوب حياة, etc.)
     final campaignContentTypes = FeqDropDownListLoader.instance.influencerContentTypes;
@@ -672,14 +710,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
       {'id': 'rejected', 'name': 'مرفوض'},
     ];
 
-    final platformOptions = [
-      {'id': 'instagram', 'name': 'إنستغرام'},
-      {'id': 'tiktok', 'name': 'تيك توك'},
-      {'id': 'snapchat', 'name': 'سناب شات'},
-      {'id': 'x', 'name': 'إكس (تويتر)'},
-      {'id': 'youtube', 'name': 'يوتيوب'},
-      {'id': 'facebook', 'name': 'فيسبوك'},
-    ];
+    final platformOptions = FeqDropDownListLoader.instance.socialPlatforms;
 
     bool statusExpanded = false;
     bool contentExpanded = false;
@@ -754,13 +785,12 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
                       spacing: 8,
                       runSpacing: 8,
                       children: campaignContentTypes.map((ct) {
-                        final idStr = ct.id.toString();
-                        final isSelected = tempContentTypes.contains(idStr);
+                        final isSelected = tempContentTypes.contains(ct.nameAr);  // ← Store NAME
                         return FilterChip(
                           label: Text(ct.nameAr),
                           selected: isSelected,
                           onSelected: (v) => setModalState(() {
-                            v ? tempContentTypes.add(idStr) : tempContentTypes.remove(idStr);
+                            v ? tempContentTypes.add(ct.nameAr) : tempContentTypes.remove(ct.nameAr);  // ← Add/remove NAME
                           }),
                           selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
@@ -783,12 +813,12 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
                       spacing: 8,
                       runSpacing: 8,
                       children: platformOptions.map((p) {
-                        final isSelected = tempPlatforms.contains(p['id']);
+                        final isSelected = tempPlatforms.contains(p.id);
                         return FilterChip(
-                          label: Text(p['name']!),
+                          label: Text(p.nameAr),
                           selected: isSelected,
                           onSelected: (v) => setModalState(() {
-                            v ? tempPlatforms.add(p['id']!) : tempPlatforms.remove(p['id']);
+                            v ? tempPlatforms.add(p.id) : tempPlatforms.remove(p.id);
                           }),
                           selectedColor: t.primary.withOpacity(0.15),
                           checkmarkColor: t.primary,
@@ -986,7 +1016,8 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage> with Si
     return ApplicationsTabContent(
       key: const ValueKey('influencer_apps'),
       isBusinessView: false,
-      filterStatuses: _influencerTab0SelectedStatuses,
+      filterByInitiator: _influencerTab0SelectedInitiators,
+      // filterStatuses: _influencerTab0SelectedStatuses,
     );
   }
 
