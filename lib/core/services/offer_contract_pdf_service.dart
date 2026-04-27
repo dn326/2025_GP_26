@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:file_saver/file_saver.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -119,7 +120,10 @@ class OfferContractPdfService {
                   [
                     ['الطرف الأول', offer['business_name'] ?? '—'],
                     ['الطرف الثاني', offer['influencer_name'] ?? '—'],
-                    ['تاريخ العقد', _fmtTs(offer['accepted_at'] ?? offer['created_at'])],
+                    [
+                      'تاريخ العقد',
+                      _fmtTs(offer['accepted_at'] ?? offer['created_at'])
+                    ],
                   ],
                   bold,
                   regular,
@@ -131,7 +135,10 @@ class OfferContractPdfService {
                   'معلومات الحملة',
                   [
                     ['عنوان الحملة', offer['campaign_title'] ?? '—'],
-                    ['نوع المحتوى', offer['influencer_content_type_name'] ?? '—'],
+                    [
+                      'نوع المحتوى',
+                      offer['influencer_content_type_name'] ?? '—'
+                    ],
                     ['تفاصيل الحملة', offer['campaign_description'] ?? '—'],
                   ],
                   bold,
@@ -230,22 +237,30 @@ class OfferContractPdfService {
       platformsLabel: platformsLabel,
       stylesLabel: stylesLabel,
     );
-
-    await FileSaver.instance.saveAs(
-      name: _fileBase(offer),
-      bytes: bytes,
-      ext: 'pdf',
-      mimeType: MimeType.pdf,
-    );
+    if (kIsWeb) {
+      await FileSaver.instance.saveFile(
+        name: _fileBase(offer),
+        bytes: bytes,
+        ext: 'pdf',
+        mimeType: MimeType.pdf,
+      );
+    } else {
+      await FileSaver.instance.saveAs(
+        name: _fileBase(offer),
+        bytes: bytes,
+        ext: 'pdf',
+        mimeType: MimeType.pdf,
+      );
+    }
   }
 
   /* ───────────────────────── widgets ───────────────────────── */
 
   static pw.Widget _header(
-      Uint8List? logo,
-      pw.Font bold,
-      pw.Font regular,
-      ) {
+    Uint8List? logo,
+    pw.Font bold,
+    pw.Font regular,
+  ) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
@@ -276,25 +291,28 @@ class OfferContractPdfService {
       ),
       child: pw.Column(
         children: [
-          pw.Text('عقد تعاون تسويقي', style: pw.TextStyle(font: bold, fontSize: 12)),
+          pw.Text('عقد تعاون تسويقي',
+              style: pw.TextStyle(font: bold, fontSize: 12)),
           pw.SizedBox(height: 4),
-          pw.Text('العقد النهائي', style: pw.TextStyle(font: regular, fontSize: 9)),
+          pw.Text('العقد النهائي',
+              style: pw.TextStyle(font: regular, fontSize: 9)),
         ],
       ),
     );
   }
 
   static pw.Widget _section(
-      String title,
-      List<List<dynamic>> rows,
-      pw.Font bold,
-      pw.Font regular,
-      ) {
+    String title,
+    List<List<dynamic>> rows,
+    pw.Font bold,
+    pw.Font regular,
+  ) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         // borderRadius: pw.BorderRadius.circular(14),
-        border: pw.Border.symmetric(horizontal: pw.BorderSide(color: PdfColors.grey300)),
+        border: pw.Border.symmetric(
+            horizontal: pw.BorderSide(color: PdfColors.grey300)),
       ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.stretch,
@@ -302,7 +320,7 @@ class OfferContractPdfService {
           pw.Text(title, style: pw.TextStyle(font: bold, fontSize: 13)),
           pw.SizedBox(height: 12),
           ...rows.map(
-                (r) => pw.Padding(
+            (r) => pw.Padding(
               padding: const pw.EdgeInsets.only(bottom: 4),
               child: pw.Row(
                 children: [
@@ -327,47 +345,49 @@ class OfferContractPdfService {
   }
 
   static pw.Widget _termsSection(
-      List<String> terms,
-      pw.Font bold,
-      pw.Font regular,
-      ) {
+    List<String> terms,
+    pw.Font bold,
+    pw.Font regular,
+  ) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         // borderRadius: pw.BorderRadius.circular(14),
-        border: pw.Border.symmetric(horizontal: pw.BorderSide(color: PdfColors.grey300)),
+        border: pw.Border.symmetric(
+            horizontal: pw.BorderSide(color: PdfColors.grey300)),
       ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.stretch,
         children: [
-          pw.Text('الشروط والأحكام', style: pw.TextStyle(font: bold, fontSize: 12)),
+          pw.Text('الشروط والأحكام',
+              style: pw.TextStyle(font: bold, fontSize: 12)),
           pw.SizedBox(height: 8),
           ...terms.asMap().entries.map(
                 (e) => pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 10),
-              child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(
-                    '${_toArabicNumber(e.key + 1)}.',
-                    style: pw.TextStyle(font: bold, fontSize: 9),
-                  ),
-                  pw.SizedBox(width: 6),
-                  pw.Expanded(
-                    child: pw.Text(
-                      e.value,
-                      textAlign: pw.TextAlign.right,
-                      style: pw.TextStyle(
-                        font: regular,
-                        fontSize: 8,
-                        height: 1.2,
+                  padding: const pw.EdgeInsets.only(bottom: 10),
+                  child: pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        '${_toArabicNumber(e.key + 1)}.',
+                        style: pw.TextStyle(font: bold, fontSize: 9),
                       ),
-                    ),
+                      pw.SizedBox(width: 6),
+                      pw.Expanded(
+                        child: pw.Text(
+                          e.value,
+                          textAlign: pw.TextAlign.right,
+                          style: pw.TextStyle(
+                            font: regular,
+                            fontSize: 8,
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
         ],
       ),
     );
