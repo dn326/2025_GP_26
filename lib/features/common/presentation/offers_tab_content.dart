@@ -109,7 +109,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
   bool _isLoading = true;
   final String? _myId = UserSession.getCurrentUserId();
 
-  final Set<String> _animatingNew = {};
+  // final Set<String> _animatingNew = {};
 
   @override
   void initState() {
@@ -166,6 +166,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
         final hasUnread = all.any((o) => !o.isReadByInfluencer && o.status == OfferStatus.pending);
         widget.onHasNewItems?.call(hasUnread);
 
+        /*
         for (final o in all) {
           if (!o.isReadByInfluencer && o.status == OfferStatus.pending && !_animatingNew.contains(o.id)) {
             _animatingNew.add(o.id);
@@ -175,6 +176,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
             });
           }
         }
+        */
       }
 
       if (mounted) {
@@ -188,11 +190,13 @@ class _OffersTabContentState extends State<OffersTabContent> {
     });
   }
 
+/*
   Future<void> _markRead(String docId) async {
     try {
       await firebaseFirestore.collection('offers').doc(docId).update({'is_read_by_influencer': true});
     } catch (_) {}
   }
+*/
 
   String _fmtDate(Timestamp ts) {
     final dt = ts.toDate();
@@ -240,7 +244,8 @@ class _OffersTabContentState extends State<OffersTabContent> {
 
   Widget _offerCard(OfferModel offer) {
     final t = FlutterFlowTheme.of(context);
-    final isNew = !widget.isBusinessView && _animatingNew.contains(offer.id);
+    // final isNew = !widget.isBusinessView && _animatingNew.contains(offer.id);
+    final isNew = !widget.isBusinessView && !offer.isReadByInfluencer && offer.status == OfferStatus.pending;
 
     final imageUrl = widget.isBusinessView ? offer.influencerImageUrl : offer.businessImageUrl;
     final name = widget.isBusinessView ? offer.influencerName : offer.businessName;
@@ -276,7 +281,6 @@ class _OffersTabContentState extends State<OffersTabContent> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      /*
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -290,7 +294,6 @@ class _OffersTabContentState extends State<OffersTabContent> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      */
                       if (!widget.isBusinessView)
                         Text(
                           name,
@@ -391,6 +394,8 @@ class _OffersTabContentState extends State<OffersTabContent> {
       builder: (_) => OfferDetailPage(
         offerId: offer.id,
         isBusinessView: widget.isBusinessView,
+        actionContractCanDownload: true,
+        actionContractCanPrint: true,
       ),
     ));
   }

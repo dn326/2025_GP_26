@@ -1,3 +1,4 @@
+// lib/features/business/presentation/profile_widget.dart
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -56,6 +57,10 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   late String userType = "influencer";
   late bool _isVerified = false;
+
+  bool _canFavoriteBusiness = false;
+  bool _isBusinessFavorite = false;
+  bool _isFavoriteBusy = false;
 
   late List<FeqDropDownList> _socialPlatforms;
   String? _error;
@@ -200,6 +205,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       if (widget.campaignId == null) {
         await loadSubscriptionData();
       }
+      await _loadBusinessFavoriteState();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -220,6 +226,81 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       return tsOrDate.toString();
     }
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+
+  // ===============================
+// profile_widget.dart
+// Add these methods inside BusinessProfileWidgetState
+// ===============================
+
+  Future<void> _loadBusinessFavoriteState() async {
+    final currentUserType = (await UserSession.getUserType()) ?? '';
+    final currentUserId = UserSession.getCurrentUserId();
+
+    if (!mounted) return;
+
+
+    if (widget.uid == null ||
+        currentUserId == null ||
+        currentUserType != 'influencer') {
+      setState(() {
+        _canFavoriteBusiness = false;
+        _isBusinessFavorite = false;
+      });
+      return;
+    }
+
+    final isFav = await _firebaseService.isBusinessFavorite(
+      influencerId: currentUserId,
+      businessId: widget.uid!,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _canFavoriteBusiness = true;
+      _isBusinessFavorite = isFav;
+    });
+  }
+
+  Future<void> _toggleBusinessFavorite() async {
+    if (!_canFavoriteBusiness || widget.uid == null || _isFavoriteBusy) return;
+
+    final influencerId = UserSession.getCurrentUserId();
+    if (influencerId == null) return;
+
+    final previous = _isBusinessFavorite;
+
+    setState(() {
+      _isFavoriteBusy = true;
+      _isBusinessFavorite = !previous;
+    });
+
+    try {
+      await _firebaseService.setBusinessFavorite(
+        influencerId: influencerId,
+        businessId: widget.uid!,
+        isFavorite: !previous,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isBusinessFavorite = previous;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'حدث خطأ أثناء تحديث المفضلة',
+            textDirection: TextDirection.rtl,
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFavoriteBusy = false;
+        });
+      }
+    }
   }
 
   void _showCampaignFilterSheet() {
@@ -651,9 +732,15 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
         appBar: FeqAppBar(
           title: (widget.uid != null) ? '' : 'صفحتي الشخصية',
           showBack: widget.uid != null,
+          backResult: true,
           showLeading: widget.uid == null,
           showNotification: widget.uid == null,
+          showFavorite: _canFavoriteBusiness,
+          isFavorite: _isBusinessFavorite,
+          onFavoriteTap: _isFavoriteBusy ? null : _toggleBusinessFavorite,
+          favoriteOnStart: true,
         ),
+
         body: SafeArea(
           top: true,
           child: _isLoading

@@ -21,7 +21,6 @@ enum ApplicationStatus {
   rejected;
 
   String toFirestore() {
-    // Convert camelCase to snake_case: offerSent → offer_sent
     return name.replaceAllMapped(
       RegExp(r'[A-Z]'),
           (match) => '_${match.group(0)!.toLowerCase()}',
@@ -29,7 +28,6 @@ enum ApplicationStatus {
   }
 
   static ApplicationStatus fromFirestore(String value) {
-    // Convert snake_case to camelCase: offer_sent → offerSent
     final camelCase = value.replaceAllMapped(
       RegExp(r'_([a-z])'),
           (match) => match.group(1)!.toUpperCase(),
@@ -43,7 +41,7 @@ enum ApplicationStatus {
   String toArabic() {
     switch (this) {
       case ApplicationStatus.offerSent:
-        return 'تم تقديم عرض';
+        return 'تم استلام عرض';
       case ApplicationStatus.pending:
         return 'قيد الانتظار';
       case ApplicationStatus.accepted:
@@ -56,7 +54,7 @@ enum ApplicationStatus {
   Color getColor() {
     switch (this) {
       case ApplicationStatus.offerSent:
-        return const Color(0xFF16A34A);
+        return const Color(0xFF3B82F6);
       case ApplicationStatus.pending:
         return const Color(0xFFF59E0B);
       case ApplicationStatus.accepted:

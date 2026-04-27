@@ -24,6 +24,7 @@ Future<void> setupFirebase() async {
   if (!shouldUseMocks) {
     // Use real Firebase for non-Linux platforms (when useMocks is false)
     await Firebase.initializeApp(
+      name: 'elan',
       options: DefaultFirebaseOptions.currentPlatform,
     );
     getIt.registerSingleton<FirebaseAuth>(FirebaseAuth.instance);

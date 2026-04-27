@@ -8,7 +8,7 @@ enum OfferInitiator {
 
   static OfferInitiator fromFirestore(String value) {
     return OfferInitiator.values.firstWhere(
-      (e) => e.name == value,
+          (e) => e.name == value,
       orElse: () => OfferInitiator.influencer,
     );
   }
@@ -23,7 +23,7 @@ enum OfferStatus {
 
   static OfferStatus fromFirestore(String value) {
     return OfferStatus.values.firstWhere(
-      (e) => e.name == value,
+          (e) => e.name == value,
       orElse: () => OfferStatus.pending,
     );
   }

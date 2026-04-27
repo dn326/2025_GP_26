@@ -306,10 +306,12 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
         for (final a in all) {
           if (!a.isReadByBusiness && a.status == ApplicationStatus.pending && !_animatingNew.contains(a.id)) {
             _animatingNew.add(a.id);
+            /*
             Future.delayed(const Duration(seconds: 2), () {
               _markRead(a.id);
               if (mounted) setState(() => _animatingNew.remove(a.id));
             });
+            */
           }
         }
       } else {
@@ -443,7 +445,8 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
 
   Widget _businessCard(ApplicationModel app) {
     final t = FlutterFlowTheme.of(context);
-    final isNew = _animatingNew.contains(app.id);
+    // final isNew = _animatingNew.contains(app.id);
+    final isNew = !app.isReadByBusiness && app.status == ApplicationStatus.pending;
     final isRejected = app.status == ApplicationStatus.rejected;
 
     return AnimatedContainer(
@@ -587,6 +590,7 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
   }
 
   void _openSendOffer(ApplicationModel app) {
+    _markRead(app.id);
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => SendOfferPage(
         applicationId: app.id,

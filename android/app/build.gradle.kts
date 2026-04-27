@@ -9,7 +9,8 @@ plugins {
 android {
     namespace = "com.example.elan_flutterproject"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.3.13750724"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
@@ -24,7 +25,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.elan_flutterproject"
-        minSdk = flutter.minSdkVersion
+        // minSdk = flutter.minSdkVersion
+        minSdk = 30
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -40,7 +42,7 @@ android {
 dependencies {
     implementation("com.google.android.gms:play-services-base:18.10.0")
     // Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
 
     // أضف الخدمات التي تستخدمها
     implementation("com.google.firebase:firebase-auth")

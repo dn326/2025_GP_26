@@ -512,100 +512,270 @@ class FeqVerifiedNameWidget extends StatelessWidget {
   }
 }
 
+// ===============================
+// feq_components.dart
+// Replace ONLY FeqAppBar class with this
+// ===============================
+
 class FeqAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final String userType;
   final bool showBack;
+  final bool showContractDownload;
+  final bool showContractPrint;
   final bool showLeading;
   final bool showNotification;
   final String? backRoute;
+  final PreferredSizeWidget? bottom;
 
-  //optional callback
+  final bool documentActionsOnStart;
+  final bool isDocumentBusyDownload;
+  final bool isDocumentBusyPrint;
+  final VoidCallback? onDownload;
+  final VoidCallback? onPrint;
+
+  final bool showFavorite;
+  final bool isFavorite;
+  final VoidCallback? onFavoriteTap;
+  final bool favoriteOnStart;
+
+  final bool showFavoriteFilter;
+  final bool isFavoriteFilterActive;
+  final VoidCallback? onFavoriteFilterTap;
+  final bool favoriteFilterOnStart;
+
   final Future<void> Function()? onBackTapExtra;
+  final Object? backResult;
 
   const FeqAppBar({
     super.key,
     required this.title,
     this.userType = '',
     this.showBack = false,
+    this.showContractDownload = false,
+    this.showContractPrint = false,
     this.showLeading = false,
     this.showNotification = false,
     this.backRoute,
+    this.bottom,
+    this.documentActionsOnStart = false,
+    this.isDocumentBusyDownload = false,
+    this.isDocumentBusyPrint = false,
+    this.onDownload,
+    this.onPrint,
+    this.showFavorite = false,
+    this.isFavorite = false,
+    this.onFavoriteTap,
+    this.favoriteOnStart = true,
+    this.showFavoriteFilter = false,
+    this.isFavoriteFilterActive = false,
+    this.onFavoriteFilterTap,
+    this.favoriteFilterOnStart = true,
     this.onBackTapExtra,
+    this.backResult,
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(56.0);
+  Size get preferredSize =>
+      Size.fromHeight(56.0 + (bottom?.preferredSize.height ?? 0));
+
+  Widget _favoriteButton(BuildContext context) {
+    return IconButton(
+      tooltip: isFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة',
+      onPressed: onFavoriteTap,
+      icon: Icon(
+        isFavorite ? Icons.favorite : Icons.favorite_border,
+        color:
+        isFavorite ? Colors.red : FlutterFlowTheme.of(context).primaryText,
+      ),
+    );
+  }
+
+  Widget _favoriteFilterButton(BuildContext context) {
+    return IconButton(
+      tooltip: isFavoriteFilterActive ? 'عرض الكل' : 'عرض المفضلة فقط',
+      onPressed: onFavoriteFilterTap,
+      icon: Icon(
+        isFavoriteFilterActive ? Icons.favorite : Icons.favorite_border,
+        color: isFavoriteFilterActive
+            ? Colors.red
+            : FlutterFlowTheme.of(context).primaryText,
+      ),
+    );
+  }
+
+  List<Widget> _documentActionButtons() {
+    final buttons = <Widget>[];
+
+    if (showContractDownload) {
+      buttons.add(
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 4, 0),
+          child: IconButton(
+            tooltip: 'تحميل',
+            onPressed: isDocumentBusyDownload ? null : onDownload,
+            icon: isDocumentBusyDownload
+                ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+                : const Icon(Icons.download_outlined),
+          ),
+        ),
+      );
+    }
+
+    if (showContractPrint) {
+      buttons.add(
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 4, 0),
+          child: IconButton(
+            tooltip: 'طباعة',
+            onPressed: isDocumentBusyPrint ? null : onPrint,
+            icon: isDocumentBusyPrint
+                ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+                : const Icon(Icons.print_outlined),
+          ),
+        ),
+      );
+    }
+
+    return buttons;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(56.0),
-      child: Container(
-        decoration: const BoxDecoration(
-          boxShadow: [BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2))],
+    final hasDocumentActions = showContractDownload || showContractPrint;
+
+    final startButtons = <Widget>[];
+
+    if (showFavorite && favoriteOnStart) {
+      startButtons.add(_favoriteButton(context));
+    }
+
+    if (showFavoriteFilter && favoriteFilterOnStart) {
+      startButtons.add(_favoriteFilterButton(context));
+    }
+
+    if (hasDocumentActions && documentActionsOnStart) {
+      startButtons.addAll(_documentActionButtons());
+    }
+
+    Widget? leadingWidget;
+    if (startButtons.isNotEmpty) {
+      leadingWidget = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: startButtons,
+      );
+    } else if (showLeading) {
+      leadingWidget = Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 16, 0),
+        child: GestureDetector(
+          onTap: () =>
+              Navigator.pushNamed(context, AccountSettingsPage.routeName),
+          child: FaIcon(
+            FontAwesomeIcons.bahai,
+            color: FlutterFlowTheme.of(context).primaryText,
+            size: 28,
+          ),
         ),
-        child: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          titleSpacing: 0,
-          centerTitle: true,
+      );
+    } else if (showBack || showNotification) {
+      leadingWidget = const SizedBox(width: 60);
+    }
 
-          // LEFT SIDE (leading)
-          leading: showLeading
-              ? Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 16, 0),
-                  child: GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, AccountSettingsPage.routeName),
-                    child: FaIcon(FontAwesomeIcons.bahai, color: FlutterFlowTheme.of(context).primaryText, size: 28),
-                  ),
-                )
-              : (showBack || showNotification
-                  ? const SizedBox(width: 60) // add space ONLY when actions exist
-                  : null),
-          // no space at all if absolutely nothing is shown
+    final actions = <Widget>[];
 
-          actions: [
-            if (showBack)
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
-                child: GestureDetector(
-                  onTap: () async {
-                    // Run extra logic if provided (e.g., delete account)
-                    if (onBackTapExtra != null) {
-                      await onBackTapExtra!();
-                    }
-                    if (!context.mounted) return;
-                    Navigator.of(context).pop();
-                  },
-                  child: FaIcon(Icons.arrow_forward_ios, color: FlutterFlowTheme.of(context).primaryText, size: 24),
-                ),
-              ),
-            if (showNotification)
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
-                child: GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, NotificationListPage.routeName),
-                  child: FaIcon(Icons.notifications_none, color: FlutterFlowTheme.of(context).primaryText, size: 30),
-                ),
-              ),
-          ],
+    if (showBack) {
+      actions.add(
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
+          child: GestureDetector(
+            onTap: () async {
+              if (onBackTapExtra != null) {
+                await onBackTapExtra!();
+              }
+              if (!context.mounted) return;
+              Navigator.of(context).pop(backResult ?? true);
+            },
+            child: Icon(
+              Icons.arrow_forward_ios,
+              color: FlutterFlowTheme.of(context).primaryText,
+              size: 24,
+            ),
+          ),
+        ),
+      );
+    }
 
-          title: SafeArea(
-            child: SizedBox(
-              height: 40,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Center(
-                    child: Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: FlutterFlowTheme.of(context).headlineSmall.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
+    if (showFavorite && !favoriteOnStart) {
+      actions.add(_favoriteButton(context));
+    }
+
+    if (showFavoriteFilter && !favoriteFilterOnStart) {
+      actions.add(_favoriteFilterButton(context));
+    }
+
+    if (hasDocumentActions && !documentActionsOnStart) {
+      actions.addAll(_documentActionButtons());
+    }
+
+    if (showNotification) {
+      actions.add(
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
+          child: GestureDetector(
+            onTap: () =>
+                Navigator.pushNamed(context, NotificationListPage.routeName),
+            child: Icon(
+              Icons.notifications_none,
+              color: FlutterFlowTheme.of(context).primaryText,
+              size: 30,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final startCount = startButtons.length;
+    final double leadingWidth =
+    startCount > 0 ? (startCount * 52.0).clamp(56.0, 160.0) : 56.0;
+
+    return Container(
+      decoration: const BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 4,
+            color: Color(0x33000000),
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: AppBar(
+        backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        titleSpacing: 0,
+        centerTitle: true,
+        bottom: bottom,
+        leading: leadingWidget,
+        leadingWidth: leadingWidth,
+        actions: actions,
+        title: SafeArea(
+          child: SizedBox(
+            height: 40,
+            child: Center(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: FlutterFlowTheme.of(context)
+                    .headlineSmall
+                    .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../../core/components/feq_components.dart';
 import '../../../flutter_flow/flutter_flow_theme.dart';
 import '../../business/presentation/profile_widget.dart';
@@ -17,14 +16,26 @@ class InfluencerHomeWidget extends StatefulWidget {
 
 class _InfluencerHomeWidgetState extends State<InfluencerHomeWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _showFavoriteBusinessesOnly = false;
 
   @override
   Widget build(BuildContext context) {
     final t = FlutterFlowTheme.of(context);
+
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: t.backgroundElan,
-      appBar: const FeqAppBar(title: 'جهات الأعمال'),
+      appBar: FeqAppBar(
+        title: _showFavoriteBusinessesOnly ? 'جهات الأعمال المفضلة' : 'جهات الأعمال',
+        showFavoriteFilter: true,
+        isFavoriteFilterActive: _showFavoriteBusinessesOnly,
+        onFavoriteFilterTap: () {
+          setState(() {
+            _showFavoriteBusinessesOnly = !_showFavoriteBusinessesOnly;
+          });
+        },
+        favoriteFilterOnStart: true,
+      ),
       body: FeqProfilesListWidget(
         targetUserType: 'business',
         titleSortField: 'name',
@@ -33,6 +44,8 @@ class _InfluencerHomeWidgetState extends State<InfluencerHomeWidget> {
         showSorting: false,
         paginated: false,
         pageSize: 10000,
+        orderByScore: true,
+        externalFavoritesOnly: _showFavoriteBusinessesOnly,
       ),
     );
   }

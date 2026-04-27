@@ -1,3 +1,4 @@
+// lib/influencer/business/presentation/profile_widget.dart
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,6 +8,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/services/firebase_service_utils.dart';
+import '../../../core/services/user_session.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -33,6 +36,7 @@ class InfluncerProfileWidget extends StatefulWidget {
 
 class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final FeqFirebaseServiceUtils _firebaseService = FeqFirebaseServiceUtils();
   late String userType = "business";
   String? _name;
   late bool _isVerified = false;
@@ -49,6 +53,9 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
   List<Map<String, dynamic>> _experiences = [];
   bool _loading = true;
   String? _error;
+  bool _canFavoriteInfluencer = false;
+  bool _isInfluencerFavorite = false;
+  bool _isFavoriteBusy = false;
 
   @override
   void initState() {
@@ -154,11 +161,90 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
         _error = null;
         _socialPlatforms = FeqDropDownListLoader.instance.socialPlatforms;
       });
+
+      await _loadInfluencerFavoriteState();
+
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+      });
+
     } catch (e) {
       setState(() {
         _loading = false;
         _error = 'حصل خطأ أثناء جلب البيانات: $e';
       });
+    }
+  }
+
+  Future<void> _loadInfluencerFavoriteState() async {
+    final currentUserType = (await UserSession.getUserType()) ?? '';
+    final currentUserId = UserSession.getCurrentUserId();
+
+    if (!mounted) return;
+
+    if (widget.uid == null ||
+        currentUserId == null ||
+        currentUserType != 'business') {
+      setState(() {
+        _canFavoriteInfluencer = false;
+        _isInfluencerFavorite = false;
+      });
+      return;
+    }
+
+    final isFav = await _firebaseService.isInfluencerFavorite(
+      businessId: currentUserId,
+      influencerId: widget.uid!,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _canFavoriteInfluencer = true;
+      _isInfluencerFavorite = isFav;
+    });
+  }
+
+  Future<void> _toggleInfluencerFavorite() async {
+    if (!_canFavoriteInfluencer ||
+        widget.uid == null ||
+        _isFavoriteBusy) return;
+
+    final businessId = UserSession.getCurrentUserId();
+    if (businessId == null) return;
+
+    final previous = _isInfluencerFavorite;
+
+    setState(() {
+      _isFavoriteBusy = true;
+      _isInfluencerFavorite = !previous;
+    });
+
+    try {
+      await _firebaseService.setInfluencerFavorite(
+        businessId: businessId,
+        influencerId: widget.uid!,
+        isFavorite: !previous,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isInfluencerFavorite = previous;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'حدث خطأ أثناء تحديث المفضلة',
+            textDirection: TextDirection.rtl,
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFavoriteBusy = false;
+        });
+      }
     }
   }
 
@@ -416,10 +502,17 @@ class _InfluncerProfileWidgetState extends State<InfluncerProfileWidget> {
         key: scaffoldKey,
         backgroundColor: theme.backgroundElan,
         appBar: FeqAppBar(
-            title: (widget.uid != null) ? '' : 'صفحتي الشخصية',
-            showBack: widget.uid != null,
-            showLeading: widget.uid == null,
-            showNotification: widget.uid == null),
+          title: (widget.uid != null) ? '' : 'صفحتي الشخصية',
+          showBack: widget.uid != null,
+          backResult: true,
+          showLeading: widget.uid == null,
+          showNotification: widget.uid == null,
+          showFavorite: _canFavoriteInfluencer,
+          isFavorite: _isInfluencerFavorite,
+          onFavoriteTap:
+          _isFavoriteBusy ? null : _toggleInfluencerFavorite,
+          favoriteOnStart: true,
+        ),
         body: SafeArea(
           top: true,
           child: _loading
