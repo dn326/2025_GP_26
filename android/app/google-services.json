@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "992326034981",
-    "project_id": "elan-db-55c84",
-    "storage_bucket": "elan-db-55c84.firebasestorage.app"
+    "project_number": "REMOVED",
+    "project_id": "REMOVED",
+    "storage_bucket": "REMOVED.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:992326034981:android:073531df9896a61ad201cc",
+        "mobilesdk_app_id": "REMOVED",
         "android_client_info": {
           "package_name": "com.example.elan_flutterproject"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC96CbWN0NNuDwWUlykRm3B5zNZDyaCJ6w"
+          "current_key": "REMOVED"
         }
       ],
       "services": {
@@ -26,7 +26,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:992326034981:android:66411a04a5595ae8d201cc",
+        "mobilesdk_app_id": "1:REMOVED:android:66411a04a5595ae8d201cc",
         "android_client_info": {
           "package_name": "com.firebase.elan"
         }
@@ -34,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC96CbWN0NNuDwWUlykRm3B5zNZDyaCJ6w"
+          "current_key": "REMOVED"
         }
       ],
       "services": {
