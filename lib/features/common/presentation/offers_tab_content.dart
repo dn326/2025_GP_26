@@ -394,8 +394,8 @@ class _OffersTabContentState extends State<OffersTabContent> {
       builder: (_) => OfferDetailPage(
         offerId: offer.id,
         isBusinessView: widget.isBusinessView,
-        actionContractCanDownload: true,
-        actionContractCanPrint: true,
+        actionContractCanDownload: offer.status == OfferStatus.accepted,
+        actionContractCanPrint: offer.status == OfferStatus.accepted,
       ),
     ));
   }

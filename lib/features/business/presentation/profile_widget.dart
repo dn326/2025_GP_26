@@ -234,7 +234,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 // ===============================
 
   Future<void> _loadBusinessFavoriteState() async {
-    final currentUserType = (await UserSession.getUserType()) ?? '';
+    userType = (await UserSession.getUserType()) ?? '';
     final currentUserId = UserSession.getCurrentUserId();
 
     if (!mounted) return;
@@ -242,7 +242,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
 
     if (widget.uid == null ||
         currentUserId == null ||
-        currentUserType != 'influencer') {
+        userType != 'influencer') {
       setState(() {
         _canFavoriteBusiness = false;
         _isBusinessFavorite = false;
@@ -958,6 +958,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                                       children: [
                                         Row(
                                           children: [
+                                            if (userType != 'influencer')
                                             IconButton(
                                               icon: Icon(Icons.filter_list, color: theme.primaryText),
                                               onPressed: _showCampaignFilterSheet,

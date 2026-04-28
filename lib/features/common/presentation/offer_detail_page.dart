@@ -130,8 +130,6 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
 
   bool get _allAcked => _acks.values.every((v) => v);
 
-  // bool get _canShowDocumentActions => (_offer?['status'] as String? ?? 'pending') == 'accepted';
-
   String _fmtTs(dynamic v) {
     if (v == null) return '—';
     DateTime dt;
