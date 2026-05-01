@@ -302,38 +302,40 @@ class OfferContractPdfService {
   }
 
   static pw.Widget _section(
-    String title,
-    List<List<dynamic>> rows,
-    pw.Font bold,
-    pw.Font regular,
-  ) {
+      String title,
+      List<List<dynamic>> rows,
+      pw.Font bold,
+      pw.Font regular,
+      ) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
-        // borderRadius: pw.BorderRadius.circular(14),
         border: pw.Border.symmetric(
             horizontal: pw.BorderSide(color: PdfColors.grey300)),
       ),
       child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(title, style: pw.TextStyle(font: bold, fontSize: 13)),
           pw.SizedBox(height: 12),
           ...rows.map(
-            (r) => pw.Padding(
+                (r) => pw.Padding(
               padding: const pw.EdgeInsets.only(bottom: 4),
               child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start, // ← added
                 children: [
                   pw.Text(
                     '${r[0]}:',
                     textAlign: pw.TextAlign.right,
                     style: pw.TextStyle(font: bold, fontSize: 9),
                   ),
-                  pw.SizedBox(width: 2),
-                  pw.Text(
-                    r[1]?.toString() ?? '—',
-                    textAlign: pw.TextAlign.right,
-                    style: pw.TextStyle(font: regular, fontSize: 9),
+                  pw.SizedBox(width: 4),
+                  pw.Expanded(          // ← THIS is the critical fix for Android
+                    child: pw.Text(
+                      r[1]?.toString() ?? '—',
+                      textAlign: pw.TextAlign.right,
+                      style: pw.TextStyle(font: regular, fontSize: 9),
+                    ),
                   ),
                 ],
               ),
