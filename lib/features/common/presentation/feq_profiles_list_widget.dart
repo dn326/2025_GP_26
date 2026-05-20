@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../core/components/feq_components.dart';
 import '../../../core/components/feq_filter_chip_group.dart';
 import '../../../core/services/dropdown_list_loader.dart';
+import '../../../core/services/firebase_service.dart';
 import '../../../core/services/firebase_service_utils.dart';
 import '../../../core/services/user_session.dart';
 import '../../../core/widgets/image_picker_widget.dart';
@@ -77,6 +78,7 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
   bool _isLoadingMore = false;
   bool _hasMore = true;
   String _searchText = '';
+  String _userAccountStatus = '';
   FeqSortType _sortType = FeqSortType.dateDesc;
   final ScrollController _scrollController = ScrollController();
   Timer? _debounceTimer;
@@ -127,6 +129,15 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
   }
 
   Future<void> _loadInitial() async {
+    final uid = firebaseAuth.currentUser?.uid;
+    if (uid != null) {
+      final usersSnap = await firebaseFirestore.collection('users').where('user_id', isEqualTo: uid).limit(1).get();
+      if (usersSnap.docs.isNotEmpty) {
+        final userDoc = usersSnap.docs.first;
+        _userAccountStatus = userDoc['account_status'];
+      }
+
+    }
     setState(() {
       _allItems.clear();
       _lastDocument = null;
@@ -935,7 +946,7 @@ class _FeqProfilesListWidgetState extends State<FeqProfilesListWidget> {
                             ),
 
                             // ✅ Send-offer row WITHOUT heart
-                            if (widget.onSendOfferTap != null)
+                            if (widget.onSendOfferTap != null && _userAccountStatus == 'active')
                               Padding(
                                 padding: const EdgeInsets.only(top: 10),
                                 child: Row(

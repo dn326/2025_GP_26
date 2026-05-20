@@ -71,6 +71,7 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
   SubscriptionModel? _subscriptionData;
   bool _isLoadingSubscription = false;
   String _subscriptionStatus = 'free';
+  String userAccountStatus = 'active';
 
   final Set<String> _appliedCampaignIds = {};
 
@@ -107,6 +108,9 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       if (usersSnap.docs.isEmpty) throw Exception('User not found');
 
       final userDoc = usersSnap.docs.first;
+      if (widget.uid != null) {
+        userAccountStatus = userDoc['account_status'];
+      }
       final userType = (userDoc['user_type'] ?? '').toString().toLowerCase();
       _isVerified = userDoc['verified'] ?? false;
 
@@ -1415,24 +1419,28 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
                           ),
                         );
                       }
-                      // Default: apply button
-                      return SizedBox(
-                        width: double.infinity,
-                        height: 44,
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.send_rounded, size: 18),
-                          label: const Text(
-                            'قدّم على هذه الحملة',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      if (userAccountStatus == 'active') {
+                        // Default: apply button
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.send_rounded, size: 18),
+                            label: const Text(
+                              'قدّم على هذه الحملة',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: () => _applyToCampaign(e),
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          onPressed: () => _applyToCampaign(e),
-                        ),
-                      );
+                        );
+                      } else {
+                        return Container();
+                      }
                     }),
                   ],
                 ),

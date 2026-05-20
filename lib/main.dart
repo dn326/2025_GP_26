@@ -1,5 +1,6 @@
 // هنا نربط الصفحات
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:elan_flutterproject/core/services/subscription_model.dart';
 import 'package:elan_flutterproject/features/business/presentation/explore_widget.dart';
 import 'package:elan_flutterproject/features/influencer/presentation/home_widget.dart';
@@ -13,6 +14,7 @@ import 'package:elan_flutterproject/features/payment/payment_page.dart';
 import 'package:elan_flutterproject/features/setting/presentation/account_update_certificate_widget.dart';
 import 'package:elan_flutterproject/features/subscription/subscription_details_page.dart';
 import 'package:elan_flutterproject/features/subscription/subscription_plans_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -39,6 +41,15 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
 
   await FeqFirebaseService.initialize();
+  await FirebaseAppCheck.instance.activate(
+    providerAndroid: kDebugMode
+        ? AndroidDebugProvider()
+        : AndroidPlayIntegrityProvider(),
+    providerApple: kDebugMode
+        ? AppleDebugProvider()
+        : AppleAppAttestProvider(),
+    providerWeb: ReCaptchaEnterpriseProvider('YOUR_RECAPTCHA_ENTERPRISE_SITE_KEY'),
+  );
   await FeqDropDownListLoader.instance.init();
 
   runApp(const MyApp());

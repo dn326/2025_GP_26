@@ -28,7 +28,7 @@ class FeqImagePickerService {
       final fileName = 'image_$timestamp.$extension';
 
       // Check if using mocks
-      bool shouldUseMocks = useMocks;
+      bool shouldUseMocks = useMocks || userId == '';
 
       if (shouldUseMocks) {
         // Mock mode: store image locally, create a mock URL

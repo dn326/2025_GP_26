@@ -22,9 +22,10 @@ Future<void> setupFirebase() async {
   bool shouldUseMocks = useMocks || (!kIsWeb && Platform.isLinux);
 
   if (!shouldUseMocks) {
+    final bool isDesktop = !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
     // Use real Firebase for non-Linux platforms (when useMocks is false)
     await Firebase.initializeApp(
-      name: 'elan',
+      name: isDesktop ? null : 'elan',
       options: DefaultFirebaseOptions.currentPlatform,
     );
     getIt.registerSingleton<FirebaseAuth>(FirebaseAuth.instance);

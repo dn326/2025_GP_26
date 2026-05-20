@@ -334,7 +334,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
       setState(() => _uploadingImage = true);
 
       final result = await FeqImagePickerService.pickAndUploadImage(
-        userId: firebaseAuth.currentUser!.uid,
+        userId: (firebaseAuth.currentUser == null) ? '' : firebaseAuth.currentUser!.uid,
         storagePath: 'profiles',
       );
 
@@ -843,108 +843,232 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                           padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              borderRadius: const BorderRadius.all(
-                                                Radius.circular(16),
-                                              ),
-                                              border: Border.all(
-                                                color: t.secondary,
-                                              ),
+                                              borderRadius: const BorderRadius.all(Radius.circular(16)),
+                                              border: Border.all(color: t.secondary),
                                             ),
                                             child: Column(
                                               children: [
+                                                /// HEADER
                                                 Padding(
                                                   padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
                                                   child: Row(
                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    crossAxisAlignment: CrossAxisAlignment.center,
                                                     children: [
-                                                      Align(
-                                                        alignment: const AlignmentDirectional(1, 0),
-                                                        child: FlutterFlowIconButton(
-                                                          borderRadius: 8,
-                                                          buttonSize: 50,
-                                                          icon: Icon(
-                                                            Icons.add_circle,
-                                                            color:
-                                                                t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                            size: 20,
-                                                          ),
-                                                          onPressed: () {
-                                                            setState(() {
-                                                              final r = _SocialRow();
-                                                              _attachSocialRowListeners(r);
-                                                              _socialRows.add(r);
-                                                            });
-                                                            _onAnyFieldChanged();
-                                                          },
+                                                      FlutterFlowIconButton(
+                                                        borderRadius: 8,
+                                                        buttonSize: 50,
+                                                        icon: Icon(
+                                                          Icons.add_circle,
+                                                          color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                          size: 20,
                                                         ),
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            final r = _SocialRow();
+                                                            _attachSocialRowListeners(r);
+                                                            _socialRows.add(r);
+                                                          });
+                                                          _onAnyFieldChanged();
+                                                        },
                                                       ),
-                                                      Align(
-                                                        alignment: const AlignmentDirectional(1, -1),
-                                                        child: Padding(
-                                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
-                                                          child: Text(
-                                                            'منصاتك في مواقع التواصل الاجتماعي',
-                                                            textAlign: TextAlign.end,
-                                                            style: t.bodyMedium.override(
-                                                              fontFamily: 'Inter',
-                                                              color: t.primaryText,
-                                                              fontSize: 16,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const Padding(
-                                                  padding: EdgeInsetsDirectional.fromSTEB(35, 0, 20, 5),
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: [
                                                       Padding(
-                                                        padding: EdgeInsetsDirectional.fromSTEB(0, 0, 10, 0),
-                                                        child: FeqLabeled(
-                                                          'اسم الحساب في المنصة',
-                                                        ),
-                                                      ),
-                                                      Align(
-                                                        alignment: AlignmentDirectional(1, -1),
-                                                        child: FeqLabeled(
-                                                          'اسم المنصة',
+                                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
+                                                        child: Text(
+                                                          'منصاتك في مواقع التواصل الاجتماعي',
+                                                          textAlign: TextAlign.end,
+                                                          style: t.bodyMedium.copyWith(
+                                                            color: t.primaryText,
+                                                            fontSize: 16,
+                                                          ),
                                                         ),
                                                       ),
                                                     ],
                                                   ),
                                                 ),
+
+                                                /// OPTIONAL LABELS (hidden on small screens)
+                                                LayoutBuilder(
+                                                  builder: (context, constraints) {
+                                                    final isSmall = constraints.maxWidth < 300;
+
+                                                    if (isSmall) {
+                                                      // ✅ STACKED LABELS (mobile)
+                                                      return const Padding(
+                                                        padding: EdgeInsetsDirectional.fromSTEB(20, 0, 20, 10),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                                          children: [
+                                                            FeqLabeled('اسم المنصة'),
+                                                            SizedBox(height: 8),
+                                                            FeqLabeled('اسم الحساب في المنصة'),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    }
+
+                                                    // ✅ ORIGINAL (desktop)
+                                                    return const Padding(
+                                                      padding: EdgeInsetsDirectional.fromSTEB(35, 0, 20, 5),
+                                                      child: Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          Padding(
+                                                            padding: EdgeInsetsDirectional.fromSTEB(0, 0, 10, 0),
+                                                            child: FeqLabeled('اسم الحساب في المنصة'),
+                                                          ),
+                                                          FeqLabeled('اسم المنصة'),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+
+                                                /// ROWS
                                                 Padding(
                                                   padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
                                                   child: Column(
                                                     children: List.generate(_socialRows.length, (i) {
                                                       final row = _socialRows[i];
+
                                                       final isFirstRow = i == 0;
                                                       final platformEmpty = row.platform?.id == null ||
                                                           row.platform!.id.toString().isEmpty;
                                                       final usernameEmpty = row.usernameCtrl.text.trim().isEmpty;
+
                                                       final showPlatformErr = _showErrors &&
                                                           isFirstRow &&
                                                           _socialsRequireError &&
                                                           platformEmpty;
+
                                                       final showUsernameErr = _showErrors &&
                                                           isFirstRow &&
                                                           _socialsRequireError &&
                                                           usernameEmpty;
 
-                                                      return Row(
-                                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Align(
-                                                            alignment: const AlignmentDirectional(1, 0),
-                                                            child: Padding(
-                                                              padding:
-                                                                  const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
-                                                              child: FlutterFlowIconButton(
+                                                      return LayoutBuilder(
+                                                        builder: (context, constraints) {
+                                                          final isSmall = constraints.maxWidth < 300;
+
+                                                          /// ✅ SMALL SCREEN
+                                                          if (isSmall) {
+                                                            return Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.end,
+                                                              children: [
+                                                                /// DELETE BUTTON
+                                                                Align(
+                                                                  alignment: AlignmentDirectional.centerStart,
+                                                                  child: Padding(
+                                                                    padding: const EdgeInsets.only(bottom: 8),
+                                                                    child: FlutterFlowIconButton(
+                                                                      borderRadius: 8,
+                                                                      buttonSize: 40,
+                                                                      icon: Icon(
+                                                                        Icons.minimize_outlined,
+                                                                        color: t
+                                                                            .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                                        size: 18,
+                                                                      ),
+                                                                      onPressed: () {
+                                                                        setState(() {
+                                                                          _socialRows.removeAt(i);
+                                                                          if (_socialRows.isEmpty) {
+                                                                            final r = _SocialRow();
+                                                                            _attachSocialRowListeners(r);
+                                                                            _socialRows.add(r);
+                                                                          }
+                                                                        });
+                                                                        _onAnyFieldChanged();
+                                                                      },
+                                                                    ),
+                                                                  ),
+                                                                ),
+
+
+                                                                /// PLATFORM FIRST
+                                                                Padding(
+                                                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                                                    children: [
+                                                                      FeqSearchableDropdown<FeqDropDownList>(
+                                                                        items: _socialPlatforms,
+                                                                        value: row.platform,
+                                                                        onChanged: (v) {
+                                                                          setState(() => row.platform = v);
+                                                                          _onAnyFieldChanged();
+                                                                        },
+                                                                        hint: 'اختر المنصة',
+                                                                        isError: showPlatformErr,
+                                                                      ),
+                                                                      if (showPlatformErr)
+                                                                        const Padding(
+                                                                          padding: EdgeInsets.only(top: 6),
+                                                                          child: Text(
+                                                                            'يرجى اختيار المنصة.',
+                                                                            style: TextStyle(color: Colors.red, fontSize: 12),
+                                                                          ),
+                                                                        ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+
+                                                                /// THEN USERNAME
+                                                                Padding(
+                                                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                                                    children: [
+                                                                      TextFormField(
+                                                                        controller: row.usernameCtrl,
+                                                                        decoration: businessPlatformInputDecoration(
+                                                                          context,
+                                                                          isError: showUsernameErr,
+                                                                        ),
+                                                                        textAlign: TextAlign.end,
+                                                                      ),
+                                                                      if (row.platform != null &&
+                                                                          row.usernameCtrl.text.trim().isNotEmpty)
+                                                                        Padding(
+                                                                          padding: const EdgeInsets.only(top: 4),
+                                                                          child: InkWell(
+                                                                            onTap: () {
+                                                                              final url =
+                                                                                  'https://${row.platform!.domain}/${row.usernameCtrl.text.trim()}';
+                                                                              launchUrl(Uri.parse(url));
+                                                                            },
+                                                                            child: Text(
+                                                                              '${row.platform!.domain}/${row.usernameCtrl.text.trim()}',
+                                                                              style: const TextStyle(
+                                                                                color: Colors.blue,
+                                                                                decoration: TextDecoration.underline,
+                                                                              ),
+                                                                              textAlign: TextAlign.end,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      if (showUsernameErr)
+                                                                        const Padding(
+                                                                          padding: EdgeInsets.only(top: 6),
+                                                                          child: Text(
+                                                                            'يرجى إدخال اسم الحساب.',
+                                                                            style: TextStyle(
+                                                                                color: Colors.red, fontSize: 12),
+                                                                          ),
+                                                                        ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+
+                                                                const SizedBox(height: 16),
+                                                              ],
+                                                            );
+                                                          }
+
+                                                          /// ✅ LARGE SCREEN
+                                                          return Row(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              FlutterFlowIconButton(
                                                                 borderRadius: 8,
                                                                 buttonSize: 50,
                                                                 icon: Icon(
@@ -965,71 +1089,31 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                                   _onAnyFieldChanged();
                                                                 },
                                                               ),
-                                                            ),
-                                                          ),
-                                                          Expanded(
-                                                            child: Padding(
-                                                              padding:
-                                                                  const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
-                                                              child: Column(
-                                                                crossAxisAlignment: CrossAxisAlignment.end,
-                                                                children: [
-                                                                  TextFormField(
-                                                                    controller: row.usernameCtrl,
-                                                                    textCapitalization: TextCapitalization.none,
-                                                                    decoration: businessPlatformInputDecoration(
-                                                                      context,
-                                                                      isError: showUsernameErr,
-                                                                    ),
-                                                                    style: t.bodyMedium.copyWith(
-                                                                      color: t.primaryText,
-                                                                    ),
-                                                                    textAlign: TextAlign.end,
+
+                                                              Expanded(
+                                                                child: Padding(
+                                                                  padding: const EdgeInsetsDirectional.fromSTEB(
+                                                                      0, 0, 20, 0),
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                                                    children: [
+                                                                      TextFormField(
+                                                                        controller: row.usernameCtrl,
+                                                                        decoration:
+                                                                        businessPlatformInputDecoration(context,
+                                                                            isError: showUsernameErr),
+                                                                        textAlign: TextAlign.end,
+                                                                      ),
+                                                                    ],
                                                                   ),
-                                                                  if (row.platform != null &&
-                                                                      row.usernameCtrl.text.trim().isNotEmpty)
-                                                                    Padding(
-                                                                      padding: const EdgeInsets.only(top: 4),
-                                                                      child: InkWell(
-                                                                        onTap: () {
-                                                                          final url =
-                                                                              'https://${row.platform!.domain}/${row.usernameCtrl.text.trim()}';
-                                                                          launchUrl(
-                                                                            Uri.parse(url),
-                                                                          );
-                                                                        },
-                                                                        child: Text(
-                                                                          '${row.platform!.domain}/${row.usernameCtrl.text.trim()}',
-                                                                          style: const TextStyle(
-                                                                            color: Colors.blue,
-                                                                            decoration: TextDecoration.underline,
-                                                                          ),
-                                                                          textAlign: TextAlign.end,
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  if (showUsernameErr)
-                                                                    const Padding(
-                                                                      padding:
-                                                                          EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
-                                                                      child: Text(
-                                                                        'يرجى إدخال اسم الحساب.',
-                                                                        style:
-                                                                            TextStyle(color: Colors.red, fontSize: 12),
-                                                                      ),
-                                                                    ),
-                                                                ],
+                                                                ),
                                                               ),
-                                                            ),
-                                                          ),
-                                                          Expanded(
-                                                            child: Padding(
-                                                              padding:
-                                                                  const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
-                                                              child: Column(
-                                                                crossAxisAlignment: CrossAxisAlignment.end,
-                                                                children: [
-                                                                  FeqSearchableDropdown<FeqDropDownList>(
+
+                                                              Expanded(
+                                                                child: Padding(
+                                                                  padding: const EdgeInsetsDirectional.fromSTEB(
+                                                                      0, 0, 20, 0),
+                                                                  child: FeqSearchableDropdown<FeqDropDownList>(
                                                                     items: _socialPlatforms,
                                                                     value: row.platform,
                                                                     onChanged: (v) {
@@ -1039,21 +1123,11 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                                     hint: 'اختر المنصة',
                                                                     isError: showPlatformErr,
                                                                   ),
-                                                                  if (showPlatformErr)
-                                                                    const Padding(
-                                                                      padding:
-                                                                          EdgeInsetsDirectional.fromSTEB(0, 6, 4, 0),
-                                                                      child: Text(
-                                                                        'يرجى اختيار المنصة.',
-                                                                        style:
-                                                                            TextStyle(color: Colors.red, fontSize: 12),
-                                                                      ),
-                                                                    ),
-                                                                ],
+                                                                ),
                                                               ),
-                                                            ),
-                                                          ),
-                                                        ],
+                                                            ],
+                                                          );
+                                                        },
                                                       );
                                                     }),
                                                   ),

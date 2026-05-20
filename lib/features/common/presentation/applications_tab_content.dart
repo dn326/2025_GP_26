@@ -274,6 +274,8 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
       }
 
       // ── Client-side filters ───────────────────────────────────────────
+      // AND
+      /*
       if (widget.filterByInitiator.isNotEmpty) {
         if (widget.filterByInitiator.contains(ApplicationStatus.pending.toFirestore())) {
           all = all.where((a) => widget.filterByInitiator.contains(a.status.toFirestore())).toList();
@@ -284,6 +286,29 @@ class _ApplicationsTabContentState extends State<ApplicationsTabContent> {
         if (widget.filterByInitiator.contains(ApplicationInitiator.business.toFirestore())) {
           all = all.where((a) => a.initiator == ApplicationInitiator.business && a.status != ApplicationStatus.pending).toList();
         }
+      }*/
+      // OR
+      if (widget.filterByInitiator.isNotEmpty) {
+        all = all.where((a) {
+          return
+            // Pending
+            (widget.filterByInitiator.contains(ApplicationStatus.pending.toFirestore()) &&
+                a.status == ApplicationStatus.pending)
+
+                ||
+
+                // Rejected
+                (widget.filterByInitiator.contains(ApplicationStatus.rejected.toFirestore()) &&
+                    a.status == ApplicationStatus.rejected &&
+                    a.initiator != ApplicationInitiator.business)
+
+                ||
+
+                // Business initiated
+                (widget.filterByInitiator.contains(ApplicationInitiator.business.toFirestore()) &&
+                    a.initiator == ApplicationInitiator.business &&
+                    a.status != ApplicationStatus.pending);
+        }).toList();
       }
       if (widget.filterStatuses.isNotEmpty) {
         all = all.where((a) => widget.filterStatuses.contains(a.status.toFirestore())).toList();
