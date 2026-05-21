@@ -42,9 +42,8 @@ android {
 dependencies {
     implementation("com.google.android.gms:play-services-base:18.10.0")
     // Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.13.0"))
 
-    // أضف الخدمات التي تستخدمها
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")

@@ -871,7 +871,8 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                           _onAnyFieldChanged();
                                                         },
                                                       ),
-                                                      Padding(
+                                                  Flexible(                          // ← add this
+                                                    child: Padding(
                                                         padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
                                                         child: Text(
                                                           'منصاتك في مواقع التواصل الاجتماعي',
@@ -881,7 +882,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                             fontSize: 16,
                                                           ),
                                                         ),
-                                                      ),
+                                                      ),),
                                                     ],
                                                   ),
                                                 ),
@@ -985,7 +986,8 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
 
 
                                                                 /// PLATFORM FIRST
-                                                                Padding(
+                                                                Expanded(                          // ← add this
+                                                                child: Padding(
                                                                   padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
                                                                   child: Column(
                                                                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -1010,10 +1012,11 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                                         ),
                                                                     ],
                                                                   ),
-                                                                ),
+                                                                ),),
 
                                                                 /// THEN USERNAME
-                                                                Padding(
+                                                                Expanded(                          // ← add this
+                                                                  child: Padding(
                                                                   padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
                                                                   child: Column(
                                                                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -1057,7 +1060,7 @@ class _BusinessProfileFormWidgetState extends State<BusinessProfileFormWidget> w
                                                                         ),
                                                                     ],
                                                                   ),
-                                                                ),
+                                                                ),),
 
                                                                 const SizedBox(height: 16),
                                                               ],

@@ -390,7 +390,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
       }
 
       final profilesSnap =
-          await firebaseFirestore.collection('profiles').where('profile_id', isEqualTo: uid).limit(1).get();
+      await firebaseFirestore.collection('profiles').where('profile_id', isEqualTo: uid).limit(1).get();
 
       if (profilesSnap.docs.isNotEmpty) {
         final profileDoc = profilesSnap.docs.first;
@@ -425,7 +425,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         final rawImageUrl = userProfileModel.profileImage;
         if (rawImageUrl != null && rawImageUrl.isNotEmpty) {
           _imageUrl =
-              rawImageUrl.contains('?') ? '${rawImageUrl.split('?').first}?alt=media' : '$rawImageUrl?alt=media';
+          rawImageUrl.contains('?') ? '${rawImageUrl.split('?').first}?alt=media' : '$rawImageUrl?alt=media';
         }
 
         final influencerSnap = await profileDoc.reference.collection('influencer_profile').limit(1).get();
@@ -444,7 +444,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
           }
 
           _selectedInfluencerContentType = _influencerContentTypes.firstWhere(
-            (c) => c.id == contentId,
+                (c) => c.id == contentId,
             orElse: () => _influencerContentTypes.first,
           );
         }
@@ -454,16 +454,16 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
 
       final usersRef = firebaseFirestore.collection('users').doc(uid);
       final snapString =
-          await firebaseFirestore.collection('social_account').where('influencer_id', isEqualTo: uid).get();
+      await firebaseFirestore.collection('social_account').where('influencer_id', isEqualTo: uid).get();
       final snapRef =
-          await firebaseFirestore.collection('social_account').where('influencer_id', isEqualTo: usersRef).get();
+      await firebaseFirestore.collection('social_account').where('influencer_id', isEqualTo: usersRef).get();
       final allDocs = [...snapString.docs, ...snapRef.docs];
 
       final rows = allDocs.map((d) {
         final m = d.data();
         final platId = (m['platform'] ?? '').toString();
         final plat = _socialPlatforms.firstWhere(
-          (p) => p.id.toString() == platId,
+              (p) => p.id.toString() == platId,
           orElse: () => _socialPlatforms.first,
         );
         final row = _SocialRow(
@@ -717,8 +717,8 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         // 🔹 Only delete account in setup mode, and only on this page
         onBackTapExtra: isSetupMode
             ? () async {
-                await _deleteAccount(); // your existing method
-              }
+          await _deleteAccount(); // your existing method
+        }
             : null,
       ),
       body: SafeArea(
@@ -726,887 +726,890 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
-                ? Center(
-                    child: Text(_error!, style: t.bodyMedium.copyWith(color: t.primaryText)),
-                  )
-                : Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
-                    child: Container(
-                      decoration: BoxDecoration(color: t.backgroundElan),
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
-                        child: SingleChildScrollView(
+            ? Center(
+          child: Text(_error!, style: t.bodyMedium.copyWith(color: t.primaryText)),
+        )
+            : Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+          child: Container(
+            decoration: BoxDecoration(color: t.backgroundElan),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: t.containers,
+                          boxShadow: const [
+                            BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2)),
+                          ],
+                          borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 16),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
+                                padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
+                                child: Column(
+                                  children: [
+                                    Align(
+                                      alignment: const AlignmentDirectional(0, -1),
+                                      child: FeqImagePickerWidget(
+                                        initialImageUrl: _imageUrl,
+                                        isUploading: _uploadingImage,
+                                        onTap: _pickAndUploadImage,
+                                        size: 100,
+                                        onImagePicked: (url, file, bytes) {
+                                          setState(() {
+                                            _imageUrl = url;
+                                            pickedImage = file;
+                                            pickedBytes = bytes;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    Align(
+                                      alignment: const AlignmentDirectional(0, -1),
+                                      child: Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 40),
+                                        child: Opacity(
+                                          opacity: (_uploadingImage || _loading) ? 0.5 : 1,
+                                          child: GestureDetector(
+                                            onTap: (_uploadingImage || _loading) ? null : _pickAndUploadImage,
+                                            child: Text(
+                                              'تغيير صورة الحساب',
+                                              style: t.bodyMedium.override(
+                                                fontFamily: 'Inter',
+                                                color: t.primaryText,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                child: FeqLabeledTextField(
+                                  label: 'الاسم ',
+                                  controller: _model.influncerNameTextController,
+                                  focusNode: _model.influncerNameFocusNode,
+                                  textCapitalization: TextCapitalization.words,
+                                  width: double.infinity,
+                                  isError: _showErrors && _nameEmpty,
+                                  errorText: _showErrors && _nameEmpty ? 'يرجى إدخال الاسم.' : null,
+                                  decoration: inputDecoration(context, isError: _showErrors && _nameEmpty),
+                                ),
+                              ),
+
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                child: FeqLabeled(
+                                  'نوع المحتوى',
+                                  errorText: _showErrors && _contentEmpty ? 'يرجى اختيار نوع المحتوى.' : null,
+                                  child: FeqSearchableDropdown<FeqDropDownList>(
+                                    items: _influencerContentTypes,
+                                    value: _selectedInfluencerContentType,
+                                    onChanged: (v) {
+                                      setState(() => _selectedInfluencerContentType = v);
+                                      _onAnyFieldChanged();
+                                    },
+                                    hint: 'اختر أو ابحث...',
+                                    isError: _showErrors && _contentEmpty,
+                                  ),
+                                ),
+                              ),
+
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: t.containers,
-                                    boxShadow: const [
-                                      BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2)),
-                                    ],
                                     borderRadius: const BorderRadius.all(Radius.circular(16)),
+                                    border: Border.all(color: t.secondary),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 16),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
-                                          child: Column(
-                                            children: [
-                                              Align(
-                                                alignment: const AlignmentDirectional(0, -1),
-                                                child: FeqImagePickerWidget(
-                                                  initialImageUrl: _imageUrl,
-                                                  isUploading: _uploadingImage,
-                                                  onTap: _pickAndUploadImage,
-                                                  size: 100,
-                                                  onImagePicked: (url, file, bytes) {
-                                                    setState(() {
-                                                      _imageUrl = url;
-                                                      pickedImage = file;
-                                                      pickedBytes = bytes;
-                                                    });
-                                                  },
-                                                ),
+                                  child: Column(
+                                    children: [
+                                      /// HEADER
+                                      Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            FlutterFlowIconButton(
+                                              borderRadius: 8,
+                                              buttonSize: 50,
+                                              icon: Icon(
+                                                Icons.add_circle,
+                                                color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                size: 20,
                                               ),
-                                              Align(
-                                                alignment: const AlignmentDirectional(0, -1),
-                                                child: Padding(
-                                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 40),
-                                                  child: Opacity(
-                                                    opacity: (_uploadingImage || _loading) ? 0.5 : 1,
-                                                    child: GestureDetector(
-                                                      onTap: (_uploadingImage || _loading) ? null : _pickAndUploadImage,
-                                                      child: Text(
-                                                        'تغيير صورة الحساب',
-                                                        style: t.bodyMedium.override(
-                                                          fontFamily: 'Inter',
-                                                          color: t.primaryText,
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                          child: FeqLabeledTextField(
-                                            label: 'الاسم ',
-                                            controller: _model.influncerNameTextController,
-                                            focusNode: _model.influncerNameFocusNode,
-                                            textCapitalization: TextCapitalization.words,
-                                            width: double.infinity,
-                                            isError: _showErrors && _nameEmpty,
-                                            errorText: _showErrors && _nameEmpty ? 'يرجى إدخال الاسم.' : null,
-                                            decoration: inputDecoration(context, isError: _showErrors && _nameEmpty),
-                                          ),
-                                        ),
-
-                                        Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                          child: FeqLabeled(
-                                            'نوع المحتوى',
-                                            errorText: _showErrors && _contentEmpty ? 'يرجى اختيار نوع المحتوى.' : null,
-                                            child: FeqSearchableDropdown<FeqDropDownList>(
-                                              items: _influencerContentTypes,
-                                              value: _selectedInfluencerContentType,
-                                              onChanged: (v) {
-                                                setState(() => _selectedInfluencerContentType = v);
+                                              onPressed: () {
+                                                setState(() {
+                                                  final r = _SocialRow();
+                                                  _attachSocialRowListeners(r);
+                                                  _socialRows.add(r);
+                                                });
                                                 _onAnyFieldChanged();
                                               },
-                                              hint: 'اختر أو ابحث...',
-                                              isError: _showErrors && _contentEmpty,
                                             ),
-                                          ),
+                                            Flexible(                          // ← add this
+                                              child: Padding(
+                                                padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
+                                                child: Text(
+                                                  'منصاتك في مواقع التواصل الاجتماعي',
+                                                  textAlign: TextAlign.end,
+                                                  style: t.bodyMedium.copyWith(
+                                                    color: t.primaryText,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),),
+                                          ],
                                         ),
+                                      ),
 
-                                        Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 20, 20, 20),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius: const BorderRadius.all(Radius.circular(16)),
-                                              border: Border.all(color: t.secondary),
-                                            ),
-                                            child: Column(
+                                      /// OPTIONAL LABELS (hidden on small screens)
+                                      LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          final isSmall = constraints.maxWidth < 300;
+
+                                          if (isSmall) {
+                                            // ✅ STACKED LABELS (mobile)
+                                            return const Padding(
+                                              padding: EdgeInsetsDirectional.fromSTEB(20, 0, 20, 10),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.end,
+                                                children: [
+                                                  FeqLabeled('اسم المنصة'),
+                                                  SizedBox(height: 8),
+                                                  FeqLabeled('اسم الحساب في المنصة'),
+                                                ],
+                                              ),
+                                            );
+                                          }
+
+                                          // ✅ ORIGINAL (desktop)
+                                          return const Padding(
+                                            padding: EdgeInsetsDirectional.fromSTEB(35, 0, 20, 5),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
-                                                /// HEADER
-                                                Padding(
-                                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                Flexible(
+                                                  child: Padding(
+                                                    padding: EdgeInsetsDirectional.fromSTEB(0, 0, 10, 0),
+                                                    child: FeqLabeled('اسم الحساب في المنصة'),
+                                                  ),),
+                                                Flexible(
+                                                  child: FeqLabeled('اسم المنصة'),),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+
+                                      /// ROWS
+                                      Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
+                                        child: Column(
+                                          children: List.generate(_socialRows.length, (i) {
+                                            final row = _socialRows[i];
+
+                                            final isFirstRow = i == 0;
+                                            final platformEmpty = row.platform?.id == null ||
+                                                row.platform!.id.toString().isEmpty;
+                                            final usernameEmpty = row.usernameCtrl.text.trim().isEmpty;
+
+                                            final showPlatformErr = _showErrors &&
+                                                isFirstRow &&
+                                                _socialsRequireError &&
+                                                platformEmpty;
+
+                                            final showUsernameErr = _showErrors &&
+                                                isFirstRow &&
+                                                _socialsRequireError &&
+                                                usernameEmpty;
+
+                                            return LayoutBuilder(
+                                              builder: (context, constraints) {
+                                                final isSmall = constraints.maxWidth < 300;
+
+                                                /// ✅ SMALL SCREEN
+                                                if (isSmall) {
+                                                  return Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.end,
                                                     children: [
-                                                      FlutterFlowIconButton(
-                                                        borderRadius: 8,
-                                                        buttonSize: 50,
-                                                        icon: Icon(
-                                                          Icons.add_circle,
-                                                          color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                          size: 20,
+                                                      /// DELETE BUTTON
+                                                      Align(
+                                                        alignment: AlignmentDirectional.centerStart,
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(bottom: 8),
+                                                          child: FlutterFlowIconButton(
+                                                            borderRadius: 8,
+                                                            buttonSize: 40,
+                                                            icon: Icon(
+                                                              Icons.minimize_outlined,
+                                                              color: t
+                                                                  .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                              size: 18,
+                                                            ),
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                _socialRows.removeAt(i);
+                                                                if (_socialRows.isEmpty) {
+                                                                  final r = _SocialRow();
+                                                                  _attachSocialRowListeners(r);
+                                                                  _socialRows.add(r);
+                                                                }
+                                                              });
+                                                              _onAnyFieldChanged();
+                                                            },
+                                                          ),
                                                         ),
-                                                        onPressed: () {
-                                                          setState(() {
+                                                      ),
+
+
+                                                      /// PLATFORM FIRST
+                                                      Padding(
+                                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                                          children: [
+                                                            FeqSearchableDropdown<FeqDropDownList>(
+                                                              items: _socialPlatforms,
+                                                              value: row.platform,
+                                                              onChanged: (v) {
+                                                                setState(() => row.platform = v);
+                                                                _onAnyFieldChanged();
+                                                              },
+                                                              hint: 'اختر المنصة',
+                                                              isError: showPlatformErr,
+                                                            ),
+                                                            if (showPlatformErr)
+                                                              const Padding(
+                                                                padding: EdgeInsets.only(top: 6),
+                                                                child: Text(
+                                                                  'يرجى اختيار المنصة.',
+                                                                  style: TextStyle(color: Colors.red, fontSize: 12),
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+
+                                                      /// THEN USERNAME
+                                                      Padding(
+                                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                                          children: [
+                                                            TextFormField(
+                                                              controller: row.usernameCtrl,
+                                                              decoration: platformInputDecoration(
+                                                                context,
+                                                                isError: showUsernameErr,
+                                                              ),
+                                                              textAlign: TextAlign.end,
+                                                            ),
+                                                            if (row.platform != null &&
+                                                                row.usernameCtrl.text.trim().isNotEmpty)
+                                                              Padding(
+                                                                padding: const EdgeInsets.only(top: 4),
+                                                                child: InkWell(
+                                                                  onTap: () {
+                                                                    final url =
+                                                                        'https://${row.platform!.domain}/${row.usernameCtrl.text.trim()}';
+                                                                    launchUrl(Uri.parse(url));
+                                                                  },
+                                                                  child: Text(
+                                                                    '${row.platform!.domain}/${row.usernameCtrl.text.trim()}',
+                                                                    style: const TextStyle(
+                                                                      color: Colors.blue,
+                                                                      decoration: TextDecoration.underline,
+                                                                    ),
+                                                                    textAlign: TextAlign.end,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            if (showUsernameErr)
+                                                              const Padding(
+                                                                padding: EdgeInsets.only(top: 6),
+                                                                child: Text(
+                                                                  'يرجى إدخال اسم الحساب.',
+                                                                  style: TextStyle(
+                                                                      color: Colors.red, fontSize: 12),
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+
+                                                      const SizedBox(height: 16),
+                                                    ],
+                                                  );
+                                                }
+
+                                                /// ✅ LARGE SCREEN
+                                                return Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    FlutterFlowIconButton(
+                                                      borderRadius: 8,
+                                                      buttonSize: 50,
+                                                      icon: Icon(
+                                                        Icons.minimize_outlined,
+                                                        color: t
+                                                            .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          _socialRows.removeAt(i);
+                                                          if (_socialRows.isEmpty) {
                                                             final r = _SocialRow();
                                                             _attachSocialRowListeners(r);
                                                             _socialRows.add(r);
-                                                          });
-                                                          _onAnyFieldChanged();
-                                                        },
-                                                      ),
-                                                      Padding(
-                                                        padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
-                                                        child: Text(
-                                                          'منصاتك في مواقع التواصل الاجتماعي',
-                                                          textAlign: TextAlign.end,
-                                                          style: t.bodyMedium.copyWith(
-                                                            color: t.primaryText,
-                                                            fontSize: 16,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
+                                                          }
+                                                        });
+                                                        _onAnyFieldChanged();
+                                                      },
+                                                    ),
 
-                                                /// OPTIONAL LABELS (hidden on small screens)
-                                                LayoutBuilder(
-                                                  builder: (context, constraints) {
-                                                    final isSmall = constraints.maxWidth < 300;
-
-                                                    if (isSmall) {
-                                                      // ✅ STACKED LABELS (mobile)
-                                                      return const Padding(
-                                                        padding: EdgeInsetsDirectional.fromSTEB(20, 0, 20, 10),
+                                                    Expanded(
+                                                      child: Padding(
+                                                        padding: const EdgeInsetsDirectional.fromSTEB(
+                                                            0, 0, 20, 0),
                                                         child: Column(
                                                           crossAxisAlignment: CrossAxisAlignment.end,
                                                           children: [
-                                                            FeqLabeled('اسم المنصة'),
-                                                            SizedBox(height: 8),
-                                                            FeqLabeled('اسم الحساب في المنصة'),
+                                                            TextFormField(
+                                                              controller: row.usernameCtrl,
+                                                              decoration:
+                                                              platformInputDecoration(context,
+                                                                  isError: showUsernameErr),
+                                                              textAlign: TextAlign.end,
+                                                            ),
                                                           ],
                                                         ),
-                                                      );
-                                                    }
-
-                                                    // ✅ ORIGINAL (desktop)
-                                                    return const Padding(
-                                                      padding: EdgeInsetsDirectional.fromSTEB(35, 0, 20, 5),
-                                                      child: Row(
-                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                        children: [
-                                                          Padding(
-                                                            padding: EdgeInsetsDirectional.fromSTEB(0, 0, 10, 0),
-                                                            child: FeqLabeled('اسم الحساب في المنصة'),
-                                                          ),
-                                                          FeqLabeled('اسم المنصة'),
-                                                        ],
                                                       ),
-                                                    );
-                                                  },
-                                                ),
+                                                    ),
 
-                                                /// ROWS
-                                                Padding(
-                                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 16),
-                                                  child: Column(
-                                                    children: List.generate(_socialRows.length, (i) {
-                                                      final row = _socialRows[i];
+                                                    Expanded(
+                                                      child: Padding(
+                                                        padding: const EdgeInsetsDirectional.fromSTEB(
+                                                            0, 0, 20, 0),
+                                                        child: FeqSearchableDropdown<FeqDropDownList>(
+                                                          items: _socialPlatforms,
+                                                          value: row.platform,
+                                                          onChanged: (v) {
+                                                            setState(() => row.platform = v);
+                                                            _onAnyFieldChanged();
+                                                          },
+                                                          hint: 'اختر المنصة',
+                                                          isError: showPlatformErr,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          }),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
 
-                                                      final isFirstRow = i == 0;
-                                                      final platformEmpty = row.platform?.id == null ||
-                                                          row.platform!.id.toString().isEmpty;
-                                                      final usernameEmpty = row.usernameCtrl.text.trim().isEmpty;
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                child: FeqLabeledTextField(
+                                  label: 'النبذة الشخصية',
+                                  required: false,
+                                  controller: _model.influncerDescreptionTextController,
+                                  focusNode: _model.influncerDescreptionFocusNode,
+                                  textCapitalization: TextCapitalization.sentences,
+                                  width: double.infinity,
+                                  maxLines: 3,
+                                  decoration: inputDecoration(context),
+                                ),
+                              ),
 
-                                                      final showPlatformErr = _showErrors &&
-                                                          isFirstRow &&
-                                                          _socialsRequireError &&
-                                                          platformEmpty;
+                              // Contact Information Section
+                              const Padding(
+                                padding: EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                child: FeqLabeled('معلومات التواصل'),
+                              ),
 
-                                                      final showUsernameErr = _showErrors &&
-                                                          isFirstRow &&
-                                                          _socialsRequireError &&
-                                                          usernameEmpty;
-
-                                                      return LayoutBuilder(
-                                                        builder: (context, constraints) {
-                                                          final isSmall = constraints.maxWidth < 300;
-
-                                                          /// ✅ SMALL SCREEN
-                                                          if (isSmall) {
-                                                            return Column(
-                                                              crossAxisAlignment: CrossAxisAlignment.end,
-                                                              children: [
-                                                                /// DELETE BUTTON
-                                                                Align(
-                                                                  alignment: AlignmentDirectional.centerStart,
-                                                                  child: Padding(
-                                                                    padding: const EdgeInsets.only(bottom: 8),
-                                                                    child: FlutterFlowIconButton(
-                                                                      borderRadius: 8,
-                                                                      buttonSize: 40,
-                                                                      icon: Icon(
-                                                                        Icons.minimize_outlined,
-                                                                        color: t
-                                                                            .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                                        size: 18,
-                                                                      ),
-                                                                      onPressed: () {
-                                                                        setState(() {
-                                                                          _socialRows.removeAt(i);
-                                                                          if (_socialRows.isEmpty) {
-                                                                            final r = _SocialRow();
-                                                                            _attachSocialRowListeners(r);
-                                                                            _socialRows.add(r);
-                                                                          }
-                                                                        });
-                                                                        _onAnyFieldChanged();
-                                                                      },
-                                                                    ),
-                                                                  ),
-                                                                ),
-
-
-                                                                /// PLATFORM FIRST
-                                                                Padding(
-                                                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
-                                                                  child: Column(
-                                                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                                                    children: [
-                                                                      FeqSearchableDropdown<FeqDropDownList>(
-                                                                        items: _socialPlatforms,
-                                                                        value: row.platform,
-                                                                        onChanged: (v) {
-                                                                          setState(() => row.platform = v);
-                                                                          _onAnyFieldChanged();
-                                                                        },
-                                                                        hint: 'اختر المنصة',
-                                                                        isError: showPlatformErr,
-                                                                      ),
-                                                                      if (showPlatformErr)
-                                                                        const Padding(
-                                                                          padding: EdgeInsets.only(top: 6),
-                                                                          child: Text(
-                                                                            'يرجى اختيار المنصة.',
-                                                                            style: TextStyle(color: Colors.red, fontSize: 12),
-                                                                          ),
-                                                                        ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-
-                                                                /// THEN USERNAME
-                                                                Padding(
-                                                                  padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 12),
-                                                                  child: Column(
-                                                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                                                    children: [
-                                                                      TextFormField(
-                                                                        controller: row.usernameCtrl,
-                                                                        decoration: platformInputDecoration(
-                                                                          context,
-                                                                          isError: showUsernameErr,
-                                                                        ),
-                                                                        textAlign: TextAlign.end,
-                                                                      ),
-                                                                      if (row.platform != null &&
-                                                                          row.usernameCtrl.text.trim().isNotEmpty)
-                                                                        Padding(
-                                                                          padding: const EdgeInsets.only(top: 4),
-                                                                          child: InkWell(
-                                                                            onTap: () {
-                                                                              final url =
-                                                                                  'https://${row.platform!.domain}/${row.usernameCtrl.text.trim()}';
-                                                                              launchUrl(Uri.parse(url));
-                                                                            },
-                                                                            child: Text(
-                                                                              '${row.platform!.domain}/${row.usernameCtrl.text.trim()}',
-                                                                              style: const TextStyle(
-                                                                                color: Colors.blue,
-                                                                                decoration: TextDecoration.underline,
-                                                                              ),
-                                                                              textAlign: TextAlign.end,
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                      if (showUsernameErr)
-                                                                        const Padding(
-                                                                          padding: EdgeInsets.only(top: 6),
-                                                                          child: Text(
-                                                                            'يرجى إدخال اسم الحساب.',
-                                                                            style: TextStyle(
-                                                                                color: Colors.red, fontSize: 12),
-                                                                          ),
-                                                                        ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-
-                                                                const SizedBox(height: 16),
-                                                              ],
-                                                            );
-                                                          }
-
-                                                          /// ✅ LARGE SCREEN
-                                                          return Row(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              FlutterFlowIconButton(
-                                                                borderRadius: 8,
-                                                                buttonSize: 50,
-                                                                icon: Icon(
-                                                                  Icons.minimize_outlined,
-                                                                  color: t
-                                                                      .iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                                  size: 20,
-                                                                ),
-                                                                onPressed: () {
-                                                                  setState(() {
-                                                                    _socialRows.removeAt(i);
-                                                                    if (_socialRows.isEmpty) {
-                                                                      final r = _SocialRow();
-                                                                      _attachSocialRowListeners(r);
-                                                                      _socialRows.add(r);
-                                                                    }
-                                                                  });
-                                                                  _onAnyFieldChanged();
-                                                                },
-                                                              ),
-
-                                                              Expanded(
-                                                                child: Padding(
-                                                                  padding: const EdgeInsetsDirectional.fromSTEB(
-                                                                      0, 0, 20, 0),
-                                                                  child: Column(
-                                                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                                                    children: [
-                                                                      TextFormField(
-                                                                        controller: row.usernameCtrl,
-                                                                        decoration:
-                                                                        platformInputDecoration(context,
-                                                                            isError: showUsernameErr),
-                                                                        textAlign: TextAlign.end,
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              ),
-
-                                                              Expanded(
-                                                                child: Padding(
-                                                                  padding: const EdgeInsetsDirectional.fromSTEB(
-                                                                      0, 0, 20, 0),
-                                                                  child: FeqSearchableDropdown<FeqDropDownList>(
-                                                                    items: _socialPlatforms,
-                                                                    value: row.platform,
-                                                                    onChanged: (v) {
-                                                                      setState(() => row.platform = v);
-                                                                      _onAnyFieldChanged();
-                                                                    },
-                                                                    hint: 'اختر المنصة',
-                                                                    isError: showPlatformErr,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          );
-                                                        },
-                                                      );
-                                                    }),
+                              // Phone Section
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    FeqLabeledTextField(
+                                      label: 'رقم الجوال ',
+                                      required: false,
+                                      controller: _model.phoneNumberTextController,
+                                      focusNode: _model.phoneNumberFocusNode,
+                                      keyboardType: TextInputType.phone,
+                                      decoration: inputDecoration(
+                                        context,
+                                        isError: _showErrors && _bothContactsEmpty,
+                                      ).copyWith(hintText: '05XXXXXXXX'),
+                                    ),
+                                    // Phone Radio Buttons
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          InkWell(
+                                            onTap: () {
+                                              setState(() => _phoneOwner = PhoneOwner.personal);
+                                              _onAnyFieldChanged();
+                                            },
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                Text(
+                                                  'رقم الجوال الخاص بي',
+                                                  style: t.bodyMedium.override(
+                                                    fontFamily: 'Inter',
+                                                    color: t.primaryText,
+                                                    fontSize: 14,
                                                   ),
+                                                ),
+                                                RadioMenuButton<PhoneOwner>(
+                                                  value: PhoneOwner.personal,
+                                                  groupValue: _phoneOwner,
+                                                  onChanged: (value) {
+                                                    setState(() => _phoneOwner = value!);
+                                                    _onAnyFieldChanged();
+                                                  },
+                                                  child: const SizedBox.shrink(),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                        ),
+                                          InkWell(
+                                            onTap: () {
+                                              setState(() => _phoneOwner = PhoneOwner.assistant);
+                                              _onAnyFieldChanged();
+                                            },
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                Text(
+                                                  'رقم الجوال الخاص بمنسق أعمالي',
+                                                  style: t.bodyMedium.override(
+                                                    fontFamily: 'Inter',
+                                                    color: t.primaryText,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                RadioMenuButton<PhoneOwner>(
+                                                  value: PhoneOwner.assistant,
+                                                  groupValue: _phoneOwner,
+                                                  onChanged: (value) {
+                                                    setState(() => _phoneOwner = value!);
+                                                    _onAnyFieldChanged();
+                                                  },
+                                                  child: const SizedBox.shrink(),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
 
-                                        Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                          child: FeqLabeledTextField(
-                                            label: 'النبذة الشخصية',
+                              // ==================== EMAIL SECTION ====================
+                              // Email Section
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(20, 15, 20, 6),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    // Display field (changes based on selection)
+                                    if (!_useCustomEmail)
+                                    // Show logged-in email as read-only
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          FeqLabeledTextField(
+                                            label: 'البريد الإلكتروني',
+                                            style: TextStyle(color: t.tertiaryText),
                                             required: false,
-                                            controller: _model.influncerDescreptionTextController,
-                                            focusNode: _model.influncerDescreptionFocusNode,
-                                            textCapitalization: TextCapitalization.sentences,
-                                            width: double.infinity,
-                                            maxLines: 3,
+                                            initialValue: _userEmail,
+                                            enabled: false,
                                             decoration: inputDecoration(context),
                                           ),
-                                        ),
+                                        ],
+                                      )
+                                    else
+                                    // Show input field for custom email
+                                      FeqLabeledTextField(
+                                        label: 'البريد الإلكتروني',
+                                        required: false,
+                                        controller: _customEmailController,
+                                        focusNode: _model.emailFocusNode,
+                                        keyboardType: TextInputType.emailAddress,
+                                        decoration: inputDecoration(
+                                          context,
+                                          isError: _showErrors && _bothContactsEmpty,
+                                        ).copyWith(hintText: 'أدخل البريد الإلكتروني'),
+                                      ),
 
-                                        // Contact Information Section
-                                        const Padding(
-                                          padding: EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                          child: FeqLabeled('معلومات التواصل'),
-                                        ),
-
-                                        // Phone Section
-                                        Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 6),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.end,
-                                            children: [
-                                              FeqLabeledTextField(
-                                                label: 'رقم الجوال ',
-                                                required: false,
-                                                controller: _model.phoneNumberTextController,
-                                                focusNode: _model.phoneNumberFocusNode,
-                                                keyboardType: TextInputType.phone,
-                                                decoration: inputDecoration(
-                                                  context,
-                                                  isError: _showErrors && _bothContactsEmpty,
-                                                ).copyWith(hintText: '05XXXXXXXX'),
-                                              ),
-                                              // Phone Radio Buttons
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 8),
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                                  children: [
-                                                    InkWell(
-                                                      onTap: () {
-                                                        setState(() => _phoneOwner = PhoneOwner.personal);
-                                                        _onAnyFieldChanged();
-                                                      },
-                                                      child: Row(
-                                                        mainAxisAlignment: MainAxisAlignment.end,
-                                                        children: [
-                                                          Text(
-                                                            'رقم الجوال الخاص بي',
-                                                            style: t.bodyMedium.override(
-                                                              fontFamily: 'Inter',
-                                                              color: t.primaryText,
-                                                              fontSize: 14,
-                                                            ),
-                                                          ),
-                                                          RadioMenuButton<PhoneOwner>(
-                                                            value: PhoneOwner.personal,
-                                                            groupValue: _phoneOwner,
-                                                            onChanged: (value) {
-                                                              setState(() => _phoneOwner = value!);
-                                                              _onAnyFieldChanged();
-                                                            },
-                                                            child: const SizedBox.shrink(),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    InkWell(
-                                                      onTap: () {
-                                                        setState(() => _phoneOwner = PhoneOwner.assistant);
-                                                        _onAnyFieldChanged();
-                                                      },
-                                                      child: Row(
-                                                        mainAxisAlignment: MainAxisAlignment.end,
-                                                        children: [
-                                                          Text(
-                                                            'رقم الجوال الخاص بمنسق أعمالي',
-                                                            style: t.bodyMedium.override(
-                                                              fontFamily: 'Inter',
-                                                              color: t.primaryText,
-                                                              fontSize: 14,
-                                                            ),
-                                                          ),
-                                                          RadioMenuButton<PhoneOwner>(
-                                                            value: PhoneOwner.assistant,
-                                                            groupValue: _phoneOwner,
-                                                            onChanged: (value) {
-                                                              setState(() => _phoneOwner = value!);
-                                                              _onAnyFieldChanged();
-                                                            },
-                                                            child: const SizedBox.shrink(),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-
-                                        // ==================== EMAIL SECTION ====================
-                                        // Email Section
-                                        Padding(
-                                          padding: const EdgeInsetsDirectional.fromSTEB(20, 15, 20, 6),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.end,
-                                            children: [
-                                              // Display field (changes based on selection)
-                                              if (!_useCustomEmail)
-                                                // Show logged-in email as read-only
-                                                Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                                  children: [
-                                                    FeqLabeledTextField(
-                                                      label: 'البريد الإلكتروني',
-                                                      style: TextStyle(color: t.tertiaryText),
-                                                      required: false,
-                                                      initialValue: _userEmail,
-                                                      enabled: false,
-                                                      decoration: inputDecoration(context),
-                                                    ),
-                                                  ],
-                                                )
-                                              else
-                                                // Show input field for custom email
-                                                FeqLabeledTextField(
-                                                  label: 'البريد الإلكتروني',
-                                                  required: false,
-                                                  controller: _customEmailController,
-                                                  focusNode: _model.emailFocusNode,
-                                                  keyboardType: TextInputType.emailAddress,
-                                                  decoration: inputDecoration(
-                                                    context,
-                                                    isError: _showErrors && _bothContactsEmpty,
-                                                  ).copyWith(hintText: 'أدخل البريد الإلكتروني'),
-                                                ),
-
-                                              // Email Radio Buttons
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 12),
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                                  children: [
-                                                    InkWell(
-                                                      onTap: () {
-                                                        setState(() {
-                                                          _useCustomEmail = false;
-                                                          _emailOwner = EmailOwner.personal;
-                                                          _customEmailController.clear();
-                                                        });
-                                                        _onAnyFieldChanged();
-                                                      },
-                                                      child: Row(
-                                                        mainAxisAlignment: MainAxisAlignment.end,
-                                                        children: [
-                                                          Text(
-                                                            'البريد الإلكتروني الخاص بي',
-                                                            style: t.bodyMedium.override(
-                                                              fontFamily: 'Inter',
-                                                              color: t.primaryText,
-                                                              fontSize: 14,
-                                                            ),
-                                                          ),
-                                                          RadioMenuButton<bool>(
-                                                            value: false,
-                                                            groupValue: _useCustomEmail,
-                                                            onChanged: (value) {
-                                                              setState(() {
-                                                                _useCustomEmail = value ?? false;
-                                                                _emailOwner = EmailOwner.personal;
-                                                                _customEmailController.clear();
-                                                              });
-                                                              _onAnyFieldChanged();
-                                                            },
-                                                            child: const SizedBox.shrink(),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    InkWell(
-                                                      onTap: () {
-                                                        setState(() {
-                                                          _useCustomEmail = true;
-                                                          _customEmailController.clear();
-                                                        });
-                                                        _onAnyFieldChanged();
-                                                      },
-                                                      child: Row(
-                                                        mainAxisAlignment: MainAxisAlignment.end,
-                                                        children: [
-                                                          Text(
-                                                            'إضافة بريد إلكتروني مختلف',
-                                                            style: t.bodyMedium.override(
-                                                              fontFamily: 'Inter',
-                                                              color: t.primaryText,
-                                                              fontSize: 14,
-                                                            ),
-                                                          ),
-                                                          RadioMenuButton<bool>(
-                                                            value: true,
-                                                            groupValue: _useCustomEmail,
-                                                            onChanged: (value) {
-                                                              setState(() {
-                                                                _useCustomEmail = value ?? false;
-                                                                _customEmailController.clear();
-                                                              });
-                                                              _onAnyFieldChanged();
-                                                            },
-                                                            child: const SizedBox.shrink(),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    if (_useCustomEmail) ...[
-                                                      const SizedBox(height: 12),
-                                                      Padding(
-                                                        padding: const EdgeInsets.only(right: 32),
-                                                        child: Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                                          children: [
-                                                            InkWell(
-                                                              onTap: () {
-                                                                setState(() => _emailOwner = EmailOwner.personal);
-                                                                _onAnyFieldChanged();
-                                                              },
-                                                              child: Row(
-                                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                                children: [
-                                                                  Text(
-                                                                    'الخاص بي',
-                                                                    style: t.bodySmall.override(
-                                                                      fontFamily: 'Inter',
-                                                                      color: t.primaryText,
-                                                                      fontSize: 13,
-                                                                    ),
-                                                                  ),
-                                                                  RadioMenuButton<EmailOwner>(
-                                                                    value: EmailOwner.personal,
-                                                                    groupValue: _emailOwner,
-                                                                    onChanged: (value) {
-                                                                      setState(() => _emailOwner = value!);
-                                                                      _onAnyFieldChanged();
-                                                                    },
-                                                                    child: const SizedBox.shrink(),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            InkWell(
-                                                              onTap: () {
-                                                                setState(() => _emailOwner = EmailOwner.assistant);
-                                                                _onAnyFieldChanged();
-                                                              },
-                                                              child: Row(
-                                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                                children: [
-                                                                  Text(
-                                                                    'الخاص بمنسق أعمالي',
-                                                                    style: t.bodySmall.override(
-                                                                      fontFamily: 'Inter',
-                                                                      color: t.primaryText,
-                                                                      fontSize: 13,
-                                                                    ),
-                                                                  ),
-                                                                  RadioMenuButton<EmailOwner>(
-                                                                    value: EmailOwner.assistant,
-                                                                    groupValue: _emailOwner,
-                                                                    onChanged: (value) {
-                                                                      setState(() => _emailOwner = value!);
-                                                                      _onAnyFieldChanged();
-                                                                    },
-                                                                    child: const SizedBox.shrink(),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-
-                                        // Error message for contact info
-                                        if (_showErrors && _bothContactsEmpty)
-                                          const Padding(
-                                            padding: EdgeInsetsDirectional.fromSTEB(0, 6, 24, 10),
-                                            child: Text(
-                                              'يرجى إدخال رقم الجوال أو البريد الإلكتروني.',
-                                              textAlign: TextAlign.end,
-                                              style: TextStyle(color: Colors.red, fontSize: 12),
-                                            ),
-                                          ),
-
-                                        if (isSetupMode) ...[
-                                          Padding(
-                                            padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                    // Email Radio Buttons
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 12),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                _useCustomEmail = false;
+                                                _emailOwner = EmailOwner.personal;
+                                                _customEmailController.clear();
+                                              });
+                                              _onAnyFieldChanged();
+                                            },
                                             child: Row(
-                                              textDirection: TextDirection.rtl,
-                                              crossAxisAlignment: CrossAxisAlignment.end,
+                                              mainAxisAlignment: MainAxisAlignment.end,
                                               children: [
-                                                Expanded(
-                                                  child: FeqLabeledTextField(
-                                                    label: 'رقم الرخصة الإعلامية (موثوق)',
-                                                    controller: _model.mediaLicenseTextController,
-                                                    focusNode: _model.mediaLicenseFocusNode,
-                                                    keyboardType: TextInputType.number,
-                                                    decoration: inputDecoration(
-                                                      context,
-                                                      isError: _showLicenseErrors &&
-                                                          (mediaLicenseRequiredError ||
-                                                              mediaLicenseFormatError ||
-                                                              mediaLicenseFetchingError),
-                                                    ).copyWith(hintText: 'xxxxxx'),
+                                                Text(
+                                                  'البريد الإلكتروني الخاص بي',
+                                                  style: t.bodyMedium.override(
+                                                    fontFamily: 'Inter',
+                                                    color: t.primaryText,
+                                                    fontSize: 14,
                                                   ),
                                                 ),
-                                                const SizedBox(width: 10),
-                                                Padding(
-                                                  padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 0, 7),
-                                                  child: ElevatedButton(
-                                                    onPressed: _fetchLicenseData,
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: t.secondaryButtonsOnLight,
-                                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(12),
-                                                      ),
-                                                    ),
-                                                    child: Text(
-                                                      'تحقق',
-                                                      style: TextStyle(color: t.primaryText, fontSize: 14),
-                                                    ),
-                                                  ),
+                                                RadioMenuButton<bool>(
+                                                  value: false,
+                                                  groupValue: _useCustomEmail,
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      _useCustomEmail = value ?? false;
+                                                      _emailOwner = EmailOwner.personal;
+                                                      _customEmailController.clear();
+                                                    });
+                                                    _onAnyFieldChanged();
+                                                  },
+                                                  child: const SizedBox.shrink(),
                                                 ),
                                               ],
                                             ),
                                           ),
-
-                                          // ===== Error: Required =====
-                                          if (_showLicenseErrors && mediaLicenseRequiredError)
-                                            const Padding(
-                                              padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
-                                              child: Text(
-                                                'يرجى إدخال رقم الرخصة.',
-                                                style: TextStyle(color: Colors.red, fontSize: 12),
-                                              ),
+                                          InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                _useCustomEmail = true;
+                                                _customEmailController.clear();
+                                              });
+                                              _onAnyFieldChanged();
+                                            },
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                Text(
+                                                  'إضافة بريد إلكتروني مختلف',
+                                                  style: t.bodyMedium.override(
+                                                    fontFamily: 'Inter',
+                                                    color: t.primaryText,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                RadioMenuButton<bool>(
+                                                  value: true,
+                                                  groupValue: _useCustomEmail,
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      _useCustomEmail = value ?? false;
+                                                      _customEmailController.clear();
+                                                    });
+                                                    _onAnyFieldChanged();
+                                                  },
+                                                  child: const SizedBox.shrink(),
+                                                ),
+                                              ],
                                             ),
-
-                                          // ===== Error: Wrong Format =====
-                                          if (_showLicenseErrors && mediaLicenseFormatError)
-                                            const Padding(
-                                              padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
-                                              child: Text(
-                                                'رقم الرخصة يجب أن يكون 6 أرقام صحيحة.',
-                                                style: TextStyle(color: Colors.red, fontSize: 12),
-                                              ),
-                                            ),
-
-                                          // ===== Error: Duplicate in Firestore =====
-                                          if (_showLicenseErrors && mediaLicenseDuplicateError)
-                                            const Padding(
-                                              padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
-                                              child: Text(
-                                                'رقم الرخصة مستخدم مسبقًا.',
-                                                style: TextStyle(color: Colors.red, fontSize: 12),
-                                              ),
-                                            ),
-
-                                          // ===== Error: Invalid / Not Found =====
-                                          if (_showLicenseErrors && mediaLicenseFetchingError)
-                                            const Padding(
-                                              padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
-                                              child: Text(
-                                                'رقم الرخصة غير صحيح أو غير موجود.',
-                                                style: TextStyle(color: Colors.red, fontSize: 12),
-                                              ),
-                                            ),
-
-                                          // ===== SHOW Fetched License Data =====
-                                          if (mediaLicenseFetched) ...[
+                                          ),
+                                          if (_useCustomEmail) ...[
                                             const SizedBox(height: 12),
-
-                                            // License Status
                                             Padding(
-                                              padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                              child: FeqLabeledTextField(
-                                                label: 'حالة الرخصة',
-                                                required: false,
-                                                enabled: false,
-                                                style: TextStyle(color: t.tertiaryText),
-                                                initialValue: mediaLicenseStatus ?? '',
-                                                decoration: inputDecoration(context),
-                                              ),
-                                            ),
-
-                                            // License Expiry Date
-                                            Padding(
-                                              padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
-                                              child: FeqLabeledTextField(
-                                                label: 'تاريخ انتهاء الرخصة',
-                                                required: false,
-                                                enabled: false,
-                                                style: TextStyle(color: t.tertiaryText),
-                                                initialValue: expDateFormatted ?? '',
-                                                decoration: inputDecoration(context),
+                                              padding: const EdgeInsets.only(right: 32),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.end,
+                                                children: [
+                                                  InkWell(
+                                                    onTap: () {
+                                                      setState(() => _emailOwner = EmailOwner.personal);
+                                                      _onAnyFieldChanged();
+                                                    },
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.end,
+                                                      children: [
+                                                        Text(
+                                                          'الخاص بي',
+                                                          style: t.bodySmall.override(
+                                                            fontFamily: 'Inter',
+                                                            color: t.primaryText,
+                                                            fontSize: 13,
+                                                          ),
+                                                        ),
+                                                        RadioMenuButton<EmailOwner>(
+                                                          value: EmailOwner.personal,
+                                                          groupValue: _emailOwner,
+                                                          onChanged: (value) {
+                                                            setState(() => _emailOwner = value!);
+                                                            _onAnyFieldChanged();
+                                                          },
+                                                          child: const SizedBox.shrink(),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  InkWell(
+                                                    onTap: () {
+                                                      setState(() => _emailOwner = EmailOwner.assistant);
+                                                      _onAnyFieldChanged();
+                                                    },
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.end,
+                                                      children: [
+                                                        Text(
+                                                          'الخاص بمنسق أعمالي',
+                                                          style: t.bodySmall.override(
+                                                            fontFamily: 'Inter',
+                                                            color: t.primaryText,
+                                                            fontSize: 13,
+                                                          ),
+                                                        ),
+                                                        RadioMenuButton<EmailOwner>(
+                                                          value: EmailOwner.assistant,
+                                                          groupValue: _emailOwner,
+                                                          onChanged: (value) {
+                                                            setState(() => _emailOwner = value!);
+                                                            _onAnyFieldChanged();
+                                                          },
+                                                          child: const SizedBox.shrink(),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
                                         ],
-
-                                        // Buttons
-                                        if (isEditMode)
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              Padding(
-                                                padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
-                                                child: FFButtonWidget(
-                                                  onPressed: _isFormValid ? () => _saveAll() : null,
-                                                  text: 'تحديث',
-                                                  options: FFButtonOptions(
-                                                    width: 400,
-                                                    height: 40,
-                                                    color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                    textStyle: t.titleMedium.override(
-                                                      fontFamily: 'Inter',
-                                                      color: t.containers,
-                                                    ),
-                                                    elevation: 2,
-                                                    borderRadius: BorderRadius.circular(12),
-                                                    disabledColor: Colors.grey,
-                                                    disabledTextColor: Colors.white70,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                        else
-                                          Center(
-                                            child: Padding(
-                                              padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
-                                              child: FFButtonWidget(
-                                                onPressed: _isFormValid ? () => _saveAll() : null,
-                                                text: 'إنشاء',
-                                                options: FFButtonOptions(
-                                                  width: 400,
-                                                  height: 40,
-                                                  color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
-                                                  textStyle: t.titleMedium.override(
-                                                    fontFamily: 'Inter',
-                                                    color: t.containers,
-                                                  ),
-                                                  elevation: 2,
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  disabledColor: Colors.grey,
-                                                  disabledTextColor: Colors.white70,
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                      ],
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ),
+
+                              // Error message for contact info
+                              if (_showErrors && _bothContactsEmpty)
+                                const Padding(
+                                  padding: EdgeInsetsDirectional.fromSTEB(0, 6, 24, 10),
+                                  child: Text(
+                                    'يرجى إدخال رقم الجوال أو البريد الإلكتروني.',
+                                    textAlign: TextAlign.end,
+                                    style: TextStyle(color: Colors.red, fontSize: 12),
+                                  ),
+                                ),
+
+                              if (isSetupMode) ...[
+                                Padding(
+                                  padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                  child: Row(
+                                    textDirection: TextDirection.rtl,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Expanded(
+                                        child: FeqLabeledTextField(
+                                          label: 'رقم الرخصة الإعلامية (موثوق)',
+                                          controller: _model.mediaLicenseTextController,
+                                          focusNode: _model.mediaLicenseFocusNode,
+                                          keyboardType: TextInputType.number,
+                                          decoration: inputDecoration(
+                                            context,
+                                            isError: _showLicenseErrors &&
+                                                (mediaLicenseRequiredError ||
+                                                    mediaLicenseFormatError ||
+                                                    mediaLicenseFetchingError),
+                                          ).copyWith(hintText: 'xxxxxx'),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Padding(
+                                        padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 0, 7),
+                                        child: ElevatedButton(
+                                          onPressed: _fetchLicenseData,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: t.secondaryButtonsOnLight,
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'تحقق',
+                                            style: TextStyle(color: t.primaryText, fontSize: 14),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // ===== Error: Required =====
+                                if (_showLicenseErrors && mediaLicenseRequiredError)
+                                  const Padding(
+                                    padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                    child: Text(
+                                      'يرجى إدخال رقم الرخصة.',
+                                      style: TextStyle(color: Colors.red, fontSize: 12),
+                                    ),
+                                  ),
+
+                                // ===== Error: Wrong Format =====
+                                if (_showLicenseErrors && mediaLicenseFormatError)
+                                  const Padding(
+                                    padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                    child: Text(
+                                      'رقم الرخصة يجب أن يكون 6 أرقام صحيحة.',
+                                      style: TextStyle(color: Colors.red, fontSize: 12),
+                                    ),
+                                  ),
+
+                                // ===== Error: Duplicate in Firestore =====
+                                if (_showLicenseErrors && mediaLicenseDuplicateError)
+                                  const Padding(
+                                    padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                    child: Text(
+                                      'رقم الرخصة مستخدم مسبقًا.',
+                                      style: TextStyle(color: Colors.red, fontSize: 12),
+                                    ),
+                                  ),
+
+                                // ===== Error: Invalid / Not Found =====
+                                if (_showLicenseErrors && mediaLicenseFetchingError)
+                                  const Padding(
+                                    padding: EdgeInsetsDirectional.fromSTEB(20, 5, 38, 0),
+                                    child: Text(
+                                      'رقم الرخصة غير صحيح أو غير موجود.',
+                                      style: TextStyle(color: Colors.red, fontSize: 12),
+                                    ),
+                                  ),
+
+                                // ===== SHOW Fetched License Data =====
+                                if (mediaLicenseFetched) ...[
+                                  const SizedBox(height: 12),
+
+                                  // License Status
+                                  Padding(
+                                    padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                    child: FeqLabeledTextField(
+                                      label: 'حالة الرخصة',
+                                      required: false,
+                                      enabled: false,
+                                      style: TextStyle(color: t.tertiaryText),
+                                      initialValue: mediaLicenseStatus ?? '',
+                                      decoration: inputDecoration(context),
+                                    ),
+                                  ),
+
+                                  // License Expiry Date
+                                  Padding(
+                                    padding: const EdgeInsetsDirectional.fromSTEB(20, 5, 20, 0),
+                                    child: FeqLabeledTextField(
+                                      label: 'تاريخ انتهاء الرخصة',
+                                      required: false,
+                                      enabled: false,
+                                      style: TextStyle(color: t.tertiaryText),
+                                      initialValue: expDateFormatted ?? '',
+                                      decoration: inputDecoration(context),
+                                    ),
+                                  ),
+                                ],
+                              ],
+
+                              // Buttons
+                              if (isEditMode)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
+                                      child: FFButtonWidget(
+                                        onPressed: _isFormValid ? () => _saveAll() : null,
+                                        text: 'تحديث',
+                                        options: FFButtonOptions(
+                                          width: 400,
+                                          height: 40,
+                                          color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                          textStyle: t.titleMedium.override(
+                                            fontFamily: 'Inter',
+                                            color: t.containers,
+                                          ),
+                                          elevation: 2,
+                                          borderRadius: BorderRadius.circular(12),
+                                          disabledColor: Colors.grey,
+                                          disabledTextColor: Colors.white70,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else
+                                Center(
+                                  child: Padding(
+                                    padding: const EdgeInsetsDirectional.fromSTEB(0, 40, 0, 24),
+                                    child: FFButtonWidget(
+                                      onPressed: _isFormValid ? () => _saveAll() : null,
+                                      text: 'إنشاء',
+                                      options: FFButtonOptions(
+                                        width: 400,
+                                        height: 40,
+                                        color: t.iconsOnLightBackgroundsMainButtonsOnLightBackgrounds,
+                                        textStyle: t.titleMedium.override(
+                                          fontFamily: 'Inter',
+                                          color: t.containers,
+                                        ),
+                                        elevation: 2,
+                                        borderRadius: BorderRadius.circular(12),
+                                        disabledColor: Colors.grey,
+                                        disabledTextColor: Colors.white70,
+                                      ),
+                                    ),
+                                  ),
+                                )
                             ],
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1637,7 +1640,7 @@ class _InfluencerProfileFormWidgetState extends State<InfluencerProfileFormWidge
 
     try {
       final dupSnap =
-          await firebaseFirestore.collection('users').where('media_license_number', isEqualTo: num).limit(1).get();
+      await firebaseFirestore.collection('users').where('media_license_number', isEqualTo: num).limit(1).get();
 
       if (dupSnap.docs.isNotEmpty) {
         mediaLicenseDuplicateError = true;
