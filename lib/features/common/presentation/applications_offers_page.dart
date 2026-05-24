@@ -66,6 +66,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _userType = '';
+  String _userAccountStatus = '';
   bool _isLoading = true;
   final _firebaseService = FeqFirebaseServiceUtils();
 
@@ -113,8 +114,10 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
 
   Future<void> _loadUserType() async {
     final userTypeValue = (await UserSession.getUserType()) ?? '';
+    final userAccountStatus = (await UserSession.getAccountStatus()) ?? 'active';
     setState(() {
       _userType = userTypeValue;
+      _userAccountStatus = userAccountStatus;
       _isLoading = false;
     });
     if (userTypeValue == 'business') {
@@ -1032,6 +1035,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
     return ApplicationsTabContent(
       key: const ValueKey('business_apps'),
       isBusinessView: true,
+      userAccountStatus: _userAccountStatus,
       filterCampaigns:    _businessTab0SelectedCampaigns,
       filterContentTypes: _businessTab0SelectedContentTypes,
       filterPlatforms:    _businessTab0SelectedPlatforms,
@@ -1043,6 +1047,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
     return OffersTabContent(
       key: const ValueKey('business_offers'),
       isBusinessView: true,
+      userAccountStatus: _userAccountStatus,
       filterStatuses:  _businessTab1SelectedStatuses,
       filterCampaigns: _businessTab1SelectedCampaigns,
     );
@@ -1052,6 +1057,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
     return ArchiveTabContent(
       key: const ValueKey('business_archive'),
       isBusinessView: true,
+      userAccountStatus: _userAccountStatus,
       actionContractCanDownload: true,
       actionContractCanPrint: true,
       filterCampaigns:   _businessTab2SelectedCampaigns,
@@ -1064,6 +1070,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
     return ApplicationsTabContent(
       key: const ValueKey('influencer_apps'),
       isBusinessView: false,
+      userAccountStatus: _userAccountStatus,
       filterByInitiator: _influencerTab0SelectedInitiators,
     );
   }
@@ -1072,6 +1079,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
     return OffersTabContent(
       key: const ValueKey('influencer_offers'),
       isBusinessView: false,
+      userAccountStatus: _userAccountStatus,
       filterStatuses:     _influencerTab1SelectedStatuses,
       filterContentTypes: _influencerTab1SelectedContentTypes,
       filterPlatforms:    _influencerTab1SelectedPlatforms,
@@ -1083,6 +1091,7 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
     return ArchiveTabContent(
       key: const ValueKey('influencer_archive'),
       isBusinessView: false,
+      userAccountStatus: _userAccountStatus,
       actionContractCanDownload: true,
       actionContractCanPrint: true,
       filterContentTypes: _influencerTab2SelectedContentTypes,

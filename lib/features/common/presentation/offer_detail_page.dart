@@ -16,6 +16,7 @@ enum _OfferDocumentAction {
 class OfferDetailPage extends StatefulWidget {
   final String offerId;
   final bool isBusinessView;
+  final String userAccountStatus;
   final bool actionContractCanDownload;
   final bool actionContractCanPrint;
 
@@ -23,6 +24,7 @@ class OfferDetailPage extends StatefulWidget {
     super.key,
     required this.offerId,
     required this.isBusinessView,
+    required this.userAccountStatus,
     required this.actionContractCanDownload,
     required this.actionContractCanPrint
   });
@@ -488,7 +490,9 @@ class _OfferDetailPageState extends State<OfferDetailPage> {
               _contractDocument(t, status),
               const SizedBox(height: 20),
               _termsSection(t, status),
-              if (!widget.isBusinessView && status == 'pending') ...[
+              if (widget.userAccountStatus == 'active'
+                  && !widget.isBusinessView
+                  && status == 'pending') ...[
                 const SizedBox(height: 24),
                 _influencerAcknowledgments(t),
                 const SizedBox(height: 20),

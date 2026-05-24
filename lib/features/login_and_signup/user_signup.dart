@@ -223,12 +223,13 @@ class _UserSignupPageState extends State<UserSignupPage> {
 
     // ─────────────── Firebase Signup ───────────────
     try {
+      String userId = '';
       if (!_feqTesting) {
         UserCredential userCredential =
             await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
 
         final user = userCredential.user!;
-        final userId = user.uid;
+        userId = user.uid;
 
         await user.sendEmailVerification();
 
@@ -268,6 +269,12 @@ class _UserSignupPageState extends State<UserSignupPage> {
 
                 if (verified) {
                   if (Navigator.canPop(ctxAlertDialog)) Navigator.pop(ctxAlertDialog);
+
+                  if (!_feqTesting) {
+                    await FirebaseFirestore.instance.collection('users').doc(userId).set({
+                      'account_status': 'active'
+                    }, SetOptions(merge: true));
+                  }
 
                   if (!mounted) return;
 

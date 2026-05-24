@@ -83,6 +83,7 @@ class OfferModel {
 
 class OffersTabContent extends StatefulWidget {
   final bool isBusinessView;
+  final String userAccountStatus;
   final List<String> filterStatuses;
   final List<String> filterCampaigns;
   final List<String> filterContentTypes;
@@ -92,6 +93,7 @@ class OffersTabContent extends StatefulWidget {
   const OffersTabContent({
     super.key,
     required this.isBusinessView,
+    required this.userAccountStatus,
     this.filterStatuses = const [],
     this.filterCampaigns = const [],
     this.filterContentTypes = const [],
@@ -394,6 +396,7 @@ class _OffersTabContentState extends State<OffersTabContent> {
       builder: (_) => OfferDetailPage(
         offerId: offer.id,
         isBusinessView: widget.isBusinessView,
+        userAccountStatus: widget.userAccountStatus,
         actionContractCanDownload: offer.status == OfferStatus.accepted,
         actionContractCanPrint: offer.status == OfferStatus.accepted,
       ),

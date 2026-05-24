@@ -113,6 +113,7 @@ class ApplicationModel {
 
 class ApplicationsTabContent extends StatefulWidget {
   final bool isBusinessView;
+  final String userAccountStatus;
   final List<String> filterByInitiator;
   final List<String> filterStatuses;
   final List<String> filterCampaigns;
@@ -126,6 +127,7 @@ class ApplicationsTabContent extends StatefulWidget {
   const ApplicationsTabContent({
     super.key,
     required this.isBusinessView,
+    required this.userAccountStatus,
     this.filterByInitiator = const [],
     this.filterStatuses = const [],
     this.filterCampaigns = const [],

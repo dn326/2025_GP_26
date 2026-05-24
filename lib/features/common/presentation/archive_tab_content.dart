@@ -23,6 +23,7 @@ class ArchiveTabContent extends StatefulWidget {
   const ArchiveTabContent({
     super.key,
     required this.isBusinessView,
+    required this.userAccountStatus,
     required this.actionContractCanDownload,
     required this.actionContractCanPrint,
     this.filterCampaigns = const [],
@@ -32,6 +33,7 @@ class ArchiveTabContent extends StatefulWidget {
   });
 
   final bool isBusinessView;
+  final String userAccountStatus;
   final bool actionContractCanDownload;
   final bool actionContractCanPrint;
   final List<String> filterCampaigns;
@@ -446,6 +448,7 @@ class _ArchiveTabContentState extends State<ArchiveTabContent> {
                           builder: (_) => OfferDetailPage(
                             offerId: offerId,
                             isBusinessView: widget.isBusinessView,
+                            userAccountStatus: widget.userAccountStatus,
                             actionContractCanDownload: true,
                             actionContractCanPrint: true,
                           ),
