@@ -338,7 +338,9 @@ class _ApplicationsOffersPageState extends State<ApplicationsOffersPage>
             ],
           ),
           const SizedBox(width: 6),
-          Text(label),
+          Flexible(
+            child: Text(label, softWrap: true, textAlign: TextAlign.center),
+          ),
         ],
       ),
     );
