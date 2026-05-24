@@ -103,14 +103,15 @@ class BusinessProfileWidgetState extends State<BusinessProfileScreen> {
       if (uid == null) throw Exception('No logged-in user');
 
       // --- Get user record ---
+      userAccountStatus = (await UserSession.getAccountStatus()) ?? 'active';
       final usersSnap = await firebaseFirestore.collection('users').where('user_id', isEqualTo: uid).limit(1).get();
 
       if (usersSnap.docs.isEmpty) throw Exception('User not found');
 
       final userDoc = usersSnap.docs.first;
-      if (widget.uid != null) {
-        userAccountStatus = userDoc['account_status'];
-      }
+      //if (widget.uid != null) {
+      //  userAccountStatus = userDoc['account_status'];
+      //}
       final userType = (userDoc['user_type'] ?? '').toString().toLowerCase();
       _isVerified = userDoc['verified'] ?? false;
 
